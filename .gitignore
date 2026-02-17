@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -22,3 +23,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+=======
+# Node
+node_modules/
+dist/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+*.db
+
+# Data
+data/raw_uploads/*
+data/processed/*
+data/logs/*
+!data/raw_uploads/.gitkeep
+!data/processed/.gitkeep
+!data/logs/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+>>>>>>> 37b75acdcbf4c637e8c87ca1185070f52e27010f
