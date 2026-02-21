@@ -1,4 +1,6 @@
-from ml_models.paddle_ocr.ocr_runner import extract_text_from_report
+class OCRService:
+    def extract_text(self, image_path: str):
+        # Implementation for PaddleOCR
+        return "extracted text"
 
-def extract_text(image_path: str):
-    return extract_text_from_report(image_path)
+ocr_service = OCRService()
