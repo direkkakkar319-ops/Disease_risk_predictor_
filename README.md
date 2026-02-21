@@ -115,4 +115,3 @@ This system is developed for educational and informational purposes only and mus
 ## 🎯 Resume Summary
 
 Designed and implemented a scalable asynchronous AI-powered health report processing system using React, FastAPI, Redis, Celery, XGBoost, and SHAP to convert unstructured medical reports into structured and explainable disease risk predictions.
-
