@@ -1,12 +1,13 @@
-fastapi
-uvicorn
-python-multipart
-sqlalchemy
-pydantic-settings
-celery
-redis
-paddlepaddle
-paddleocr
-xgboost
-pandas
-scikit-learn
+fastapi#data t              
+uvicorn#fastapi
+python-multipart#fastapi
+sqlalchemy#fastapi
+pydantic-settings#fastapi
+celery#celery
+redis#celery
+paddlepaddle#paddleocr
+paddleocr#paddleocr
+xgboost#xgboost
+pandas#pandas
+scikit-learn#scikit-learn
+matplotlib#graphs
