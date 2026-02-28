@@ -10,4 +10,5 @@ paddleocr#paddleocr
 xgboost#xgboost
 pandas#pandas
 scikit-learn#scikit-learn
+psycopg2-binary#postgres
 matplotlib#graphs
