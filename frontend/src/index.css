@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 55 20% 93%;
+    --foreground: 0 0% 10%;
+    --card: 55 20% 93%;
+    --card-foreground: 0 0% 10%;
+    --popover: 55 20% 93%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 55 20% 93%;
+    --secondary: 55 10% 85%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 55 10% 85%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 25 95% 53%;
+    --radius: 0rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+    background-color: #f0f0e8;
+    background-image: radial-gradient(circle, #d4d4c8 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+  }
+  
+  .text-brutalist {
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  
+  .border-brutalist {
+    border: 1px solid #1a1a1a;
+  }
+  
+  .bg-brutalist {
+    background-color: #f0f0e8;
+  }
+  
+  .dot-pattern {
+    background-image: radial-gradient(circle, #d4d4c8 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  
+  .terminal-text {
+    font-family: 'IBM Plex Mono', monospace;
+    color: #4ade80;
+  }
+  
+  .dither-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, #1a1a1a 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, #1a1a1a 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0e8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* Selection */
+::selection {
+  background: #1a1a1a;
+  color: #f0f0e8;
+}
+
+/* Animation keyframes */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-scan {
+  animation: scan 3s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
