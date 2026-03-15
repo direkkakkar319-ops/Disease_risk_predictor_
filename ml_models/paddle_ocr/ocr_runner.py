@@ -1,4 +1,6 @@
+import os
 from paddleocr import PaddleOCR
+
 ocr  = PaddleOCR(use_angle_cls = True, lang = 'en')
 
 def extract_text_from_report(path):#here will put the image path
