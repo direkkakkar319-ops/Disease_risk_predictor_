@@ -36,6 +36,8 @@ async def upload_file(
     db.commit()
     db.refresh(new_task)
 
+    process_medical_report.delay(file_location, task_id)
+
     return {
         "task_id": task_id,
         "status": "PENDING",
