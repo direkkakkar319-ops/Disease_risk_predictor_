@@ -6,6 +6,7 @@ import uuid
 
 from app.db.database import get_db
 from app.db.models import Task
+from queue.tasks import process_medical_report
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ async def upload_file(
     ):
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-    # sving file
+    # saving file
     file_location = os.path.join(UPLOAD_DIR, file.filename)
 
     with open(file_location, "wb+") as file_object:
