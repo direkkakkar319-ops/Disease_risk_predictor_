@@ -13,7 +13,7 @@ def extract_text_from_report(path:str)->str:#here will put the image path
         images = convert_from_path(path)
         all_text = []
         for img in images:
-            with tempfile.NamedTemporaryFile(siffix=".jpg", delete=False) as tmp:
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
                 img.save(tmp.name)
                 all_text.append(_run_ocr(tmp.name))
                 os.unlink(tmp.name)
