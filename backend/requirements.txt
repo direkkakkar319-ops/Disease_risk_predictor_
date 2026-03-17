@@ -1,15 +1,43 @@
-fastapi #data t              
-uvicorn #fastapi
-python-multipart #fastapi
-sqlalchemy #fastapi
-pydantic-settings #fastapi
-celery #celery
-redis #celery
-paddlepaddle #paddleocr
-paddleocr #paddleocr
-xgboost #xgboost
-pandas #pandas
-scikit-learn #scikit-learn
-psycopg2-binary #postgres
-matplotlib #graphs
-pdf2image
+# FastAPI & Server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Database (SQL - Using PostgreSQL as recommended, but works with MySQL/SQLite too)
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+asyncpg==0.29.0  # For async PostgreSQL
+
+# Redis & Celery
+redis==5.0.1
+celery==5.3.4
+flower==2.0.1  # Celery monitoring dashboard
+
+# PaddleOCR & ML
+paddlepaddle==3.0.0
+paddleocr>=3.0.0
+pillow==10.1.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+pandas==2.1.3
+
+# XGBoost & Prediction
+xgboost==2.0.2
+scikit-learn==1.3.2
+shap==0.44.0
+joblib==1.3.2
+
+# Image Processing
+pdf2image==1.16.3
+pymupdf==1.23.7
+
+# Utilities
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+httpx==0.25.2
+aiofiles==23.2.1
