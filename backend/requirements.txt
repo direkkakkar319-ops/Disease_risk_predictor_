@@ -12,3 +12,4 @@ pandas#pandas
 scikit-learn#scikit-learn
 psycopg2-binary#postgres
 matplotlib#graphs
+pdf2image
