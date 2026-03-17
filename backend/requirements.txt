@@ -1,15 +1,15 @@
-fastapi#data t              
-uvicorn#fastapi
-python-multipart#fastapi
-sqlalchemy#fastapi
-pydantic-settings#fastapi
-celery#celery
-redis#celery
-paddlepaddle#paddleocr
-paddleocr#paddleocr
-xgboost#xgboost
-pandas#pandas
-scikit-learn#scikit-learn
-psycopg2-binary#postgres
-matplotlib#graphs
+fastapi #data t              
+uvicorn #fastapi
+python-multipart #fastapi
+sqlalchemy #fastapi
+pydantic-settings #fastapi
+celery #celery
+redis #celery
+paddlepaddle #paddleocr
+paddleocr #paddleocr
+xgboost #xgboost
+pandas #pandas
+scikit-learn #scikit-learn
+psycopg2-binary #postgres
+matplotlib #graphs
 pdf2image
