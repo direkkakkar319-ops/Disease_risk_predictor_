@@ -89,5 +89,33 @@ Disease_risk_predictor/
 - **HIPAA Compliance:** Adding end-to-end encryption for report data.
 - **Unit Conversion Engine:** Smarter automated unit mapping for international reports.
 
+##    6. Required Dependencies installed
+- **Install PaddlePaddle (CPU version)**
+python -m pip install paddlepaddle==3.0.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+- **Or GPU version (CUDA 11.8)**
+python -m pip install paddlepaddle-gpu==3.0.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+- **Install PaddleOCR (Basic OCR only)**
+python -m pip install paddleocr
+
+- **For full document parsing (tables, charts, formulas - recommended for medical reports)**
+python -m pip install "paddleocr[all]"
+
+- **Install all dependencies**
+pip install fastapi==0.104.1 uvicorn[standard]==0.24.0 sqlalchemy==2.0.23 pydantic==2.5.0 pydantic-settings==2.1.0 python-dotenv==1.0.0
+
+- **Database drivers (choose based on your SQL database)**
+- **For PostgreSQL (Recommended)**
+pip install asyncpg==0.29.0 psycopg2-binary==2.9.9
+
+- **For MySQL**
+pip install aiomysql==0.2.0 pymysql==1.1.0
+
+- **For SQLite (Development/Testing)**
+pip install aiosqlite==0.19.0
+
+- **Additional utilities**
+pip install alembic==1.13.1 passlib[bcrypt]==1.7.4 python-jose[cryptography]==3.3.0 python-multipart==0.0.6
 ---
 *Created by the Health Insight AI Development Team.*
