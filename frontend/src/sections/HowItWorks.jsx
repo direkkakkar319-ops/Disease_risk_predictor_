@@ -58,6 +58,27 @@ export function HowItWorks() {
     const [activeStep, setActiveStep] = useState(1);
     const [visibleLogs, setVisibleLogs] = useState([]);
     const terminalRef = useRef(null);
+    const stepRefs = useRef({});
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const id = Number(entry.target.getAttribute('data-step-id'));
+                        if (id) setActiveStep(id);
+                    }
+                });
+            },
+            { rootMargin: '-40% 0px -40% 0px', threshold: 0 }
+        );
+
+        Object.values(stepRefs.current).forEach((el) => {
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         const currentStep = processSteps.find((s) => s.id === activeStep);
@@ -110,15 +131,19 @@ export function HowItWorks() {
                         {processSteps.map((step) => (
                             <div
                                 key={step.id}
-                                className={`border border-brutalist-fg p-4 cursor-pointer transition-all ${activeStep === step.id
-                                        ? 'bg-brutalist-fg text-brutalist-bg'
+                                ref={(el) => {
+                                    if (el) stepRefs.current[step.id] = el;
+                                }}
+                                data-step-id={step.id}
+                                className={`border border-brutalist-fg p-4 cursor-pointer transition-all duration-300 ease-in-out ${activeStep === step.id
+                                        ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 shadow-brutalist-sm relative z-10'
                                         : 'bg-brutalist-bg hover:bg-brutalist-fg/5'
                                     }`}
-                                onClick={() => setActiveStep(step.id)}
+                                onMouseEnter={() => setActiveStep(step.id)}
                             >
                                 <div className="flex items-start gap-4">
                                     <div
-                                        className={`w-10 h-10 border border-current flex items-center justify-center flex-shrink-0 ${activeStep === step.id
+                                        className={`w-10 h-10 border border-current flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${activeStep === step.id
                                                 ? 'bg-brutalist-accent border-brutalist-accent'
                                                 : ''
                                             }`}
@@ -128,7 +153,7 @@ export function HowItWorks() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
                                             <span
-                                                className={`text-xs font-mono ${activeStep === step.id
+                                                className={`text-xs font-mono transition-colors duration-300 ${activeStep === step.id
                                                         ? 'text-brutalist-bg/60'
                                                         : 'text-brutalist-muted'
                                                     }`}
@@ -143,7 +168,7 @@ export function HowItWorks() {
                                             {step.title}
                                         </h3>
                                         <p
-                                            className={`text-sm font-mono ${activeStep === step.id
+                                            className={`text-sm font-mono transition-colors duration-300 ${activeStep === step.id
                                                     ? 'text-brutalist-bg/80'
                                                     : 'text-brutalist-muted'
                                                 }`}
