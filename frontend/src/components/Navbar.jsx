@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Activity, Moon, History, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
+import { UploadReportModal } from './UploadReportModal';
 const navLinks = [
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Diseases', href: '#diseases' },
@@ -67,11 +67,13 @@ export function Navbar() {
                         >
                             Log In
                         </a>
-                        <Button
-                            className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
-                        >
-                            Upload Report
-                        </Button>
+                        <UploadReportModal>
+                            <Button
+                                className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
+                            >
+                                Upload Report
+                            </Button>
+                        </UploadReportModal>
                     </div>
                 </nav>
             </div>
