@@ -306,3 +306,31 @@ async def _get_report_data(report_id:str) -> dict:
             }
 
         return {}
+
+async def _save_comparision(comparision_id:str, comparision_data:dict):
+    """
+    Saves the finished comparision of two reports
+    Returns to the report_comparision table
+    Called after task-3(Comparision)
+
+    comparision_data is a dict returned by ReportComparator.compare_medical_reports():
+        significant_changes
+        summary.overall_trend
+    """
+    async with AsyncSessionLocal() as session:
+        
+        result = await session.ececute(
+            select(ReportComparator).where(ReportComparator.id == comparision_id)
+        )
+
+        comp = result.scalar_one_or_none()
+
+        if comp:
+            # Entire comparison result
+            comp.comparision_data = comparision_data
+
+            comp.significant_changes = comparision_data.get("significant_changes", [])
+
+            comp.trend_analysis = comparision_data.get["summary"]["overall_trend"] 
+
+        await session.commit()
