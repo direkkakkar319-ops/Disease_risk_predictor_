@@ -23,8 +23,3 @@ from app.database import AsyncSessionLocal
 Database Table Models
 """
 from app.models import MedicalReport, Prediction, Report Comparision
-
-"""
-OCR and ML imports
-"""
-from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
