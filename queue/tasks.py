@@ -23,3 +23,4 @@ from app.database import AsyncSessionLocal
 Database Table Models
 """
 from app.models import MedicalReport, Prediction, Report Comparision
+from ml_models.predict import RiskPredictor
