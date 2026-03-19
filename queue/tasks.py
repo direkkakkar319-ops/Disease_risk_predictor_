@@ -18,3 +18,8 @@ from queue.celery_app import celery_app
 Database Connection
 """
 from app.database import AsyncSessionLocal
+
+"""
+Database Table Models
+"""
+from app.models import MedicalReport, Prediction, Report Comparision
