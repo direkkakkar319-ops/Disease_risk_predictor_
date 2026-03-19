@@ -23,4 +23,9 @@ from app.database import AsyncSessionLocal
 Database Table Models
 """
 from app.models import MedicalReport, Prediction, Report Comparision
-from ml_models.predict import RiskPredictor
+
+"""
+OCR and ML imports
+"""
+from ml_models.paddle_ocr.ocr_runner import get_ocr_runner  
+from ml_models.predict import RiskPredictor 
