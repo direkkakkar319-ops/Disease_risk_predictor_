@@ -5,3 +5,11 @@ The three tasks run in order:
     2. predict_disease_risk    → runs the ML model on those lab values
     3. compare_reports         → compares two reports side by side
 """
+
+"""
+Important imports
+"""
+import asyncio          
+import logging
+from datetime import datetime
+from queue.celery_app import celery_app
