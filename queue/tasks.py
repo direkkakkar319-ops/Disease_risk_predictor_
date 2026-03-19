@@ -29,3 +29,9 @@ OCR and ML imports
 """
 from ml_models.paddle_ocr.ocr_runner import get_ocr_runner  
 from ml_models.predict import RiskPredictor 
+
+"""
+Comaparision Service
+"""
+from services.ml_service import ReportComparator
+from sqlalchemy import select
