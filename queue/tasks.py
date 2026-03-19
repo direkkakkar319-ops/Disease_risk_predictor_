@@ -133,3 +133,43 @@ def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
     except Exception as exc:
         logger.error(f"[predict_disease_risk] failed for {report_id}:{exc}")
         raise self.retry(exc=exc)
+
+"""
+Task 3 - Report Comparision
+"""
+@celery_app.task(
+    bind = True,
+    max_retries = 2,
+    default_retry_delay = 30,
+    name = "queue.tasks.compare_reports"
+)
+def compare_reports(self, comparision_id:str, report_1_id:str, report_2_id:str):
+    """
+    Compare two health reports and saves the results in the database
+    
+    Args:
+        comparision_id
+        report_1_id
+        report_2_id
+    """
+    try:
+        self.update_state(state="PROGRESS", meta={"step":"fetching_reports"})
+        report_1 = asyncio.run(_get_report_data(report_1_id))
+        report_2 = asyncio.run(_get_report_data(report_2_id))
+
+        self.update_state(state="PROGRESS", meta={"step":"comparing"})
+        comparator = ReportComparator()
+        comparision = comparator.compare_medical_reports(report_1, report_2)
+
+        self.update_state(state="PROGRESS", meta={"step":"saving_comparision"})
+        asyncio.run(_save_comparision(comparision_id, comparision))
+
+        return {
+            "status":"completed",
+            "comparision_id":comparision_id,
+            "trend":comparison["summary"]["overall_trend"]
+        }
+
+    except Exception as exc:
+        logger.error(f"[compare_reports] failed for comparison {comparision_id}:{exc}")
+        raise self.retry(exc=exc)
