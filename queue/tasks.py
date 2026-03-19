@@ -67,7 +67,7 @@ def process_medical_report(self, report_id:str, file_path:str, report_type:str):
         asyncio.run(_update_report_status(report_id, "preprocessing"))
         self.update_state(state="PROGRESS", meta={"step":"intialising_ocr"})
 
-        ocr_runner = get_ocr_runner()
+        ocr_runner = get_ocr_runner()#gate keeping function
         self.update_state(state="PROGRESS", meta={"step": "ocr_extraction"})
         result = ocr_runner.process_report(file_path, report_type)
 
@@ -80,7 +80,7 @@ def process_medical_report(self, report_id:str, file_path:str, report_type:str):
             confidence = result.get("average_confidence", 0.0)
             )
         )
-
+        
         predict_disease_risk.delay(
             report_id,
             result["structured_metrics"],
@@ -96,4 +96,40 @@ def process_medical_report(self, report_id:str, file_path:str, report_type:str):
     except Exception as exc:
         logger.error(f"[process_medical_report] failed for {report_id}: {exc}")
         asyncio.run(_update_report_status(report_id, "failed"))
+        raise self.retry(exc=exc)
+
+"""
+Task 2 - Disease Risk Prediction
+"""
+@celery_app.task(
+    bind = True,
+    max_retries = 2,
+    default_retry_delay = 30,
+    name = "queue.tasks.predict_disease_risk"
+)
+def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
+    """
+    Runs the XGBoost ML model on the extracted lab values and saves 
+    the disease risk predictions to the database
+
+    Args:
+        report_id
+        metrics
+        report_type
+    """
+    try:
+        self.update(state="PROGRESS", meta={"step":"loading model"})
+        predictor = RiskPredictor()
+
+        self.update_state(state="PROGRESS", meta={"step":"predicting"})
+        asyncio.run(_save_prediction(report_id, prediction_result))
+
+        return {
+            "status":"completed",
+            "report_id":report_id,
+            "risk_level":prediction_result.get("risk level")
+        }
+
+    except Exception as exc:
+        logger.error(f"[predict_disease_risk] failed for {report_id}:{exc}")
         raise self.retry(exc=exc)
