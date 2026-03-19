@@ -159,7 +159,7 @@ def compare_reports(self, comparision_id:str, report_1_id:str, report_2_id:str):
 
         self.update_state(state="PROGRESS", meta={"step":"comparing"})
         comparator = ReportComparator()
-        comparision = comparator.compare_medical_reports(report_1, report_2)
+        comparison = comparator.compare_medical_reports(report_1, report_2)
 
         self.update_state(state="PROGRESS", meta={"step":"saving_comparision"})
         asyncio.run(_save_comparision(comparision_id, comparision))
@@ -173,3 +173,31 @@ def compare_reports(self, comparision_id:str, report_1_id:str, report_2_id:str):
     except Exception as exc:
         logger.error(f"[compare_reports] failed for comparison {comparision_id}:{exc}")
         raise self.retry(exc=exc)
+
+"""
+Private database helper `async` functions
+
+our database SQLAlchemy uses async/await for all the queries
+but celery uses tasks are regular `synchronous functions`
+asyncio.run() is the bridge — it lets a sync function call an async one.
+Each helper opens a DB session, does one job, then closes the session.
+"""
+async def _update_report_status(report_id:str, status:str):
+    """
+    Update the status column of a report row in the database
+    Sets processed_at timestamp when status becomes `completed`
+    """
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(MedicalReport).where(MedicalReport.id == report_id)
+        )
+
+        report = result.scaler_one_or_none()
+        
+        if report:
+            report.status = status
+
+            if status == "completed":
+                report.processed_at = datetime.utcnow() 
+            
+            await session.commit()
