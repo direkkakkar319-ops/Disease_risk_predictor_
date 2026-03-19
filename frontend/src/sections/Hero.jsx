@@ -37,6 +37,7 @@ export function Hero() {
         const draw = () => {
             const width = canvas.width / window.devicePixelRatio;
             const height = canvas.height / window.devicePixelRatio;
+            const isDark = document.documentElement.classList.contains('dark');
 
             ctx.clearRect(0, 0, width, height);
 
@@ -55,8 +56,8 @@ export function Hero() {
                         ctx.beginPath();
                         ctx.moveTo(cx, cy);
                         ctx.lineTo(sx, sy);
-                        ctx.strokeStyle = '#1a1a1a';
-                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = isDark ? '#f0f0e8' : '#1a1a1a';
+                        ctx.lineWidth = isDark ? 1.5 : 1;
                         ctx.stroke();
 
                         // Animated pulse on line

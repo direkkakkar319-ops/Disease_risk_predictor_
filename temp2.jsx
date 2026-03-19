@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Upload, FileSearch, Brain, TrendingUp, Check } from 'lucide-react';
 
 const processSteps = [
@@ -175,13 +175,14 @@ export function HowItWorks() {
                             <div className="text-brutalist-terminal mb-4">
                                 {`> MEDSCAN.AI v2.4.1 initialized`}
                             </div>
-                            <div className="text-brutalist-terminal opacity-60 mb-4">
+                            <div className="text-brutalist-terminal/60 mb-4">
                                 {`> Processing Step ${activeStep}: ${processSteps.find(s => s.id === activeStep)?.title}`}
                             </div>
                             {visibleLogs.map((log, index) => (
                                 <div
                                     key={index}
-                                    className="text-brutalist-terminal mb-1"
+                                    className="text-brutalist-terminal mb-1 opacity-0 animate-[fadeIn_0.2s_ease_forwards]"
+                                    style={{ animationDelay: `${index * 0.05}s` }}
                                 >
                                     {log}
                                 </div>

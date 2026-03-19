@@ -26,6 +26,39 @@
     --input: 0 0% 20%;
     --ring: 25 95% 53%;
     --radius: 0rem;
+
+    --brutalist-bg: #f0f0e8;
+    --brutalist-fg: #1a1a1a;
+    --brutalist-muted: #6b6b5e;
+    --brutalist-accent: #f97316;
+    --brutalist-border: #1a1a1a;
+    --brutalist-terminal: #4ade80;
+    --brutalist-dot: #d4d4c8;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 55 20% 93%;
+    --card: 0 0% 10%;
+    --card-foreground: 55 20% 93%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 55 20% 93%;
+    --primary: 55 20% 93%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 55 20% 93%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+
+    --brutalist-bg: #1a1a1a;
+    --brutalist-fg: #f0f0e8;
+    --brutalist-muted: #a3a396;
+    --brutalist-accent: #f97316;
+    --brutalist-border: #f0f0e8;
+    --brutalist-terminal: #4ade80;
+    --brutalist-dot: #333333;
   }
 }
 
@@ -41,9 +74,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'IBM Plex Mono', 'Space Mono', monospace;
-    background-color: #f0f0e8;
-    background-image: radial-gradient(circle, #d4d4c8 1px, transparent 1px);
+    background-color: var(--brutalist-bg);
+    background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
     background-size: 24px 24px;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -58,15 +92,15 @@
   }
   
   .border-brutalist {
-    border: 1px solid #1a1a1a;
+    border: 1px solid var(--brutalist-border);
   }
   
   .bg-brutalist {
-    background-color: #f0f0e8;
+    background-color: var(--brutalist-bg);
   }
   
   .dot-pattern {
-    background-image: radial-gradient(circle, #d4d4c8 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
     background-size: 24px 24px;
   }
   
@@ -77,8 +111,8 @@
   
   .dither-pattern {
     background-image: 
-      radial-gradient(circle at 25% 25%, #1a1a1a 1px, transparent 1px),
-      radial-gradient(circle at 75% 75%, #1a1a1a 1px, transparent 1px);
+      radial-gradient(circle at 25% 25%, var(--brutalist-fg) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, var(--brutalist-fg) 1px, transparent 1px);
     background-size: 4px 4px;
   }
 }
