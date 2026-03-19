@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Activity, Moon, History, GitCompare } from 'lucide-react';
+import { Activity, Moon, Sun, History, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
+import { UploadReportModal } from './UploadReportModal';
 const navLinks = [
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Diseases', href: '#diseases' },
@@ -13,8 +13,12 @@ const navLinks = [
 
 export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
+    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
+        const root = document.documentElement;
+        setIsDark(root.classList.contains('dark'));
+
         const handleScroll = () => {
             setScrolled(window.scrollY > 50);
         };
@@ -22,10 +26,21 @@ export function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const toggleTheme = () => {
+        const root = document.documentElement;
+        if (isDark) {
+            root.classList.remove('dark');
+            setIsDark(false);
+        } else {
+            root.classList.add('dark');
+            setIsDark(true);
+        }
+    };
+
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                    ? 'bg-brutalist-bg/95 backdrop-blur-sm border-b border-brutalist-fg'
+                    ? 'bg-brutalist-bg border-b border-brutalist-fg'
                     : 'bg-transparent'
                 }`}
         >
@@ -56,10 +71,11 @@ export function Navbar() {
                     {/* Actions */}
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={toggleTheme}
                             className="p-2 border border-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors"
                             aria-label="Toggle theme"
                         >
-                            <Moon className="w-4 h-4" />
+                            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>
                         <a
                             href="#"
@@ -67,11 +83,13 @@ export function Navbar() {
                         >
                             Log In
                         </a>
-                        <Button
-                            className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
-                        >
-                            Upload Report
-                        </Button>
+                        <UploadReportModal>
+                            <Button
+                                className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
+                            >
+                                Upload Report
+                            </Button>
+                        </UploadReportModal>
                     </div>
                 </nav>
             </div>

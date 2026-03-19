@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Heart, Brain, Activity, Stethoscope, Bone, Eye, Droplets, Shield } from 'lucide-react';
 
 const diseaseCategories = [
@@ -144,11 +144,11 @@ export function Diseases() {
                         {diseaseCategories.map((category, index) => (
                             <button
                                 key={category.id}
-                                className={`w-full flex items-center gap-3 p-4 text-left transition-all ${activeCategory === category.id
-                                        ? 'bg-brutalist-fg text-brutalist-bg'
-                                        : 'bg-brutalist-bg hover:bg-brutalist-fg/5'
+                                className={`w-full flex items-center gap-3 p-4 text-left transition-transform duration-300 ease-out ${activeCategory === category.id
+                                        ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 relative z-10'
+                                        : 'bg-brutalist-bg'
                                     } ${index < diseaseCategories.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
-                                onClick={() => setActiveCategory(category.id)}
+                                onMouseEnter={() => setActiveCategory(category.id)}
                             >
                                 <span
                                     className="w-8 h-8 flex items-center justify-center"
@@ -188,7 +188,7 @@ export function Diseases() {
                             {activeDiseases.map((disease) => (
                                 <div
                                     key={disease}
-                                    className="border border-brutalist-fg p-4 cursor-pointer transition-all hover:bg-brutalist-fg hover:text-brutalist-bg"
+                                    className="border border-brutalist-fg p-4 cursor-pointer transition-transform duration-300 ease-out hover:bg-brutalist-fg hover:text-brutalist-bg hover:-translate-y-1"
                                     onMouseEnter={() => setHoveredDisease(disease)}
                                     onMouseLeave={() => setHoveredDisease(null)}
                                 >

@@ -15,13 +15,13 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         brutalist: {
-          bg: '#f0f0e8',
-          fg: '#1a1a1a',
-          muted: '#6b6b5e',
-          accent: '#f97316',
-          border: '#1a1a1a',
-          terminal: '#4ade80',
-          dot: '#d4d4c8',
+          bg: 'var(--brutalist-bg)',
+          fg: 'var(--brutalist-fg)',
+          muted: 'var(--brutalist-muted)',
+          accent: 'var(--brutalist-accent)',
+          border: 'var(--brutalist-border)',
+          terminal: 'var(--brutalist-terminal)',
+          dot: 'var(--brutalist-dot)',
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -71,8 +71,8 @@ module.exports = {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        brutalist: "4px 4px 0 0 #1a1a1a",
-        "brutalist-sm": "2px 2px 0 0 #1a1a1a",
+        brutalist: "4px 4px 0 0 var(--brutalist-fg)",
+        "brutalist-sm": "2px 2px 0 0 var(--brutalist-fg)",
       },
       keyframes: {
         "accordion-down": {
@@ -95,6 +95,10 @@ module.exports = {
           "0%": { transform: "translateY(-100%)" },
           "100%": { transform: "translateY(100%)" },
         },
+        "scan-vertical": {
+          "0%": { top: "0%", transform: "translateY(-100%)" },
+          "100%": { top: "100%", transform: "translateY(0)" },
+        },
         "pulse-glow": {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "1" },
@@ -114,6 +118,7 @@ module.exports = {
         "caret-blink": "caret-blink 1.25s ease-out infinite",
         "blink": "blink 1s step-end infinite",
         "scan": "scan 3s linear infinite",
+        "scan-vertical": "scan-vertical 1.5s linear infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "marquee": "marquee 30s linear infinite",
         "typewriter": "typewriter 2s steps(40) forwards",
