@@ -27,3 +27,39 @@ celery_app = Celery(
     backend=CELERY_RESULT_BACKEND,
     include=["queue.tasks"]# tells where tasks are defined
 )
+
+"""
+Celerey Configuration
+"""
+celery_app.conf.upadte(
+    # Format for sending/reciving tasks
+    task_serializer = "json",
+    accept_content = ["json"],
+    result_serializer = "json",
+    
+    # Timezone
+    timzone = "UTC",
+    enable_utc = True,
+    
+    # Track task progress
+    task_time_limit = 300,
+    
+    # Number of tasks a worker will pick at a time
+    worker_process_multiplier = 1,
+
+    # Number of worker processes
+    worker_currency = int(os.getenv("CELERY_WORKER_CONCURRENCY", "4")),
+
+    # how long to keep results of the completed task
+    result_expire = 3600,
+
+    # Seperate queues for each tasks
+    task_routs = {
+        "queue.tasks.process_medical_reports":{"queue":"ocr"},
+        "queue.tasks.process_disease_risk":{"queue":"prediction"},
+        "queue.tasks.compare_reports":{"queue":"comparison"}
+    },
+
+    # queue for un-listed tasks
+    task_default_queue = "default"
+)
