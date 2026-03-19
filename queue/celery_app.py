@@ -1,12 +1,15 @@
 from celery import Celery
+from celery.signals import worker_ready, worker_process_init
+"""
+worker_ready-->fires once the entire worker is up
+worker_process_init-->fires onces inside the EACH worker process at startup
+"""
 import os
+import logging
 
-celery_app = Celery(
-    "worker",
-    broker=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("REDIS_URL", "redis://localhost:6379/0")
-)
+logger = logging.getLogger(__name__)
 
-celery_app.conf.task_routes = {
-    "app.tasks.*": {"queue": "main_queue"}
-}
+"""
+Read broker / backend from environment (set in .env or docker-compose)
+"""
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6390/0")
