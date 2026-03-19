@@ -13,3 +13,8 @@ import asyncio
 import logging
 from datetime import datetime
 from queue.celery_app import celery_app
+
+"""
+Database Connection
+"""
+from app.database import AsyncSessionLocal
