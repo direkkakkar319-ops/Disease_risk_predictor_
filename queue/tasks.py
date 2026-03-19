@@ -253,7 +253,7 @@ async def _save_predictions(report_id:str, prediction_result:dict):
         result = await session.execute(
             select(MedicalReport).where(MedicalReport.id == report_id)
         )
-        result = result.scalar_one_or_none()
+        report = result.scalar_one_or_none()
 
         if report:
             # one row in prediction table
@@ -279,3 +279,30 @@ async def _save_predictions(report_id:str, prediction_result:dict):
             session.add(prediction)
 
             await session.commit()
+
+async def _get_report_data(report_id:str) -> dict:
+    """
+    Reads report from the database and returns its data as a plain dictionary
+    Called by Task 3(compare reports)
+    Empty dictionary is returned if report_id does not exists in the database
+    """
+    async with AsyncSessionLocal() as session:
+
+        result = await session.execute(
+            select(MedicalReport).where(MedicalReport.id == report_id)
+        )
+
+        report = result.scalar_one_or_none()
+
+        if report:
+            return{
+                "structured metrics":report.extracted_metrics or {},
+
+                "raw text":report.raw_text or "",
+
+                "report_type":report.report_type,
+
+                "created_at":report.createdat.isoformat(),
+            }
+
+        return {}
