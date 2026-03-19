@@ -192,7 +192,7 @@ async def _update_report_status(report_id:str, status:str):
             select(MedicalReport).where(MedicalReport.id == report_id)
         )
 
-        report = result.scaler_one_or_none()
+        report = result.scaler_one_or_none()# returns none if the report is not found
         
         if report:
             report.status = status
@@ -200,4 +200,37 @@ async def _update_report_status(report_id:str, status:str):
             if status == "completed":
                 report.processed_at = datetime.utcnow() 
             
+            # Keep changes 
+            await session.commit()
+
+async def _save_ocr_results(
+    report_id : str,
+    raw_text  : str,
+    metrics   : dict,
+    tables    : list,
+    confidence: float,
+    ):
+    """
+    Saves everthing OCR has extracted from the image of the health report
+    It is called after OCR finishes task 1 
+    Marks the report as 'completed' and record the finish time
+    """
+    async with AsyncSessionLocal() as session:
+
+        result = await session.execute(
+            select(MedicalReport).where(MedicalReport.id==report_id)
+        )
+
+        report = result.scalar_one_or_none()
+
+        if report:
+            # Each columns is filled with OCR output
+            report.raw_text = raw_text
+            report.extracted_,etrics = metrics
+            report.ocr_confidence = confidence
+
+            # status updated and time recorded
+            report.status = "completed"
+            report.processed_at = datetime.utcnow()
+
             await session.commit()
