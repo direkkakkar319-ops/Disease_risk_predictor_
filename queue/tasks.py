@@ -234,3 +234,48 @@ async def _save_ocr_results(
             report.processed_at = datetime.utcnow()
 
             await session.commit()
+
+async def _save_predictions(report_id:str, prediction_result:dict):
+    """
+    Creates a new row in the predictions table with the ML model output
+    Called after Task-2(Disease Risk Prediction[predict_disease_risk])
+    
+    prediction_result is a dictionary returned by RiskPredictor.predict():
+        risks           
+        risk_level  
+        shap_values    
+        model_version
+        recommendations 
+        key_factors
+    """   
+    async with AsyncSessionLocal() as session:
+        # user_id for linking it to prediction results
+        result = await session.execute(
+            select(MedicalReport).where(MedicalReport.id == report_id)
+        )
+        result = result.scalar_one_or_none()
+
+        if report:
+            # one row in prediction table
+            prediction = Prediction(
+                user_id = report.user_id,
+                
+                report_id = report_id,
+
+                disease_risk = prediction_result.get("risks", {}),
+                
+                risk_level = prediction_result.get("risk_level"),
+                
+                #tells why model gave this score
+                shap_values = prediction_result.get("shap_values"),
+
+                model_version = prediction_result.get("model_version"),
+
+                recommendations = prediction_result.get("recommendations", []),
+
+                key_factors = prediction_result.get("key_factors", [])
+            )
+            # Stages new rows in sql
+            session.add(prediction)
+
+            await session.commit()
