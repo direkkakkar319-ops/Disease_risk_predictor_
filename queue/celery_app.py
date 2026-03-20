@@ -63,3 +63,7 @@ celery_app.conf.upadte(
     # queue for un-listed tasks
     task_default_queue = "default"
 )
+
+"""
+Worker lifecycle hooks
+"""
