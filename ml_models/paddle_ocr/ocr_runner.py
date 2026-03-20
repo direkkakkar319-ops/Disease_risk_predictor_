@@ -352,7 +352,7 @@ class OCRRunner:
 
         metrics:Dict[str, Any]={}
 
-        for key, pattrens in pattrens.items():
+        for key, pattren in pattrens.items():
             matches = re.findall(pattren, text, re.IGNORECASE)
 
             if matches:
@@ -368,7 +368,40 @@ class OCRRunner:
             metrics = self._extract_from_tables(tables)
         
         return metrics
+
+    def _parse_kidney_function_report(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
+        """
+        Parse Kidney Function report
+        """
+
+        text = ' '.join(item["text"] for item in text_data)
+
+        pattrens={
+            'creatinine': r'(?:Creatinine)[\s:]+([\d.]+)',
+            'bun': r'(?:BUN|Blood\s+Urea\s+Nitrogen)[\s:]+([\d.]+)',
+            'urea': r'(?:Urea)[\s:]+([\d.]+)',
+            'uric_acid': r'(?:Uric\s+Acid)[\s:]+([\d.]+)',
+            'egfr': r'(?:eGFR|GFR)[\s:]+([\d.]+)',
+        }
+
+        metrics:Dict[str, Any]={}
         
+        for key, pattren in pattrens.items():
+            matches = re.findall(pattren, text, re.IGNORECASE)
+
+            if matches:
+                try:
+                    metrics={
+                        'value':float(matches[0]),
+                        'unit':self._infer_unit(key),
+                        'source':"text"
+                    }
+                except ValueError:
+                    continue
+                
+        if not metrics and tables:
+            matrics = self._extract_from_tables(tables)
+
     """
     General Parser
     """
