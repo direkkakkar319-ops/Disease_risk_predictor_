@@ -123,6 +123,7 @@ class OCRRunner:
         
         return enhanced
     
+
     """
     Public extraction methods
     """
@@ -169,12 +170,11 @@ class OCRRunner:
         
         return extracted
 
-    """
-    Extract tables using PP-StructureV3.
-    PP-StructureV3 understands the table layout returns cell-level data
-    """
     def extract_tables(self, image_path: str) -> List[Dict]:
-
+        """
+        Extract tables using PP-StructureV3.
+        PP-StructureV3 understands the table layout returns cell-level data
+        """
         try:
             result = self.structure_engine.predict(input=image_path)
             tables = []
@@ -198,7 +198,10 @@ class OCRRunner:
     Main entry point - rechestrates the full OCR pipeline
     """    
     def process_report(self, image_path: str, report_type: str) -> Dict[str, Any]:
-
+        """
+        Complete processing pipeline for medical reports.
+        Main entry point - rechestrates the full OCR pipeline
+        """
         logger.info(f"Processing {report_type} report: {image_path}")
         
         # Extracting data
