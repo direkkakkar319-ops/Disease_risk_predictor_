@@ -398,10 +398,45 @@ class OCRRunner:
                     }
                 except ValueError:
                     continue
-                
-        if not metrics and tables:
-            matrics = self._extract_from_tables(tables)
 
+        if not metrics and tables:
+            metrics = self._extract_from_tables(tables)
+
+    def _parse_liver_function_report(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
+        """
+        Parse Liver Function report
+        """
+
+        text = ' '.join(item["text"] for item in text_data)
+
+        metrics:Dict[str, Any]={}
+
+        pattrens={
+            'bilirubin_total': r'(?:Total\s+Bilirubin|Bilirubin\s+Total)[\s:]+([\d.]+)',
+            'bilirubin_direct': r'(?:Direct\s+Bilirubin)[\s:]+([\d.]+)',
+            'bilirubin_indirect': r'(?:Indirect\s+Bilirubin)[\s:]+([\d.]+)',
+
+            'alt': r'(?:ALT|SGPT)[\s:]+([\d.]+)',
+            'ast': r'(?:AST|SGOT)[\s:]+([\d.]+)',
+            'alp': r'(?:ALP|Alkaline\s+Phosphatase)[\s:]+([\d.]+)',
+
+            'albumin': r'(?:Albumin)[\s:]+([\d.]+)',
+            'total_protein': r'(?:Total\s+Protein)[\s:]+([\d.]+)',
+        }
+
+        for key, pattren in pattrens.items():
+            matches = re.findall(pattren,text,re.IGNORECASE)
+
+            if matches:
+                try:
+                    metrics={
+                        'value':float(matches[0]),
+                        'unit':self._infer_unit(key),
+                        'source':text
+                    }
+                except ValueError:
+                    continue
+                
     """
     General Parser
     """
