@@ -329,6 +329,46 @@ class OCRRunner:
         
         return metrics
 
+    def _parse_hormone_report(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
+        """
+        Parse Hormone report metrics
+        """
+        text = ' '.join(item["text"] for item in text_data)
+
+        pattrens={
+            'tsh': r'(?:TSH|T\.?\s*S\.?\s*H)[\s:]+([\d.]+)',
+            't3': r'(?:T3|Free\s*T3|Triiodothyronine)[\s:]+([\d.]+)',
+            't4': r'(?:T4|Free\s*T4|Thyroxine)[\s:]+([\d.]+)',
+
+            'testosterone': r'(?:Testosterone|Total\s*Testosterone)[\s:]+([\d.]+)',
+            'estradiol': r'(?:Estradiol|Estrogen|E2)[\s:]+([\d.]+)',
+            'progesterone': r'(?:Progesterone)[\s:]+([\d.]+)',
+
+            'prolactin': r'(?:Prolactin)[\s:]+([\d.]+)',
+            'lh': r'(?:LH|Luteinizing\s*Hormone)[\s:]+([\d.]+)',
+            'fsh': r'(?:FSH|Follicle\s*Stimulating\s*Hormone)[\s:]+([\d.]+)',
+            'cortisol': r'(?:Cortisol)[\s:]+([\d.]+)',            
+        }
+
+        metrics:Dict[str, Any]={}
+
+        for key, pattrens in pattrens.items():
+            matches = re.findall(pattren, text, re.IGNORECASE)
+
+            if matches:
+                try:
+                    metrics[key]={
+                        'value':float(matches[0]),
+                        'unit':self._infer_unit(key),
+                        'source':'text'
+                    }
+                except ValueError:
+                    continue
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+        
+        return metrics
+        
     """
     General Parser
     """
