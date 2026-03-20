@@ -32,7 +32,7 @@ This system is developed for educational and informational purposes only and mus
 - `ml_models/`: Machine Learning Layer
 - `queue/`: Celery Queue Config
 - `data/`: Uploaded & processed data
-- `system`:System workflows
+- `system/`:System workflows
 
 
 
