@@ -286,7 +286,7 @@ class OCRRunner:
             'vldl': r'(?:VLDL)[\s:]+([\d.]+)',
         }
 
-        metrics = Dict[str, Any]={}
+        metrics:Dict[str, Any]={}
         for key, pattern in patterns.items():
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
@@ -301,6 +301,34 @@ class OCRRunner:
         
         return metrics
     
+    def _parse_vitamin_d(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
+        """
+        Parse Vitamin-D report metrics.
+        """
+        text = ' '.join(item["text"] for item in text_data)
+        
+        patterns = {
+        'vitamin_d': r'(?:25[\s\-]?(?:OH|Hydroxy)?\s*Vitamin\s*D|Vitamin\s*D|Vit\s*D)[\s:]+([\d.]+)'
+        }
+
+        metrics:Dict[str, Any]={}
+        for key, pattren in patterns.items():
+            matches = re.findall(pattren, text, re.IGNORECASE)
+            if matches:
+                try:
+                    metrics[key] = {
+                        'value': float(matches[0]),
+                        'unit': 'ng/ml',
+                        'source': 'text'
+                    }
+                except ValueError:
+                    continue
+        
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+        
+        return metrics
+
     """
     General Parser
     """
