@@ -67,3 +67,24 @@ celery_app.conf.upadte(
 """
 Worker lifecycle hooks
 """
+
+@worker_process_init.connect
+def _init_worker(**kwargs):
+    """
+    Runs once when each worker process starts.(before reciving any task)
+    We load the OCR model here so it makes it ready in the memory before 
+    the first task arrives. 
+
+    **kwargs is needed as celery passes extra info to this function
+    Without it error would be thrown by Python
+    """
+    logger.info(f"Worker process initialising--Loading the OCR engine........")
+
+    try:
+        # import in function prevents crash if PaddleOCR is not installed
+        from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
+        get_ocr_runner()#paddle ocr engine is loaded here
+        logger.info("OCR engine is successfully loaded")
+    
+    except Exception as exc:
+        logger.error(f"Failed to pre-load OCR engine:{exc}")
