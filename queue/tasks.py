@@ -307,7 +307,7 @@ async def _get_report_data(report_id:str) -> dict:
 
         return {}
 
-async def _save_comparision(comparision_id:str, comparision_data:dict):
+async def _save_comparision(comparision_id:str, comparison_data:dict):
     """
     Saves the finished comparision of two reports
     Returns to the report_comparision table
@@ -327,10 +327,10 @@ async def _save_comparision(comparision_id:str, comparision_data:dict):
 
         if comp:
             # Entire comparison result
-            comp.comparision_data = comparision_data
+            comp.comparision_data = comparison_data
 
-            comp.significant_changes = comparision_data.get("significant_changes", [])
+            comp.significant_changes = comparison_data.get("significant_changes", [])
 
-            comp.trend_analysis = comparision_data.get["summary"]["overall_trend"] 
+            comp.trend_analysis = comparison_data["summary"]["overall_trend"]
 
         await session.commit()
