@@ -96,3 +96,11 @@ def on_worker_ready(**kwargs):
     Prints confirmation message so we know the worker started correctly
     """
     logger.info("Celery worker is ready and is listening tasks.")
+
+"""
+Running direclty for development
+Start with: python -m queue.celery_app
+For production docker runs the celery commnads insted
+"""
+if __name__=="__main__":
+    celery_app.start()
