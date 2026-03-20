@@ -88,3 +88,11 @@ def _init_worker(**kwargs):
     
     except Exception as exc:
         logger.error(f"Failed to pre-load OCR engine:{exc}")
+
+@worker_ready.connect
+def on_worker_ready(**kwargs):
+    """
+    Runs once when the whole celery worker is up and connected to Redis
+    Prints confirmation message so we know the worker started correctly
+    """
+    logger.info("Celery worker is ready and is listening tasks.")
