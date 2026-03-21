@@ -1,68 +1,179 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background: 55 20% 93%;
+    --foreground: 0 0% 10%;
+    --card: 55 20% 93%;
+    --card-foreground: 0 0% 10%;
+    --popover: 55 20% 93%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 55 20% 93%;
+    --secondary: 55 10% 85%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 55 10% 85%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 25 95% 53%;
+    --radius: 0rem;
+
+    --brutalist-bg: #f0f0e8;
+    --brutalist-fg: #1a1a1a;
+    --brutalist-muted: #6b6b5e;
+    --brutalist-accent: #f97316;
+    --brutalist-border: #1a1a1a;
+    --brutalist-terminal: #4ade80;
+    --brutalist-dot: #d4d4c8;
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 55 20% 93%;
+    --card: 0 0% 10%;
+    --card-foreground: 55 20% 93%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 55 20% 93%;
+    --primary: 55 20% 93%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 55 20% 93%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+
+    --brutalist-bg: #1a1a1a;
+    --brutalist-fg: #f0f0e8;
+    --brutalist-muted: #a3a396;
+    --brutalist-accent: #f97316;
+    --brutalist-border: #f0f0e8;
+    --brutalist-terminal: #4ade80;
+    --brutalist-dot: #333333;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+    background-color: var(--brutalist-bg);
+    background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
+    background-size: 24px 24px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+  }
+  
+  .text-brutalist {
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  
+  .border-brutalist {
+    border: 1px solid var(--brutalist-border);
+  }
+  
+  .bg-brutalist {
+    background-color: var(--brutalist-bg);
+  }
+  
+  .dot-pattern {
+    background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  
+  .terminal-text {
+    font-family: 'IBM Plex Mono', monospace;
+    color: #4ade80;
+  }
+  
+  .dither-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, var(--brutalist-fg) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, var(--brutalist-fg) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0e8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* Selection */
+::selection {
+  background: #1a1a1a;
+  color: #f0f0e8;
+}
+
+/* Animation keyframes */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-scan {
+  animation: scan 3s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
 }
