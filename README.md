@@ -110,8 +110,8 @@ Dashboard fetches and visualizes results<br>
 
 ## Contributors
 
-* Direk Kakkar
-* Tannaya Supriya
+* Direk Kakkar[https://github.com/direkkakkar319-ops]
+* Tannaya Supriya[https://github.com/tannaya7]
 
 ## Resume Summary
 
