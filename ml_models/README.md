@@ -124,6 +124,9 @@ Common helper functions:
     - Data formatting
     - Shared ML utilities
 
+- def get_model_path(report_type: str) -> str:
+Returns the absolute path to the XGBoost model file.
+
 ## `ml_models/predict.py`
 Main entry point for predictions:
 Responsibilities:
