@@ -28,3 +28,26 @@ Fetches two reports from the database so they can be compared
 Saves the finished comparison result back to the database
 
 ## `queue/celery.py`
+- `logger = logging.getLogger(__name__)`
+Sets up logger for this file
+
+- `CELERY_BROKER_URL`
+Broker URL
+
+- `CELERY_RESULT_BACKEND`
+Backend URL
+
+- `celery_app = Celery()`
+Celery application
+
+- celery_app.conf.update()
+Celery Configuration
+
+- Worker life Cycle hooks
+    - `@worker_process_init.connect`
+        - `_init_worker()`
+        Runs once when the worker process start
+    
+    - `@worker_ready.connect`
+        - `on_worker_ready()`
+        Prints the confirmation message
