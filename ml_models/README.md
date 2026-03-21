@@ -114,7 +114,9 @@ Handles:
     - Feature transformation
 
 ### `ml_models/xgboost/model.pkl`
-
+Serialized trained XGBoost model used for:
+    - Disease risk prediction
+    - Inference on processed data
 
 ## `ml_models/models_utils.py`
 Common helper functions:
