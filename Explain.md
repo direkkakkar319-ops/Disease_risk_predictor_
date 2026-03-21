@@ -1,10 +1,10 @@
-# 🩺 Disease Risk Predictor: Project Deep Dive
+# Disease Risk Predictor: Project Deep Dive
 
 Welcome to the **Disease Risk Predictor** (also known as *Health Insight AI*). This project is a state-of-the-art, asynchronous medical report analysis system that converts unstructured health reports (PDFs/Images) into structured data and actionable disease risk predictions.
 
 ---
 
-## 🏗️ 1. Orchestration & Architecture
+## 1. Orchestration & Architecture
 
 The system is built on a distributed micro-services philosophy, ensuring that heavy computation like AI processing doesn't slow down the user experience.
 
@@ -21,7 +21,7 @@ The system is built on a distributed micro-services philosophy, ensuring that he
 
 ---
 
-## 🚀 2. Step-by-Step Workflow
+## 2. Step-by-Step Workflow
 
 The journey of a medical report follows this 5-step pipeline:
 
@@ -56,7 +56,7 @@ The final results are returned to the frontend.
 
 ---
 
-## 📊 3. Visual Flows
+## 3. Visual Flows
 
 ### User Journey Flow
 ![Customer Flow](./CustomerFlow.png)
@@ -70,7 +70,7 @@ The extracted metrics and historical predictions are stored in a relational data
 
 ---
 
-## 🛠️ 4. Key Directory Structure
+## 4. Key Directory Structure
 
 ```text
 Disease_risk_predictor/
@@ -84,7 +84,7 @@ Disease_risk_predictor/
 
 ---
 
-## 🔒 5. Future Enhancements
+## 5. Future Enhancements
 - **SHAP Integration:** For providing explainable AI (showing *why* a risk score is high).
 - **HIPAA Compliance:** Adding end-to-end encryption for report data.
 - **Unit Conversion Engine:** Smarter automated unit mapping for international reports.
