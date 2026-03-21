@@ -108,6 +108,10 @@ Used across backend and Celery workers.
 ## XGBoost model
 
 ### `ml_models/xgboost/feature_engineering.py`
+Handles:
+    - Data cleaning
+    - Feature extraction
+    - Feature transformation
 
 ### `ml_models/xgboost/model.pkl`
 
