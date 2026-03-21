@@ -117,6 +117,9 @@ Handles:
 
 
 ## `ml_models/models_utils.py`
-
+Common helper functions:
+    - Model loading
+    - Data formatting
+    - Shared ML utilities
 
 ## `ml_models/predict.py`
