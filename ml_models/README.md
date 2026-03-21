@@ -125,3 +125,8 @@ Common helper functions:
     - Shared ML utilities
 
 ## `ml_models/predict.py`
+Main entry point for predictions:
+Responsibilities:
+    - Load trained model
+    - Accept structured input (OCR + features)
+    - Return disease risk score
