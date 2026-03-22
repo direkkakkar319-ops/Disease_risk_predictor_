@@ -128,3 +128,39 @@ class RiskPredictor:
                 "shap_values": None,
                 "model_version": "none",
         }
+
+"""
+Helper Functions
+"""
+def _get_disease_lables(report_type:str)->List[str]:
+    """
+    Maps report type
+    """
+    return {
+        "blood":   [
+            "diabetes",
+            "anemia",
+            "infection"
+        ],
+        "lipid":   [
+            "heart_disease", 
+            "stroke"
+        ],
+        "vitamin_d": ["vitamin_d_deficiency"],
+        "hormone": [
+            "thyroid_disorder",
+            "testosterone_imbalance",
+            "hormonal_imbalance"
+        ],
+        "renal_failure"
+        "kidney": [
+            "kidney_disease",
+            "renal_failure"
+        ],
+        "liver": [
+            "liver_disease",
+            "fatty_liver",
+            "hepatitis"
+        ],
+        "general": ["general_risk"]  
+    }.get(report_type, ["general_risk"])
