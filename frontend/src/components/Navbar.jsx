@@ -6,9 +6,9 @@ const navLinks = [
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Diseases', href: '#diseases' },
     { label: 'Results', href: '#results' },
-    { label: 'Security', href: '#security' },
     { label: 'History', href: '#history', icon: <History className="w-3 h-3" /> },
     { label: 'Compare', href: '#compare', icon: <GitCompare className="w-3 h-3" /> },
+    { label: 'Security', href: '#security' },
 ];
 
 export function Navbar() {
