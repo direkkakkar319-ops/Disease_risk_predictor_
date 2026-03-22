@@ -59,3 +59,5 @@ LIVER_FUNCTIONS: List[Tuple[str, str, float]]=[
     ("albumin", "albumin", 4.5),
     ("total_protein", "total_protein", 7.0)   
 ]
+
+GENERAL_FEATURES: List[Tuple[str, str, float]] = []
