@@ -22,3 +22,7 @@ LIPID_FEATURES: List[Tuple[str, str, float]] = [
     ("triglycerides",     "triglycerides",     130.0),
     ("vldl",              "vldl",               26.0)
 ]
+
+VITAMIND_FEATURES: List[Tuple[str, str, float]] = [
+    ("vitamin_d", "vitamin_d", 30.0)    
+]
