@@ -49,3 +49,13 @@ KIDNEY_FEATURES: List[Tuple[str, str, float]] = [
     ("uric_acid", "uric_acid", 5.0),
     ("egfr", "egfr", 90.0)  
 ]
+
+LIVER_FUNCTIONS: List[Tuple[str, str, float]]=[
+    ("alt", "alt", 25.0),
+    ("ast", "ast", 25.0),
+    ("alp", "alp", 100.0),
+    ("bilirubin_total", "bilirubin_total", 1.0),
+    ("bilirubin_direct", "bilirubin_direct", 0.3),
+    ("albumin", "albumin", 4.5),
+    ("total_protein", "total_protein", 7.0)   
+]
