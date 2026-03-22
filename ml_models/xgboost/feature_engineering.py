@@ -41,3 +41,11 @@ HORMONE_FEATURES: List[Tuple[str, str, float]]=[
     ("fsh", "fsh", 5.0),
     ("cortisol", "cortisol", 10.0)
 ]
+
+KIDNEY_FEATURES: List[Tuple[str, str, float]] = [
+    ("creatinine", "creatinine", 1.0),
+    ("bun", "bun", 15.0),
+    ("urea", "urea", 25.0),
+    ("uric_acid", "uric_acid", 5.0),
+    ("egfr", "egfr", 90.0)  
+]
