@@ -395,7 +395,7 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
                         'source':"text"
@@ -435,7 +435,7 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
                         'source':text
