@@ -2,7 +2,7 @@
 
 This project is a disease risk predictor using React, FastAPI, PaddleOCR, and XGBoost.
 
-## Health Insight AI
+## MEDSCAN AI
 AI-Powered Medical Report Processing & Risk Prediction System.
 Health Insight AI is a scalable, asynchronous web application that transforms medical report images into structured health data and generates explainable disease risk predictions using machine learning.
 
