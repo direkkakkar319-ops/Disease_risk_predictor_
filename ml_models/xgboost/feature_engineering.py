@@ -26,3 +26,18 @@ LIPID_FEATURES: List[Tuple[str, str, float]] = [
 VITAMIND_FEATURES: List[Tuple[str, str, float]] = [
     ("vitamin_d", "vitamin_d", 30.0)    
 ]
+
+HORMONE_FEATURES: List[Tuple[str, str, float]]=[
+    ("tsh", "tsh", 2.5),
+    ("t3", "t3", 1.2),
+    ("t4", "t4", 8.0),
+
+    ("testosterone", "testosterone", 500.0),
+    ("estradiol", "estradiol", 25.0),
+    ("progesterone", "progesterone", 1.0),
+
+    ("prolactin", "prolactin", 10.0),
+    ("lh", "lh", 5.0),
+    ("fsh", "fsh", 5.0),
+    ("cortisol", "cortisol", 10.0)
+]
