@@ -50,7 +50,7 @@ KIDNEY_FEATURES: List[Tuple[str, str, float]] = [
     ("egfr", "egfr", 90.0)  
 ]
 
-LIVER_FUNCTIONS: List[Tuple[str, str, float]]=[
+LIVER_FEATURES: List[Tuple[str, str, float]]=[
     ("alt", "alt", 25.0),
     ("ast", "ast", 25.0),
     ("alp", "alp", 100.0),
@@ -65,9 +65,9 @@ GENERAL_FEATURES: List[Tuple[str, str, float]] = []
 FEATURE_MAP: Dict[str, List[Tuple[str, str, float]]] = {
     "blood":BLOOD_FEATURES,
     "lipid":LIPID_FEATURES,
-    "vitaminD":VITAMIND_FEATURES,
+    "vitamin_d":VITAMIND_FEATURES,
     "hormone":HORMONE_FEATURES,
     "kidney":KIDNEY_FEATURES,
-    "liver":LIVER_FUNCTIONS,
+    "liver":LIVER_FEATURES,
     "general":GENERAL_FEATURES
 }
