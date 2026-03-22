@@ -164,3 +164,9 @@ def _get_disease_lables(report_type:str)->List[str]:
         ],
         "general": ["general_risk"]  
     }.get(report_type, ["general_risk"])
+
+def _score_to_level(score:float)->str:
+    if score >= RISK_THRESHOLDS["critical"]:  return "critical"
+    if score >= RISK_THRESHOLDS["high"]:      return "high"
+    if score >= RISK_THRESHOLDS["moderate"]:  return "moderate"
+    return "low"
