@@ -38,7 +38,7 @@ def _load_model(report_type:str):
     model_path = get_model_path(report_type)
 
     if not os.path.exists(model_path):
-        raise FileNotFound(
+        raise FileNotFoundError(
             f"Model file not found {model_path}\n"
             "Train the model"
         )
