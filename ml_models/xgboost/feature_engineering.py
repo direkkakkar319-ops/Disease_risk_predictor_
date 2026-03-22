@@ -12,5 +12,13 @@ BLOOD_FEATURES: List[Tuple[str, str, float]] = [
     ("platelets",  "platelets",  250.0),
     ("glucose",    "glucose",    90.0),
     ("creatinine", "creatinine", 1.0),
-    ("bun",        "bun",        15.0),
+    ("bun",        "bun",        15.0)
+]
+
+LIPID_FEATURES: List[Tuple[str, str, float]] = [
+        ("total_cholesterol", "total_cholesterol", 180.0),
+    ("hdl",               "hdl",               55.0),
+    ("ldl",               "ldl",               100.0),
+    ("triglycerides",     "triglycerides",     130.0),
+    ("vldl",              "vldl",               26.0)
 ]
