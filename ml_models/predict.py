@@ -170,3 +170,14 @@ def _score_to_level(score:float)->str:
     if score >= RISK_THRESHOLDS["high"]:      return "high"
     if score >= RISK_THRESHOLDS["moderate"]:  return "moderate"
     return "low"
+
+def _compute_shap(model, X:np.ndarray, feature_names:List[str]) -> Optional[Dict]:
+    try:
+        import shap
+        explainer = shap.TreeExplainer(model)
+        sv = explainer.shap_values(X)
+        return {name: round(float(v), 6) for name, v in zip(feature_names, values)}
+    except Exception as exc:
+        logger.debug(f"SHAP skipped: {exc}")
+        return None
+    
