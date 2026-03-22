@@ -391,7 +391,7 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
                         'source':"text"
@@ -429,14 +429,18 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
-                        'source':text
+                        'source':"text"
                     }
                 except ValueError:
                     continue
-                
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+        
+        return metrics 
+                     
     """
     General Parser
     """
