@@ -71,3 +71,49 @@ FEATURE_MAP: Dict[str, List[Tuple[str, str, float]]] = {
     "liver":LIVER_FEATURES,
     "general":GENERAL_FEATURES
 }
+
+"""
+Public Function
+"""
+def build_feature_vector(
+    metrics:Dict[str, Any],
+    report_type:str,
+    ) -> Tuple[List[float], List[str]]:
+    """
+    Convert parsed medical report metrics into a flat numeric feature vector.
+
+    This function:
+        1. Selects the correct features for the given report type
+        2. Extracts values from parsed metrics
+        3. Fills missing values with defaults
+        4. Returns a clean vector ready for model prediction
+    
+    Returns:
+        feature_vector: list[float]
+        feature_names: list[str]
+    """
+
+    """Step-1 Get feature definitions for this report type"""
+    feature_defs = FEATURE_MAP.get(report_type, GENERAL_FEATURES)
+
+    feature_vector:List[float]=[]
+    feature_names:List[str]=[]
+
+    """Step-2 Iterate over all expected features"""
+    for feat_name, metrics_key, default in feature_defs:
+
+        entry = metrics.get(metrics_key)
+
+        """Step-3 Extract vlaue safely"""
+        if entry is isinstance(entry, dict):
+            value=float(entry.get("value", default))
+        else:
+            value=default  
+
+        """Step-4 Append to feature vector"""
+        feature_vector.append(value)
+
+        feature_names.append(feat_name)
+
+    """Step-5 Return final ML-ready data"""
+    return feature_vector, feature_names
