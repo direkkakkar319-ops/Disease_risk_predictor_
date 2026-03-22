@@ -298,6 +298,9 @@ class OCRRunner:
                     }
                 except ValueError:
                     continue
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
         
         return metrics
     
@@ -364,6 +367,7 @@ class OCRRunner:
                     }
                 except ValueError:
                     continue
+
         if tables and not metrics:
             metrics = self._extract_from_tables(tables)
         
@@ -391,7 +395,7 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
                         'source':"text"
@@ -399,8 +403,10 @@ class OCRRunner:
                 except ValueError:
                     continue
 
-        if not metrics and tables:
+        if tables and not metrics:
             metrics = self._extract_from_tables(tables)
+        
+        return metrics
 
     def _parse_liver_function_report(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
         """
@@ -429,14 +435,19 @@ class OCRRunner:
 
             if matches:
                 try:
-                    metrics={
+                    metrics[key]={
                         'value':float(matches[0]),
                         'unit':self._infer_unit(key),
                         'source':text
                     }
                 except ValueError:
                     continue
-                
+        
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+        
+        return metrics
+
     """
     General Parser
     """

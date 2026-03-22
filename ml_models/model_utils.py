@@ -16,7 +16,7 @@ Model file resolution
 """
 _BASE_DIR = Path(__file__).parent
 _XGBOOST_DIR = _BASE_DIR/"xgboost"
-ALLOWED_REPORT_TYPE = {"blood", "lipid", "vitaminD", "hormone", "kidney", "liver"}
+ALLOWED_REPORT_TYPE = {"blood", "lipid", "vitamin_d", "hormone", "kidney", "liver"}
 
 def get_model_path(report_type:str) -> str:
     """
