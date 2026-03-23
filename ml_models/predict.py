@@ -14,8 +14,8 @@ import numpy as np
 """
 Internal Project imports
 """
-import ml_models.model_utils import get_model_path, RISK_THRESHOLDS
-import ml_models.xgboost.feature_engineering import build_feature_vector
+from ml_models.model_utils import get_model_path, RISK_THRESHOLDS
+from ml_models.xgboost.feature_engineering import build_feature_vector
 
 """
 Logger Set-up
@@ -30,7 +30,7 @@ _MODEL_CACHE:Dict[str, Any]={}
 
 def _load_model(report_type:str):
     """
-    Loads model and cache data for give report type
+    Loads model and cache data for given report type
     """
     if report_type in _MODEL_CACHE:
         return _MODEL_CACHE[report_type]
@@ -56,7 +56,7 @@ Main Prediction Class
 """
 class RiskPredictor:
     """
-    High-level wrapper for diesase risk prediction
+    High-level wrapper for diesease risk prediction
     """     
     def predict(
         self,
@@ -80,27 +80,27 @@ class RiskPredictor:
             model = _load_model(report_type)
         except FileNotFoundError as exc:
             logger.error(exc)
-            return self._fallback_responses()
+            return self._fallback_response()
         
         feature_vector, feature_names = build_feature_vector(metrics, report_type)
 
         X = np.array(feature_vector).reshape(1, -1)
 
         try:
-            proba = model.prediction_proba(X)[0]
+            proba = model.predict_proba(X)[0]
         except AttributeError:
             proba = [float(model.predict(X)[0])]
         
-        disease_lables = _get_disease_lables(report_type)
+        disease_labels = _get_disease_labels(report_type)
         risks:Dict[str, float]={
             label: round(float(p), 4)
-            for label, p in zip(disease_lables, proba)
+            for label, p in zip(disease_labels, proba)
         }
 
         max_risk = max(risks.values()) if risks else 0.0
         risk_level = _score_to_level(max_risk)
 
-        shap_values = _compute_shape(model, X, feature_names)
+        shap_values = _compute_shap(model, X, feature_names)
         key_factors = _top_factors(shap_values, feature_names)
 
         return {
@@ -112,27 +112,27 @@ class RiskPredictor:
             "model_version": "xgboost-v1",
         }
         
-        @staticmethod
-        def _fallback_response() -> Dict[str, Any]:
-            """
-            Used when model is unavailable.
-            Prevents system crash and gives safe output.
-            """
-            return {
-                "risks": {},
-                "risk_level": "unknown",
-                "key_factors": [],
-                "recommendations": [
-                    "Model not available. Please consult a healthcare professional."
-                ],
-                "shap_values": None,
-                "model_version": "none",
+    @staticmethod
+    def _fallback_response() -> Dict[str, Any]:
+        """
+        Used when model is unavailable.
+        Prevents system crash and gives safe output.
+        """
+        return {
+            "risks": {},
+            "risk_level": "unknown",
+            "key_factors": [],
+            "recommendations": [
+                "Model not available. Please consult a healthcare professional."
+            ],
+            "shap_values": None,
+            "model_version": "none",
         }
 
 """
 Internal Helper Functions
 """
-def _get_disease_lables(report_type:str)->List[str]:
+def _get_disease_labels(report_type:str)->List[str]:
     """
     Maps report type
     """
@@ -152,7 +152,6 @@ def _get_disease_lables(report_type:str)->List[str]:
             "testosterone_imbalance",
             "hormonal_imbalance"
         ],
-        "renal_failure"
         "kidney": [
             "kidney_disease",
             "renal_failure"
@@ -186,6 +185,7 @@ def _compute_shap(model, X:np.ndarray, feature_names:List[str]) -> Optional[Dict
         import shap
         explainer = shap.TreeExplainer(model)
         sv = explainer.shap_values(X)
+        values = sv[0] if isinstance(sv, list) else sv[0]
         return {name: round(float(v), 6) for name, v in zip(feature_names, values)}
     except Exception as exc:
         logger.debug(f"SHAP skipped: {exc}")
@@ -204,7 +204,7 @@ def _top_factors(
     if not shap_values:
         return []
     
-    top = sorted(shap_values.items(), key=lambda ky: abs(kv[1]), reverse=True)[:n]
+    top = sorted(shap_values.items(), key=lambda kv: abs(kv[1]), reverse=True)[:n]
 
     return [
         {
@@ -212,12 +212,13 @@ def _top_factors(
             "impact":    v,
             "direction": "increases" if v > 0 else "decreases"        
         }
+        for k, v in top
     ]
 
 def _recommendations(
     risk_level:str,
     risks:Dict[str, float]
-    ):
+    ) -> List[str]:
     """
     It generates health recommendations based on overall
     risk level and adds specific advice if certain disease
@@ -249,8 +250,8 @@ def _recommendations(
     recs = list(base.get(risk_level, base["unknown"]))
 
     if risks.get("heart_disease", 0)>0.6:
-        recs.append("High cardiovascular risk - lipid managenent adviced")
-    if risks.get("diabities", 0)>0.6:
+        recs.append("High cardiovascular risk - lipid management advised")
+    if risks.get("diabetes", 0)>0.6:
         recs.append("Elevated diabetes risk - fasting glucose test recommended.")       
     
     return recs
