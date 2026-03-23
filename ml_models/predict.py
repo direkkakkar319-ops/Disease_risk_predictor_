@@ -177,6 +177,11 @@ def _score_to_level(score:float)->str:
     return "low"
 
 def _compute_shap(model, X:np.ndarray, feature_names:List[str]) -> Optional[Dict]:
+    """
+    It computes feature-wise contribution values(SHAP) to
+    explain how each input feature influenced the model 
+    prediction
+    """
     try:
         import shap
         explainer = shap.TreeExplainer(model)
