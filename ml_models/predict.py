@@ -213,3 +213,44 @@ def _top_factors(
             "direction": "increases" if v > 0 else "decreases"        
         }
     ]
+
+def _recommendations(
+    risk_level:str,
+    risks:Dict[str, float]
+    ):
+    """
+    It generates health recommendations based on overall
+    risk level and adds specific advice if certain disease
+    riks are high
+    Returned in `predict()` like `recommendations:_recommendations(.....)`
+    """
+    base={
+        "low":      ["Maintain current lifestyle. Annual check-up recommended."],
+        "moderate": [
+            "Consult your doctor within 3 months.",
+            "Consider dietary adjustments.",
+            "Increase physical activity.",
+        ],
+        
+        "high": [
+            "Schedule a doctor appointment soon.",
+            "Review medication and diet with your physician.",
+            "Monitor key metrics more frequently.",
+        ],
+        
+        "critical": [
+            "Seek immediate medical attention.",
+            "Do not delay consulting a healthcare professional.",
+        ],
+        
+        "unknown": ["Please consult a healthcare professional for interpretation."]        
+    }
+
+    recs = list(base.get(risk_level, base["unknown"]))
+
+    if risks.get("heart_disease", 0)>0.6:
+        recs.append("High cardiovascular risk - lipid managenent adviced")
+    if risks.get("diabities", 0)>0.6:
+        recs.append("Elevated diabetes risk - fasting glucose test recommended.")       
+    
+    return recs
