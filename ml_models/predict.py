@@ -130,7 +130,7 @@ class RiskPredictor:
         }
 
 """
-Helper Functions
+Internal Helper Functions
 """
 def _get_disease_lables(report_type:str)->List[str]:
     """
@@ -166,6 +166,11 @@ def _get_disease_lables(report_type:str)->List[str]:
     }.get(report_type, ["general_risk"])
 
 def _score_to_level(score:float)->str:
+    """
+    It converts the model’s numeric risk score into a human-readable risk 
+    category like "low", "moderate", "high", or "critical" based on predefined 
+    thresholds in `RISK_THRESHOLDS`
+    """
     if score >= RISK_THRESHOLDS["critical"]:  return "critical"
     if score >= RISK_THRESHOLDS["high"]:      return "high"
     if score >= RISK_THRESHOLDS["moderate"]:  return "moderate"
@@ -180,4 +185,3 @@ def _compute_shap(model, X:np.ndarray, feature_names:List[str]) -> Optional[Dict
     except Exception as exc:
         logger.debug(f"SHAP skipped: {exc}")
         return None
-    
