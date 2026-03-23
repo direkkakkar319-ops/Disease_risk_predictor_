@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Activity, Moon, Sun, History, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadReportModal } from './UploadReportModal';
+import { AuthModal } from './AuthModal';
 const navLinks = [
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Diseases', href: '#diseases' },
     { label: 'Results', href: '#results' },
-    { label: 'Security', href: '#security' },
     { label: 'History', href: '#history', icon: <History className="w-3 h-3" /> },
     { label: 'Compare', href: '#compare', icon: <GitCompare className="w-3 h-3" /> },
+    { label: 'Security', href: '#security' },
 ];
 
 export function Navbar() {
@@ -77,12 +78,15 @@ export function Navbar() {
                         >
                             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>
-                        <a
-                            href="#"
-                            className="hidden sm:block text-xs font-mono tracking-widest text-brutalist-muted hover:text-brutalist-fg transition-colors uppercase"
-                        >
-                            Log In
-                        </a>
+                        <AuthModal>
+                            <button
+                                className="hidden sm:block text-xs font-mono tracking-widest text-brutalist-muted hover:text-brutalist-fg transition-all uppercase group"
+                            >
+                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity mr-1">[</span>
+                                LOG IN
+                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity ml-1">]</span>
+                            </button>
+                        </AuthModal>
                         <UploadReportModal>
                             <Button
                                 className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
