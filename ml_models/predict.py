@@ -190,3 +190,26 @@ def _compute_shap(model, X:np.ndarray, feature_names:List[str]) -> Optional[Dict
     except Exception as exc:
         logger.debug(f"SHAP skipped: {exc}")
         return None
+
+def _top_factors(
+    shap_values:Optional[Dict],
+    feature_names:List[str],
+    n:int=5
+    ) -> List[Dict]:
+    """
+    It selects top N most impactful features from SHAP values
+    and shows how each one influences the prediction
+    Stored in `key_factors`
+    """
+    if not shap_values:
+        return []
+    
+    top = sorted(shap_values.items(), key=lambda ky: abs(kv[1]), reverse=True)[:n]
+
+    return [
+        {
+            "feature":   k,
+            "impact":    v,
+            "direction": "increases" if v > 0 else "decreases"        
+        }
+    ]
