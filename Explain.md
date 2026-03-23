@@ -117,5 +117,8 @@ pip install aiosqlite==0.19.0
 
 - **Additional utilities**
 pip install alembic==1.13.1 passlib[bcrypt]==1.7.4 python-jose[cryptography]==3.3.0 python-multipart==0.0.6
+
+- **JWT Tokens**
+pip install python-jose[cryptography] passlib[bcrypt]
 ---
 *Created by the Health Insight AI Development Team.*
