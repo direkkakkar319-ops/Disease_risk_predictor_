@@ -10,10 +10,9 @@ WORKDIR /app
 # libxext6         → X11 extensions library (required by OpenCV in headless mode)
 # libxrender-dev   → X Rendering Extension (OpenCV dependency)
 # libgomp1         → OpenMP for multi-threading (used by PaddleOCR/numpy operations)
-# libgl1-mesa-glx  → OpenGL support required by OpenCV for image processing
+# libgl1           → OpenGL support required by OpenCV for image processing
 # libpq-dev        → PostgreSQL client headers (needed to compile psycopg2)
 # gcc              → C compiler required to build native Python extensions
-# rm -rf ...       → Clean up apt cache to reduce final image size
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
@@ -21,15 +20,6 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     libgl1 \
-    libpq-dev \
-    gcc \
-    libgl1 \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    libgl1-mesa-glx \
     libpq-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
@@ -46,7 +36,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Pre-download PaddleOCR ML models at build time
 # Without this, models download on first API request (slow cold start)
 # With this, models are baked into the image and ready immediately
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(download_model=True)"
+RUN python -c "from paddleocr import PaddleOCR; PaddleOCR()"
 
 # Copy the entire project source code into /app inside the container
 # Done AFTER pip install so that code changes don't invalidate the dependency cache layer
