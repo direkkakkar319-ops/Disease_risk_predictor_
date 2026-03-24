@@ -6,7 +6,6 @@ from app.db.models import Task
 router = APIRouter()
 
 @router.get("/status/{task_id}")
-<<<<<<< Updated upstream
 async def get_status(task_id: str, db: Session=Depends(get_db)):
 
     task = db.query(Task).filter(Task.task_id == task_id).first()
@@ -18,11 +17,3 @@ async def get_status(task_id: str, db: Session=Depends(get_db)):
         "result": task.result,
         "created_at": task.created_at
     }
-=======
-async def get_status(task_id: str):
-<<<<<<< Updated upstream
-    return {"task_id": task_id, "status": "PENDING"}
-=======
-    return {"task_id": task_id, "status": "Placeholder status"}
->>>>>>> Stashed changes
->>>>>>> Stashed changes
