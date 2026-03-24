@@ -129,17 +129,17 @@ export function Security() {
                         {securityFeatures.map((feature) => (
                             <div
                                 key={feature.title}
-                                className="border border-brutalist-fg p-4 bg-transparent transition-all duration-300 ease-out hover:bg-brutalist-fg hover:text-brutalist-bg hover:-translate-y-1.5 hover:translate-x-1.5 hover:shadow-[-6px_6px_0_0_var(--brutalist-accent)] group relative z-10 hover:z-20 cursor-default"
+                                className="border border-brutalist-fg p-4 hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors group"
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 border border-current flex items-center justify-center flex-shrink-0 transition-colors duration-300 group-hover:bg-brutalist-accent group-hover:border-brutalist-accent group-hover:text-brutalist-bg">
+                                    <div className="w-10 h-10 border border-current flex items-center justify-center flex-shrink-0 group-hover:bg-brutalist-accent group-hover:border-brutalist-accent">
                                         {feature.icon}
                                     </div>
                                     <div>
-                                        <h3 className="font-space font-bold text-lg mb-1 transition-colors duration-300">
+                                        <h3 className="font-space font-bold text-lg mb-1">
                                             {feature.title}
                                         </h3>
-                                        <p className="text-sm font-mono opacity-70 leading-relaxed transition-opacity duration-300 group-hover:opacity-100">
+                                        <p className="text-sm font-mono opacity-70 leading-relaxed">
                                             {feature.description}
                                         </p>
                                     </div>
