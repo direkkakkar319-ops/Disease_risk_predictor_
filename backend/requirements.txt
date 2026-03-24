@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # Use official Python 3.10 slim image as base (smaller size, fewer vulnerabilities)
 FROM python:3.10-slim
 
@@ -56,3 +57,41 @@ EXPOSE 8000
 # --host 0.0.0.0 → listen on all network interfaces (required inside Docker)
 # --port 8000    → run on port 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+=======
+<<<<<<< Updated upstream
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+pydantic-settings
+celery
+redis
+paddlepaddle
+paddleocr
+xgboost
+pandas
+scikit-learn
+=======
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+alembic==1.13.1
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+celery==5.3.6
+redis==5.0.1
+paddlepaddle==3.0.0
+paddleocr==3.4.0
+opencv-python-headless==4.9.0.80
+xgboost==2.0.3
+pandas==2.2.1
+python-magic==0.4.27
+jinja2==3.1.3
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes

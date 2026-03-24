@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 import shutil
@@ -7,12 +8,22 @@ import uuid
 from app.db.database import get_db
 from app.db.models import Task
 from queue.tasks import process_medical_report
+=======
+<<<<<<< Updated upstream
+from fastapi import APIRouter, UploadFile, File
+import shutil
+import os
+=======
+from fastapi import APIRouter
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
 router = APIRouter()
 
 UPLOAD_DIR = "data/raw_uploads"
 
 @router.post("/upload")
+<<<<<<< Updated upstream
 async def upload_file(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
@@ -43,3 +54,15 @@ async def upload_file(
         "status": "PENDING",
         "message": "File uploaded successfully. Processing started."
     }
+=======
+<<<<<<< Updated upstream
+async def upload_file(file: UploadFile = File(...)):
+    file_location = f"data/raw_uploads/{file.filename}"
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)    
+    return {"info": f"file '{file.filename}' saved at '{file_location}'"}
+=======
+async def upload_file():
+    return {"message": "Upload endpoint placeholder"}
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
