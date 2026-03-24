@@ -177,3 +177,28 @@
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-shake {
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.animate-slide-up {
+  animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.bg-crosshatch {
+  background-image: repeating-linear-gradient(45deg, var(--brutalist-fg) 0, var(--brutalist-fg) 0.5px, transparent 0.5px, transparent 4px), repeating-linear-gradient(135deg, var(--brutalist-fg) 0, var(--brutalist-fg) 0.5px, transparent 0.5px, transparent 4px);
+  background-size: 8px 8px;
+}
