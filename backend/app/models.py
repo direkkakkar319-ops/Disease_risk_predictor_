@@ -10,3 +10,5 @@ class Task(Base):
     status = Column(String)
     result = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+from app.auth.models import User

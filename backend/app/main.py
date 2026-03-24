@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from app.api import upload, status
-from app.core.config import settings
-from app.db.database import engine
-from app.db import models
+from app.config import settings
+from app.database import engine
+from app import models
+from app.auth import router as auth_router
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -12,6 +13,7 @@ def on_startup():
 
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(status.router, prefix="/api", tags=["status"])
+app.include_router(auth_router)
 
 @app.get("/")
 async def root():

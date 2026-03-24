@@ -1,7 +1,7 @@
 # docker-compose.yml
 # Defines and connects all services needed to run the full application stack
 
-version: '3.8'  # Docker Compose file format version — 3.8 supports healthcheck conditions
+#Docker Compose file format version — 3.8 supports healthcheck conditions
 
 services:
 

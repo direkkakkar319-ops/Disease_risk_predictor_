@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine#CREATES A CONNECTION BETWEEN THE FASTAPI AND SQL ALCHEMY
 from sqlalchemy.ext.declarative import declarative_base#CREATES A BASE CLASS FOR ALL MODELS
 from sqlalchemy.orm import sessionmaker#CREATES A SESSION MAKER
-from app.core.config import settings#IMPORTS THE SETTINGS FROM THE CONFIG FILE
+from app.config import settings#IMPORTS THE SETTINGS FROM THE CONFIG FILE
 
 engine = create_engine(
     settings.DATABASE_URL
