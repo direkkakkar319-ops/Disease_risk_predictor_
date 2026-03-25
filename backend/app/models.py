@@ -23,6 +23,7 @@ class Report(Base):
     content_type = Column(String)
     file_path = Column(String)
     user_id = Column(Integer, index=True)
+    report_type = Column(String, index=True)
     status = Column(String, default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
