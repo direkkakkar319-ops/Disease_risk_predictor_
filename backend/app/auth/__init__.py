@@ -1,9 +1,12 @@
+"""Auth package public entrypoints."""
+
 from typing import Any
 
 __all__ = ["router", "get_current_active_user"]
 
 
 def __getattr__(name: str) -> Any:
+    """Lazy-import auth helpers to avoid side effects during tooling runs."""
     if name == "router":
         from app.auth.router import router
         return router

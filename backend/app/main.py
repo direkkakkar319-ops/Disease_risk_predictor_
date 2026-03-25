@@ -1,3 +1,5 @@
+"""App entrypoint that creates the FastAPI application."""
+
 from fastapi import FastAPI
 from app.api import upload, status
 from app.config import settings
@@ -9,6 +11,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 @app.on_event("startup")
 def on_startup():
+    """Create database tables at startup."""
     models.Base.metadata.create_all(bind=engine)
 
 app.include_router(upload.router, prefix="/api", tags=["upload"])
@@ -17,4 +20,5 @@ app.include_router(auth_router)
 
 @app.get("/")
 async def root():
+    """Basic health-style response for the root route."""
     return {"message": "Welcome to Disease Risk Predictor API"}

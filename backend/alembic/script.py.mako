@@ -1,4 +1,6 @@
-"""${message}
+"""Alembic migration template.
+
+${message}
 
 Revision ID: ${up_revision}
 Revises: ${down_revision}
@@ -15,8 +17,10 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade():
+    """Apply the migration steps."""
     ${upgrades if upgrades else "pass"}
 
 
 def downgrade():
+    """Revert the migration steps."""
     ${downgrades if downgrades else "pass"}

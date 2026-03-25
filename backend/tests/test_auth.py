@@ -1,3 +1,5 @@
+"""Tests for the authentication flow using an in-memory database."""
+
 import os
 from datetime import timedelta
 
@@ -24,6 +26,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 def override_get_db():
+    """Provide a temporary database session for tests."""
     db = TestingSessionLocal()
     try:
         yield db
@@ -37,6 +40,7 @@ app.include_router(auth_router)
 
 @app.get("/me")
 def read_me(current_user=Depends(get_current_active_user)):
+    """Protected route used by the tests."""
     return current_user
 
 
@@ -47,6 +51,7 @@ client = TestClient(app)
 
 
 def test_auth_flow():
+    """Register, login, and verify protected access."""
     register_response = client.post(
         "/auth/register",
         json={"username": "alice", "email": "alice@example.com", "password": "secret"},

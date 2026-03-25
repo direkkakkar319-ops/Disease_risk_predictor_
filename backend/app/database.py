@@ -1,11 +1,11 @@
-from sqlalchemy import create_engine#CREATES A CONNECTION BETWEEN THE FASTAPI AND SQL ALCHEMY
-from sqlalchemy.ext.declarative import declarative_base#CREATES A BASE CLASS FOR ALL MODELS
-from sqlalchemy.orm import sessionmaker#CREATES A SESSION MAKER
-from app.config import settings#IMPORTS THE SETTINGS FROM THE CONFIG FILE
+"""Database engine and session helpers."""
 
-engine = create_engine(
-    settings.DATABASE_URL
-)
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from app.config import settings
+
+engine = create_engine(settings.DATABASE_URL)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -16,6 +16,7 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 def get_db():
+    """Provide a database session and clean it up after the request."""
     db = SessionLocal()
     try:
         yield db
