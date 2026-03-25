@@ -14,4 +14,16 @@ class Task(Base):
     result = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class Report(Base):
+    """Stores uploaded report information."""
+    __tablename__ = "reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, index=True)
+    content_type = Column(String)
+    file_path = Column(String)
+    user_id = Column(Integer, index=True)
+    status = Column(String, default="pending")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 from app.auth.models import User

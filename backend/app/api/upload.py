@@ -1,10 +1,67 @@
-"""Upload API routes."""
-
-from fastapi import APIRouter
+import os
+import shutil
+from pathlib import Path
+from typing import List
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import Report
+from app.auth.dependencies import get_current_active_user
+from app.auth.models import User
 
 router = APIRouter()
 
-@router.post("/upload")
-async def upload_file():
-    """Placeholder upload endpoint."""
-    return {"message": "Upload endpoint placeholder"}
+# Define the directory where reports will be stored
+UPLOAD_DIR = Path("data/raw_uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+@router.post("/upload", response_model=List[dict])
+async def upload_reports(
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Upload medical reports and save metadata to the database.
+    """
+    uploaded_files_metadata = []
+
+    for file in files:
+        try:
+            # Create a unique filename to avoid collisions
+            file_extension = Path(file.filename).suffix
+            unique_filename = f"{current_user.id}_{os.urandom(8).hex()}{file_extension}"
+            file_path = UPLOAD_DIR / unique_filename
+
+            # Save file to disk
+            with file_path.open("wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # Save metadata to database
+            new_report = Report(
+                filename=file.filename,
+                content_type=file.content_type,
+                file_path=str(file_path),
+                user_id=current_user.id,
+                status="uploaded"
+            )
+            db.add(new_report)
+            db.commit()
+            db.refresh(new_report)
+
+            uploaded_files_metadata.append({
+                "id": new_report.id,
+                "filename": new_report.filename,
+                "status": "success"
+            })
+
+        except Exception as e:
+            # Log the error (in a real app, use a proper logger)
+            print(f"Error uploading {file.filename}: {e}")
+            uploaded_files_metadata.append({
+                "filename": file.filename,
+                "status": "failed",
+                "error": str(e)
+            })
+
+    return uploaded_files_metadata

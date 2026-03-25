@@ -69,14 +69,47 @@ export function UploadReportModal({ children }) {
         setError(null);
     };
 
-    const handleUpload = () => {
-        // Pass files to existing model/analysis pipeline here
-        console.log("Analyzing files:", files);
-        
-        // Reset state and close
-        setFiles([]);
-        setError(null);
-        setOpen(false);
+    const handleUpload = async () => {
+        if (files.length === 0) return;
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            setError('Please log in to upload reports.');
+            return;
+        }
+
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append('files', file);
+        });
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Upload failed');
+            }
+
+            const result = await response.json();
+            console.log("Upload result:", result);
+            
+            // Reset state and close
+            setFiles([]);
+            setError(null);
+            setOpen(false);
+            
+            // Optional: trigger success notification or refresh
+        } catch (err) {
+            console.error('Upload error:', err);
+            setError(err.message);
+        }
     };
 
     const handleOpenChange = (newOpen) => {

@@ -1,13 +1,23 @@
 """App entrypoint that creates the FastAPI application."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api import upload, status
 from app.config import settings
 from app.database import engine
 from app import models
-from app.auth import router as auth_router
+from app.auth.router import router as auth_router
 
 app = FastAPI(title=settings.PROJECT_NAME)
+
+# Set up CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Frontend port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():

@@ -61,7 +61,7 @@ export function AuthModal({ children }) {
         setTimeout(() => setShake(false), 300);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(false);
 
@@ -75,22 +75,63 @@ export function AuthModal({ children }) {
             return;
         }
 
-        // Mock success
-        setSuccess(true);
-        setError(false);
-        
-        if (isLogin) {
-            setTimeout(() => {
-                setOpen(false);
-                setTimeout(resetForm, 500); // Wait for fade out
-            }, 800);
-        } else {
-            setTimeout(() => {
-                setSuccess(false);
-                setIsLogin(true);
-                setPassword('');
-                setConfirmPassword('');
-            }, 1000);
+        try {
+            const url = isLogin ? 'http://127.0.0.1:8000/auth/login' : 'http://127.0.0.1:8000/auth/register';
+            
+            let body;
+            let headers = {
+                'Content-Type': 'application/json',
+            };
+
+            if (isLogin) {
+                // OAuth2PasswordRequestForm expects x-www-form-urlencoded
+                const formData = new URLSearchParams();
+                formData.append('username', email); // backend uses username for email
+                formData.append('password', password);
+                body = formData;
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            } else {
+                body = JSON.stringify({
+                    email,
+                    username: email, // use email as username for simplicity
+                    password,
+                });
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Authentication failed');
+            }
+
+            const data = await response.json();
+            
+            if (isLogin) {
+                localStorage.setItem('access_token', data.access_token);
+                setSuccess(true);
+                setError(false);
+                setTimeout(() => {
+                    setOpen(false);
+                    setTimeout(resetForm, 500);
+                    window.location.reload(); // Quick way to update UI
+                }, 800);
+            } else {
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                    setIsLogin(true);
+                    setPassword('');
+                    setConfirmPassword('');
+                }, 1000);
+            }
+        } catch (err) {
+            console.error('Auth error:', err);
+            triggerErrorShake();
         }
     };
 
