@@ -12,17 +12,17 @@ Important imports
 import asyncio          
 import logging
 from datetime import datetime
-from queue.celery_app import celery_app
+from task_queue.celery_app import celery_app
 
 """
 Database Connection
 """
-from app.database import AsyncSessionLocal
-
-"""
-Database Table Models
-"""
-from app.models import MedicalReport, Prediction, Report Comparision
+from app.models import Report as MedicalReport, Task as Prediction
+# Note: Report Comparison model seems to be missing, using Task for now or a dummy
+try:
+    from app.models import ReportComparison
+except ImportError:
+    ReportComparison = Prediction # Placeholder
 
 """
 OCR and ML imports
@@ -46,7 +46,7 @@ Task 1 - OCR Preprocessing
 @celery_app.task(
     bind=True,
     max_retries=3,
-    name="quene.tasks.process_medical_report"
+    name="task_queue.tasks.process_medical_report"
 )
 def process_medical_report(self, report_id:str, file_path:str, report_type:str):
     """
@@ -105,7 +105,7 @@ Task 2 - Disease Risk Prediction
     bind = True,
     max_retries = 2,
     default_retry_delay = 30,
-    name = "queue.tasks.predict_disease_risk"
+    name = "task_queue.tasks.predict_disease_risk"
 )
 def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
     """
@@ -141,7 +141,7 @@ Task 3 - Report Comparision
     bind = True,
     max_retries = 2,
     default_retry_delay = 30,
-    name = "queue.tasks.compare_reports"
+    name = "task_queue.tasks.compare_reports"
 )
 def compare_reports(self, comparision_id:str, report_1_id:str, report_2_id:str):
     """

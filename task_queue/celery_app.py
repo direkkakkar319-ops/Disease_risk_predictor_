@@ -25,20 +25,20 @@ celery_app = Celery(
     "MEDSCAN AI", # name of celery app
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
-    include=["queue.tasks"]# tells where tasks are defined
+    include=["task_queue.tasks"]# tells where tasks are defined
 )
 
 """
 Celerey Configuration
 """
-celery_app.conf.upadte(
+celery_app.conf.update(
     # Format for sending/reciving tasks
     task_serializer = "json",
     accept_content = ["json"],
     result_serializer = "json",
     
     # Timezone
-    timzone = "UTC",
+    timezone = "UTC",
     enable_utc = True,
     
     # Track task progress
@@ -48,16 +48,16 @@ celery_app.conf.upadte(
     worker_process_multiplier = 1,
 
     # Number of worker processes
-    worker_currency = int(os.getenv("CELERY_WORKER_CONCURRENCY", "4")),
+    worker_concurrency = int(os.getenv("CELERY_WORKER_CONCURRENCY", "4")),
 
     # how long to keep results of the completed task
-    result_expire = 3600,
+    result_expires = 3600,
 
     # Seperate queues for each tasks
-    task_routs = {
-        "queue.tasks.process_medical_reports":{"queue":"ocr"},
-        "queue.tasks.process_disease_risk":{"queue":"prediction"},
-        "queue.tasks.compare_reports":{"queue":"comparison"}
+    task_routes = {
+        "task_queue.tasks.process_medical_reports":{"queue":"ocr"},
+        "task_queue.tasks.process_disease_risk":{"queue":"prediction"},
+        "task_queue.tasks.compare_reports":{"queue":"comparison"}
     },
 
     # queue for un-listed tasks
