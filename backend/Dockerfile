@@ -31,7 +31,7 @@ COPY requirements.txt .
 
 # Install all Python dependencies from requirements.txt
 # --no-cache-dir → skip saving pip's download cache, keeps image size smaller
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --timeout 300 --retries 10 -r requirements.txt
 
 # Pre-download PaddleOCR ML models at build time
 # Without this, models download on first API request (slow cold start)

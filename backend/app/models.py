@@ -1,8 +1,11 @@
+"""SQLAlchemy ORM models used by the backend."""
+
 from sqlalchemy import Column, Integer, String, JSON, DateTime
 from sqlalchemy.sql import func
 from .database import Base
 
 class Task(Base):
+    """Tracks background job status and results."""
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -10,3 +13,5 @@ class Task(Base):
     status = Column(String)
     result = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+from app.auth.models import User
