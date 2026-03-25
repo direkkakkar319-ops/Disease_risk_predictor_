@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export function AuthModal({ children }) {
+    const API_BASE = 'http://127.0.0.1:8000';
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
     
@@ -25,6 +26,7 @@ export function AuthModal({ children }) {
     
     // Status state
     const [error, setError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [shake, setShake] = useState(false);
 
@@ -40,6 +42,7 @@ export function AuthModal({ children }) {
         setPassword('');
         setConfirmPassword('');
         setError(false);
+        setErrorMessage('');
         setSuccess(false);
         setShake(false);
         setIsLogin(true);
@@ -50,20 +53,34 @@ export function AuthModal({ children }) {
     const toggleMode = () => {
         setIsLogin(!isLogin);
         setError(false);
+        setErrorMessage('');
         setSuccess(false);
         setPassword('');
         setConfirmPassword('');
     };
 
-    const triggerErrorShake = () => {
+    const triggerErrorShake = (message = 'Authentication failed') => {
         setError(true);
+        setErrorMessage(message);
         setShake(true);
         setTimeout(() => setShake(false), 300);
+    };
+
+    const getErrorMessage = async (response, fallbackMessage) => {
+        try {
+            const errorData = await response.json();
+            if (typeof errorData?.detail === 'string') return errorData.detail;
+            if (Array.isArray(errorData?.detail)) return errorData.detail.map((item) => item.msg).join(', ');
+            return fallbackMessage;
+        } catch {
+            return fallbackMessage;
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(false);
+        setErrorMessage('');
 
         if (!email || !password) {
             triggerErrorShake();
@@ -76,62 +93,50 @@ export function AuthModal({ children }) {
         }
 
         try {
-            const url = isLogin ? 'http://127.0.0.1:8000/auth/login' : 'http://127.0.0.1:8000/auth/register';
-            
-            let body;
-            let headers = {
-                'Content-Type': 'application/json',
-            };
+            const loginFormData = new URLSearchParams();
+            loginFormData.append('username', email);
+            loginFormData.append('password', password);
 
-            if (isLogin) {
-                // OAuth2PasswordRequestForm expects x-www-form-urlencoded
-                const formData = new URLSearchParams();
-                formData.append('username', email); // backend uses username for email
-                formData.append('password', password);
-                body = formData;
-                headers['Content-Type'] = 'application/x-www-form-urlencoded';
-            } else {
-                body = JSON.stringify({
-                    email,
-                    username: email, // use email as username for simplicity
-                    password,
+            if (!isLogin) {
+                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        username: email,
+                        password,
+                    }),
                 });
+
+                if (!registerResponse.ok) {
+                    const message = await getErrorMessage(registerResponse, 'Signup failed');
+                    throw new Error(message);
+                }
             }
 
-            const response = await fetch(url, {
+            const loginResponse = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
-                headers,
-                body,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: loginFormData,
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Authentication failed');
+            if (!loginResponse.ok) {
+                const message = await getErrorMessage(loginResponse, 'Login failed');
+                throw new Error(message);
             }
 
-            const data = await response.json();
-            
-            if (isLogin) {
-                localStorage.setItem('access_token', data.access_token);
-                setSuccess(true);
-                setError(false);
-                setTimeout(() => {
-                    setOpen(false);
-                    setTimeout(resetForm, 500);
-                    window.location.reload(); // Quick way to update UI
-                }, 800);
-            } else {
-                setSuccess(true);
-                setTimeout(() => {
-                    setSuccess(false);
-                    setIsLogin(true);
-                    setPassword('');
-                    setConfirmPassword('');
-                }, 1000);
-            }
+            const loginData = await loginResponse.json();
+            localStorage.setItem('access_token', loginData.access_token);
+            setSuccess(true);
+            setError(false);
+            setTimeout(() => {
+                setOpen(false);
+                setTimeout(resetForm, 500);
+                window.location.reload();
+            }, 800);
         } catch (err) {
             console.error('Auth error:', err);
-            triggerErrorShake();
+            triggerErrorShake(err instanceof Error ? err.message : 'Authentication failed');
         }
     };
 
@@ -190,7 +195,7 @@ export function AuthModal({ children }) {
                                 <div className="flex flex-col gap-1.5 animate-slide-up relative" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
                                     <label className="font-mono text-[11px] font-bold tracking-widest uppercase text-brutalist-fg flex items-center">
                                         PASSWORD
-                                        {error && <span className="text-red-500 text-[10px] ml-2">// AUTH FAILED</span>}
+                                        {error && <span className="text-red-500 text-[10px] ml-2">{`// ${errorMessage}`}</span>}
                                     </label>
                                     <div className="relative group">
                                         <input 
