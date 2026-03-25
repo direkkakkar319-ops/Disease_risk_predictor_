@@ -211,7 +211,11 @@ class OCRRunner:
         
         parsers = {
             'blood':self._parse_blood_report,
-            'lipid':self._parse_lipid_profile
+            'lipid':self._parse_lipid_profile,
+            'vitamin_d':self._parse_vitamin_d,
+            'hormone':self._parse_hormone_report,
+            'kidney':self._parse_kidney_function_report,
+            'liver':self._parse_liver_function_report
         }
 
         parse_fn = parsers.get(report_type, lambda t, _:self._parse_general(t))
@@ -401,6 +405,8 @@ class OCRRunner:
 
         if tables and not metrics:
             metrics = self._extract_from_tables(tables)
+
+        return metrics
 
     def _parse_liver_function_report(self, text_data:List[Dict], tables:List[Dict])->Dict[str, Any]:
         """
