@@ -57,8 +57,7 @@ services:
     ports:
       - "8000:8000"           # Expose FastAPI to host — access at http://localhost:8000
     environment:
-      # Async DB URL used by SQLAlchemy with asyncpg driver (for FastAPI async routes)
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/disease_predictor
+      - DATABASE_URL=postgresql://postgres:password@db:5432/disease_predictor
       # Sync DB URL used by Alembic migrations and sync SQLAlchemy operations
       - SYNC_DATABASE_URL=postgresql://postgres:password@db:5432/disease_predictor
       # Redis connection URL for direct Redis access (caching etc.)
@@ -98,10 +97,12 @@ services:
     volumes:
       - ./data:/app/data                # Access uploaded report images for OCR processing
       - ./ml_models:/app/ml_models      # Mount XGBoost model files so worker can load them
+      - ./task_queue:/app/task_queue    # Mount Celery application module
+      - ./backend/services:/app/services        # Mount business logic services
     depends_on:
       - db      # Needs DB to save OCR results and predictions
       - redis   # Needs Redis to receive tasks from the queue
-    command: celery -A queue.celery_app worker --loglevel=info --concurrency=2
+    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2
     # celery worker         → starts a Celery task consumer
     # -A queue.celery_app   → points to the Celery app instance in queue/celery_app.py
     # --loglevel=info       → print task start/success/failure logs
@@ -121,7 +122,11 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0  # Pushes scheduled tasks into Redis queue
     depends_on:
       - redis   # Only needs Redis to enqueue scheduled tasks
-    command: celery -A queue.celery_app beat --loglevel=info
+    volumes:
+      - ./task_queue:/app/task_queue    # Mount Celery application module
+      - ./ml_models:/app/ml_models      # Mount XGBoost model files for task registration
+      - ./backend/services:/app/services        # Mount business logic services
+    command: celery -A task_queue.celery_app beat --loglevel=info
     # celery beat   → runs the scheduler (not a task executor — just enqueues tasks on schedule)
     # Workers (above) actually execute whatever beat enqueues
 
