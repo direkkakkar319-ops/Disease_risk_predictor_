@@ -9,12 +9,14 @@ from app.models import Report
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 
+from app.config import settings, BASE_DIR
+
 router = APIRouter()
 
 VALID_REPORT_TYPES = {"blood", "lipid", "vitamin_d", "hormone", "kidney", "liver"}
 
-# Define the directory where reports will be stored
-UPLOAD_DIR = Path("data/raw_uploads")
+# Define the directory where reports will be stored (relative to backend root)
+UPLOAD_DIR = BASE_DIR / "data" / "raw_uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload", response_model=List[dict])
