@@ -67,7 +67,7 @@ services:
       # Celery result backend — Redis stores task results (OCR output, predictions)
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - ./data:/app/data      # Mount local ./data folder so uploaded reports are shared
+      - ./backend/data:/app/backend/data      # Mount local backend/data folder
                               # between host and container (persists outside container)
     depends_on:
       db:
@@ -95,7 +95,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - PADDLE_USE_GPU=false   # Force PaddleOCR to use CPU (no GPU in Docker by default)
     volumes:
-      - ./data:/app/data                # Access uploaded report images for OCR processing
+      - ./backend/data:/app/backend/data                # Access uploaded report images for OCR processing
       - ./ml_models:/app/ml_models      # Mount XGBoost model files so worker can load them
       - ./task_queue:/app/task_queue    # Mount Celery application module
       - ./backend/services:/app/services        # Mount business logic services
