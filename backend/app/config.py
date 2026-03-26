@@ -16,5 +16,6 @@ class Settings(BaseSettings):
         env_file=str(BASE_DIR / ".env"),
         extra="ignore"
     )
+    
 
 settings = Settings()
