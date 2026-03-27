@@ -67,7 +67,7 @@ class RiskPredictor:
         self,
         metrics: Dict[str, Any],
         report_type: str = "blood"
-    ) -> Dict[str, Any]:
+        ) -> Dict[str, Any]:
 
         try:
             model = _load_model(report_type)

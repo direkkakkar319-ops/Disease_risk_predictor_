@@ -174,7 +174,7 @@ def normalize_units(metrics: Dict[str, Any]) -> Dict[str, Any]:
 def build_feature_vector(
     metrics: Dict[str, Any],
     report_type: str
-) -> Tuple[List[float], List[str]]:
+    ) -> Tuple[List[float], List[str]]:
 
     feature_defs = FEATURE_MAP.get(report_type, GENERAL_FEATURES)
 
@@ -194,7 +194,6 @@ def build_feature_vector(
         else:
             value = default
 
-        # ✅ validation layer
         value = validate_value(metrics_key, value)
 
         feature_vector.append(value)
