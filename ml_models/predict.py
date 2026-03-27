@@ -57,7 +57,17 @@ Main Prediction Class
 class RiskPredictor:
     """
     High-level wrapper for diesease risk prediction
-    """     
+    """  
+    def __init__(self):
+        self.models = {
+            "blood": self.load_model("blood.pkl"),
+            "lipid": self.load_model("lipid.pkl"),
+            "hormone": self.load_model("hormone.pkl"),
+            "kidney": self.load_model("kidney.pkl"),
+            "liver": self.load_model("liver.pkl"),
+            "vitamin_d": self.load_model("vitamin_d.pkl"),
+        }  
+
     def predict(
         self,
         metrics:Dict[str, Any],
