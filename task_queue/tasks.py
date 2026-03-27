@@ -9,7 +9,8 @@ The three tasks run in order:
 """
 Important imports
 """
-import asyncio          
+import asyncio  
+from app.db.session import AsyncSessionLocal        
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
@@ -122,6 +123,11 @@ def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
         predictor = RiskPredictor()
 
         self.update_state(state="PROGRESS", meta={"step":"predicting"})
+
+        prediction_result = predictor.predict(
+        metrics=metrics,
+        report_type=report_type
+        )
         asyncio.run(_save_prediction(report_id, prediction_result))
 
         return {
@@ -192,7 +198,7 @@ async def _update_report_status(report_id:str, status:str):
             select(MedicalReport).where(MedicalReport.id == report_id)
         )
 
-        report = result.scaler_one_or_none()# returns none if the report is not found
+        report = result.scalar_one_or_none()# returns none if the report is not found
         
         if report:
             report.status = status
@@ -226,7 +232,7 @@ async def _save_ocr_results(
         if report:
             # Each columns is filled with OCR output
             report.raw_text = raw_text
-            report.extracted_,etrics = metrics
+            report.extracted_metrics = metrics
             report.ocr_confidence = confidence
 
             # status updated and time recorded
