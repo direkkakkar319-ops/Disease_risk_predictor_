@@ -56,42 +56,25 @@ Main Prediction Class
 """
 class RiskPredictor:
     """
-    High-level wrapper for diesease risk prediction
-    """  
+    High-level wrapper for disease risk prediction
+    """
+
     def __init__(self):
-        self.models = {
-            "blood": self.load_model("blood.pkl"),
-            "lipid": self.load_model("lipid.pkl"),
-            "hormone": self.load_model("hormone.pkl"),
-            "kidney": self.load_model("kidney.pkl"),
-            "liver": self.load_model("liver.pkl"),
-            "vitamin_d": self.load_model("vitamin_d.pkl"),
-        }  
+        # No need to preload models (we already cache globally)
+        pass  
 
     def predict(
         self,
-        metrics:Dict[str, Any],
-        report_type:str="blood")->Dict[str, Any]:
-        """
-        Parameters:
-            1. metrics:dict --> from OCRRunner.process_report()
-            2. report_type:str --> "blood"|"lipid"|"general"....\
-        
-        Steps:-
-            1. Loads the data set
-            2. Converts input to feature vector
-            3. Runs model prediction
-            4. Maps outputs to diseases
-            5. Determines overall risks level
-            6. Explanability(SHAP)
-        """
+        metrics: Dict[str, Any],
+        report_type: str = "blood"
+    ) -> Dict[str, Any]:
 
         try:
             model = _load_model(report_type)
         except FileNotFoundError as exc:
             logger.error(exc)
             return self._fallback_response()
-        
+
         feature_vector, feature_names = build_feature_vector(metrics, report_type)
 
         X = np.array(feature_vector).reshape(1, -1)
@@ -100,9 +83,10 @@ class RiskPredictor:
             proba = model.predict_proba(X)[0]
         except AttributeError:
             proba = [float(model.predict(X)[0])]
-        
+
         disease_labels = _get_disease_labels(report_type)
-        risks:Dict[str, float]={
+
+        risks: Dict[str, float] = {
             label: round(float(p), 4)
             for label, p in zip(disease_labels, proba)
         }
@@ -119,15 +103,11 @@ class RiskPredictor:
             "key_factors": key_factors,
             "recommendations": _recommendations(risk_level, risks),
             "shap_values": shap_values,
-            "model_version": "xgboost-v1",
+            "model_version": f"xgboost-{report_type}-v1",
         }
-        
+
     @staticmethod
     def _fallback_response() -> Dict[str, Any]:
-        """
-        Used when model is unavailable.
-        Prevents system crash and gives safe output.
-        """
         return {
             "risks": {},
             "risk_level": "unknown",
