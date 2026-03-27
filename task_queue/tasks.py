@@ -128,7 +128,7 @@ def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
         metrics=metrics,
         report_type=report_type
         )
-        asyncio.run(_save_prediction(report_id, prediction_result))
+        asyncio.run(_save_predictions(report_id, prediction_result))
 
         return {
             "status":"completed",
@@ -325,7 +325,7 @@ async def _save_comparision(comparision_id:str, comparison_data:dict):
     """
     async with AsyncSessionLocal() as session:
         
-        result = await session.ececute(
+        result = await session.execute(
             select(ReportComparator).where(ReportComparator.id == comparision_id)
         )
 
