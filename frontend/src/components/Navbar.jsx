@@ -15,6 +15,7 @@ const navLinks = [
 export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [isDark, setIsDark] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -24,8 +25,18 @@ export function Navbar() {
             setScrolled(window.scrollY > 50);
         };
         window.addEventListener('scroll', handleScroll);
+
+        const token = localStorage.getItem('access_token');
+        setIsLoggedIn(!!token);
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        setIsLoggedIn(false);
+        window.location.reload();
+    };
 
     const toggleTheme = () => {
         const root = document.documentElement;
@@ -78,15 +89,26 @@ export function Navbar() {
                         >
                             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>
-                        <AuthModal>
+                        {isLoggedIn ? (
                             <button
-                                className="hidden sm:block text-xs font-mono tracking-widest text-brutalist-muted hover:text-brutalist-fg transition-all uppercase group"
+                                onClick={handleLogout}
+                                className="hidden sm:block text-xs font-mono tracking-widest text-brutalist-muted hover:text-red-500 transition-all uppercase group"
                             >
-                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity mr-1">[</span>
-                                LOG IN
-                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity ml-1">]</span>
+                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-red-500 transition-opacity mr-1">[</span>
+                                LOG OUT
+                                <span className="opacity-0 group-hover:opacity-100 group-hover:text-red-500 transition-opacity ml-1">]</span>
                             </button>
-                        </AuthModal>
+                        ) : (
+                            <AuthModal>
+                                <button
+                                    className="hidden sm:block text-xs font-mono tracking-widest text-brutalist-muted hover:text-brutalist-fg transition-all uppercase group"
+                                >
+                                    <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity mr-1">[</span>
+                                    LOG IN
+                                    <span className="opacity-0 group-hover:opacity-100 group-hover:text-brutalist-accent transition-opacity ml-1">]</span>
+                                </button>
+                            </AuthModal>
+                        )}
                         <UploadReportModal>
                             <Button
                                 className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"

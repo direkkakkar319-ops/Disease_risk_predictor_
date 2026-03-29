@@ -13,6 +13,7 @@ import asyncio
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
+from app.database import AsyncSessionLocal
 
 """
 Database Connection
@@ -192,7 +193,7 @@ async def _update_report_status(report_id:str, status:str):
             select(MedicalReport).where(MedicalReport.id == report_id)
         )
 
-        report = result.scaler_one_or_none()# returns none if the report is not found
+        report = result.scalar_one_or_none()# returns none if the report is not found
         
         if report:
             report.status = status
@@ -226,7 +227,7 @@ async def _save_ocr_results(
         if report:
             # Each columns is filled with OCR output
             report.raw_text = raw_text
-            report.extracted_,etrics = metrics
+            report.extracted_metrics = metrics
             report.ocr_confidence = confidence
 
             # status updated and time recorded
@@ -319,7 +320,7 @@ async def _save_comparision(comparision_id:str, comparison_data:dict):
     """
     async with AsyncSessionLocal() as session:
         
-        result = await session.ececute(
+        result = await session.execute(
             select(ReportComparator).where(ReportComparator.id == comparision_id)
         )
 

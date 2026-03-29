@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models import Report
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
+from task_queue.tasks import process_medical_report
 
 from app.config import settings, BASE_DIR
 
@@ -60,6 +61,13 @@ async def upload_reports(
             db.add(new_report)
             db.commit()
             db.refresh(new_report)
+
+            # Trigger the background processing task
+            process_medical_report.delay(
+                str(new_report.id),
+                str(file_path),
+                report_type
+            )
 
             uploaded_files_metadata.append({
                 "id": new_report.id,
