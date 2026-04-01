@@ -36,7 +36,7 @@ def get_model_path(report_type:str) -> str:
         return env_path
     
     typed = _XGBOOST_DIR/f"model_{report_type}.pkl"
-    if typed.exixts():
+    if typed.exists():
         return str(typed)
     
     fallback = _XGBOOST_DIR/"model.pkl"
