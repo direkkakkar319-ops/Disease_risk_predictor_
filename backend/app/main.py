@@ -1,12 +1,17 @@
 """App entrypoint that creates the FastAPI application."""
 
+import logging
+from alembic.config import Config
+from alembic import command
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import upload, status
-from app.config import settings
+from app.config import settings, BASE_DIR
 from app.database import engine
 from app import models
 from app.auth.router import router as auth_router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -21,8 +26,15 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    """Create database tables at startup."""
-    models.Base.metadata.create_all(bind=engine)
+    """Run Alembic migrations then ensure all tables exist."""
+    try:
+        alembic_cfg = Config(str(BASE_DIR / "alembic.ini"))
+        alembic_cfg.set_main_option("script_location", str(BASE_DIR / "alembic"))
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Alembic migrations applied successfully")
+    except Exception as e:
+        logger.warning(f"Alembic migration failed ({e}), falling back to create_all")
+        models.Base.metadata.create_all(bind=engine)
 
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(status.router, prefix="/api", tags=["status"])
