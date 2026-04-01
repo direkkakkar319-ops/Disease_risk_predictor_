@@ -41,7 +41,7 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
     volumes:
-      - ./backend/data:/app/backend/data
+      - upload_data:/app/data/raw_uploads
       - ./ml_models:/app/ml_models
       - ./task_queue:/app/task_queue
       - ./backend/services:/app/services
@@ -66,7 +66,7 @@ services:
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - PADDLE_USE_GPU=false
     volumes:
-      - ./backend/data:/app/backend/data
+      - upload_data:/app/data/raw_uploads
       - ./ml_models:/app/ml_models
       - ./task_queue:/app/task_queue
       - ./backend/services:/app/services
@@ -105,3 +105,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  upload_data:
