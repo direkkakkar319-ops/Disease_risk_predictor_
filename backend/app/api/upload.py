@@ -16,8 +16,9 @@ router = APIRouter()
 
 VALID_REPORT_TYPES = {"blood", "lipid", "vitamin_d", "hormone", "kidney", "liver"}
 
-# Define the directory where reports will be stored (relative to backend root)
-UPLOAD_DIR = BASE_DIR / "data" / "raw_uploads"
+# Shared volume path — must match the Docker volume mount in docker-compose.yml
+# Both the API and Worker containers mount upload_data at this exact path.
+UPLOAD_DIR = Path("/app/data/raw_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload", response_model=List[dict])
@@ -63,8 +64,9 @@ async def upload_reports(
             db.refresh(new_report)
 
             # Trigger the background processing task
+            # Pass report_id as int to match Report.id (Integer column)
             process_medical_report.delay(
-                str(new_report.id),
+                new_report.id,
                 str(file_path),
                 report_type
             )
