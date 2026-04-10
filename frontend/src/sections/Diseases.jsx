@@ -39,7 +39,7 @@ const diseaseCategories = [
         color: '#06b6d4',
         diseases: [
             'Thyroid Disorder',
-            'testosterone_imbalance',
+            'Testosterone_imbalance',
             'hormonal_imbalance',
         ],
     },
@@ -105,8 +105,8 @@ export function Diseases() {
                             <button
                                 key={category.id}
                                 className={`w-full flex items-center gap-3 p-4 text-left transition-transform duration-300 ease-out ${activeCategory === category.id
-                                        ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 relative z-10'
-                                        : 'bg-brutalist-bg'
+                                    ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 relative z-10'
+                                    : 'bg-brutalist-bg'
                                     } ${index < diseaseCategories.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
                                 onMouseEnter={() => setActiveCategory(category.id)}
                             >
