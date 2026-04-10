@@ -40,7 +40,7 @@ const diseaseCategories = [
         diseases: [
             'Thyroid Disorder',
             'Testosterone Imbalance',
-            'Hormonal_Imbalance',
+            'Hormonal Imbalance',
         ],
     },
     {
