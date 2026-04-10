@@ -44,16 +44,13 @@ const diseaseCategories = [
         ],
     },
     {
-        id: 'oncological',
-        name: 'ONCOLOGICAL',
+        id: 'kidney',
+        name: 'KIDNEY',
         icon: <Shield className="w-5 h-5" />,
         color: '#ec4899',
         diseases: [
-            'Breast Cancer Risk',
-            'Lung Cancer Risk',
-            'Colorectal Cancer',
-            'Prostate Cancer',
-            'Skin Cancer Risk',
+            'kidney_disease',
+            'renal_failure',
         ],
     },
     {
