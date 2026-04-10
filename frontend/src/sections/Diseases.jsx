@@ -59,7 +59,7 @@ const diseaseCategories = [
         icon: <Bone className="w-5 h-5" />,
         color: '#84cc16',
         diseases: [
-            'Liver_Disease',
+            'Liver Disease',
             'fatty_liver',
             'hepatitis',
         ],
