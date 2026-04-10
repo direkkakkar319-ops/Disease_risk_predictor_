@@ -10,7 +10,7 @@ const diseaseCategories = [
         diseases: [
             'Diabetes',
             'Anemia',
-            'infection',
+            'Infections',
         ],
     },
     {
