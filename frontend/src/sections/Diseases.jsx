@@ -14,16 +14,12 @@ const diseaseCategories = [
         ],
     },
     {
-        id: 'metabolic',
-        name: 'METABOLIC',
+        id: 'vitamin_d',
+        name: 'VITAMIN_D',
         icon: <Droplets className="w-5 h-5" />,
         color: '#f97316',
         diseases: [
-            'Type 2 Diabetes',
-            'Prediabetes',
-            'Metabolic Syndrome',
-            'Thyroid Disorders',
-            'Obesity',
+            'vitamin_d_deficiency',
         ],
     },
     {
