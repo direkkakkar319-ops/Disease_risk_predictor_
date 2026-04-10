@@ -33,16 +33,14 @@ const diseaseCategories = [
         ],
     },
     {
-        id: 'respiratory',
-        name: 'RESPIRATORY',
+        id: 'hormone',
+        name: 'HORMONE',
         icon: <Activity className="w-5 h-5" />,
         color: '#06b6d4',
         diseases: [
-            'Asthma',
-            'COPD',
-            'Sleep Apnea',
-            'Lung Disease',
-            'Respiratory Infections',
+            'thyroid_disorder',
+            'testosterone_imbalance',
+            'hormonal_imbalance',
         ],
     },
     {
