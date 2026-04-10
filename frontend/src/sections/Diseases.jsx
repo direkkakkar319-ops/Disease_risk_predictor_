@@ -39,7 +39,7 @@ const diseaseCategories = [
         color: '#06b6d4',
         diseases: [
             'Thyroid Disorder',
-            'Testosterone_Imbalance',
+            'Testosterone Imbalance',
             'Hormonal_Imbalance',
         ],
     },
