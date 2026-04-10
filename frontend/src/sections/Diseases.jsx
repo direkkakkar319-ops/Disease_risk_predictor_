@@ -54,16 +54,14 @@ const diseaseCategories = [
         ],
     },
     {
-        id: 'musculoskeletal',
-        name: 'MUSCULOSKELETAL',
+        id: 'liver',
+        name: 'LIVER',
         icon: <Bone className="w-5 h-5" />,
         color: '#84cc16',
         diseases: [
-            'Osteoporosis',
-            'Arthritis',
-            'Back Problems',
-            'Joint Disorders',
-            'Muscle Atrophy',
+            'liver_disease',
+            'fatty_liver',
+            'hepatitis',
         ],
     },
     {
