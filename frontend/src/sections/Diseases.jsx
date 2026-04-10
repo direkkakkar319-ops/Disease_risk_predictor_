@@ -9,7 +9,7 @@ const diseaseCategories = [
         color: '#ef4444',
         diseases: [
             'Diabetes',
-            'anemia',
+            'Anemia',
             'infection',
         ],
     },
