@@ -61,7 +61,7 @@ const diseaseCategories = [
         diseases: [
             'Liver Disease',
             'fatty_liver',
-            'hepatitis',
+            'Hepatitis',
         ],
     },
 
