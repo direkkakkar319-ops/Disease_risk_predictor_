@@ -23,16 +23,13 @@ const diseaseCategories = [
         ],
     },
     {
-        id: 'neurological',
-        name: 'NEUROLOGICAL',
+        id: 'lipid',
+        name: 'LIPID',
         icon: <Brain className="w-5 h-5" />,
         color: '#8b5cf6',
         diseases: [
-            'Stroke Risk',
-            'Alzheimer\'s Risk',
-            'Parkinson\'s Risk',
-            'Migraine Patterns',
-            'Epilepsy',
+            'heart_disease',
+            'stroke',
         ],
     },
     {
