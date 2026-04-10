@@ -38,7 +38,7 @@ const diseaseCategories = [
         icon: <Activity className="w-5 h-5" />,
         color: '#06b6d4',
         diseases: [
-            'thyroid_disorder',
+            'Thyroid_disorder',
             'testosterone_imbalance',
             'hormonal_imbalance',
         ],
