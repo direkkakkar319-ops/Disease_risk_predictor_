@@ -8,7 +8,7 @@ const diseaseCategories = [
         icon: <Heart className="w-5 h-5" />,
         color: '#ef4444',
         diseases: [
-            'diabetes',
+            'Diabetes',
             'anemia',
             'infection',
         ],
