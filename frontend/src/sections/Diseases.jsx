@@ -29,7 +29,7 @@ const diseaseCategories = [
         color: '#8b5cf6',
         diseases: [
             'Heart Disease',
-            'stroke',
+            'Stroke',
         ],
     },
     {
