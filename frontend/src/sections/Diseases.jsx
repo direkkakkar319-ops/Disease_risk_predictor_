@@ -19,7 +19,7 @@ const diseaseCategories = [
         icon: <Droplets className="w-5 h-5" />,
         color: '#f97316',
         diseases: [
-            'vitamin_d_deficiency',
+            'Vitamin-D Deficiency',
         ],
     },
     {
