@@ -65,19 +65,7 @@ const diseaseCategories = [
         ],
     },
 
-    {
-        id: 'general',
-        name: 'GENERAL HEALTH',
-        icon: <Stethoscope className="w-5 h-5" />,
-        color: '#64748b',
-        diseases: [
-            'Anemia',
-            'Vitamin Deficiencies',
-            'Liver Function',
-            'Kidney Disease',
-            'Immune Disorders',
-        ],
-    },
+
 ];
 
 export function Diseases() {
