@@ -3,16 +3,14 @@ import { Heart, Brain, Activity, Stethoscope, Bone, Eye, Droplets, Shield } from
 
 const diseaseCategories = [
     {
-        id: 'cardiovascular',
-        name: 'CARDIOVASCULAR',
+        id: 'blood',
+        name: 'BLOOD',
         icon: <Heart className="w-5 h-5" />,
         color: '#ef4444',
         diseases: [
-            'Hypertension',
-            'Coronary Artery Disease',
-            'Heart Failure',
-            'Arrhythmia',
-            'High Cholesterol',
+            'diabetes',
+            'anemia',
+            'infection',
         ],
     },
     {
@@ -109,7 +107,7 @@ const diseaseCategories = [
 ];
 
 export function Diseases() {
-    const [activeCategory, setActiveCategory] = useState('cardiovascular');
+    const [activeCategory, setActiveCategory] = useState('blood');
     const [hoveredDisease, setHoveredDisease] = useState(null);
 
     const activeDiseases = diseaseCategories.find((c) => c.id === activeCategory)?.diseases || [];
