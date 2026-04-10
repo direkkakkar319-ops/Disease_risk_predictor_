@@ -60,7 +60,7 @@ const diseaseCategories = [
         color: '#84cc16',
         diseases: [
             'Liver Disease',
-            'fatty_liver',
+            'fatty liver',
             'Hepatitis',
         ],
     },
