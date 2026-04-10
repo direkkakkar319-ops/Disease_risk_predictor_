@@ -50,7 +50,7 @@ const diseaseCategories = [
         color: '#ec4899',
         diseases: [
             'Kidney Disease',
-            'renal_failure',
+            'Renal_Failure',
         ],
     },
     {
