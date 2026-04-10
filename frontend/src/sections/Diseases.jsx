@@ -49,7 +49,7 @@ const diseaseCategories = [
         icon: <Shield className="w-5 h-5" />,
         color: '#ec4899',
         diseases: [
-            'kidney_disease',
+            'Kidney Disease',
             'renal_failure',
         ],
     },
