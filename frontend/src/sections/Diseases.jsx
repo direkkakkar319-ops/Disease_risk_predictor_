@@ -64,19 +64,7 @@ const diseaseCategories = [
             'hepatitis',
         ],
     },
-    {
-        id: 'ophthalmological',
-        name: 'OPHTHALMOLOGICAL',
-        icon: <Eye className="w-5 h-5" />,
-        color: '#14b8a6',
-        diseases: [
-            'Glaucoma',
-            'Cataracts',
-            'Diabetic Retinopathy',
-            'Macular Degeneration',
-            'Vision Problems',
-        ],
-    },
+
     {
         id: 'general',
         name: 'GENERAL HEALTH',
