@@ -28,7 +28,7 @@ const diseaseCategories = [
         icon: <Brain className="w-5 h-5" />,
         color: '#8b5cf6',
         diseases: [
-            'heart_disease',
+            'Heart Disease',
             'stroke',
         ],
     },
