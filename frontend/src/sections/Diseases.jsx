@@ -15,7 +15,7 @@ const diseaseCategories = [
     },
     {
         id: 'vitamin_d',
-        name: 'VITAMIN_D',
+        name: 'VITAMIN-D',
         icon: <Droplets className="w-5 h-5" />,
         color: '#f97316',
         diseases: [
