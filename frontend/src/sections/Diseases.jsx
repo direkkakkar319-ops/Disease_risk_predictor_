@@ -3,113 +3,73 @@ import { Heart, Brain, Activity, Stethoscope, Bone, Eye, Droplets, Shield } from
 
 const diseaseCategories = [
     {
-        id: 'cardiovascular',
-        name: 'CARDIOVASCULAR',
+        id: 'blood',
+        name: 'BLOOD',
         icon: <Heart className="w-5 h-5" />,
         color: '#ef4444',
         diseases: [
-            'Hypertension',
-            'Coronary Artery Disease',
-            'Heart Failure',
-            'Arrhythmia',
-            'High Cholesterol',
+            'Diabetes',
+            'Anemia',
+            'Infections',
         ],
     },
     {
-        id: 'metabolic',
-        name: 'METABOLIC',
+        id: 'vitamin_d',
+        name: 'VITAMIN-D',
         icon: <Droplets className="w-5 h-5" />,
         color: '#f97316',
         diseases: [
-            'Type 2 Diabetes',
-            'Prediabetes',
-            'Metabolic Syndrome',
-            'Thyroid Disorders',
-            'Obesity',
+            'Vitamin-D Deficiency',
         ],
     },
     {
-        id: 'neurological',
-        name: 'NEUROLOGICAL',
+        id: 'lipid',
+        name: 'LIPID',
         icon: <Brain className="w-5 h-5" />,
         color: '#8b5cf6',
         diseases: [
-            'Stroke Risk',
-            'Alzheimer\'s Risk',
-            'Parkinson\'s Risk',
-            'Migraine Patterns',
-            'Epilepsy',
+            'Heart Disease',
+            'Stroke',
         ],
     },
     {
-        id: 'respiratory',
-        name: 'RESPIRATORY',
+        id: 'hormone',
+        name: 'HORMONE',
         icon: <Activity className="w-5 h-5" />,
         color: '#06b6d4',
         diseases: [
-            'Asthma',
-            'COPD',
-            'Sleep Apnea',
-            'Lung Disease',
-            'Respiratory Infections',
+            'Thyroid Disorder',
+            'Testosterone Imbalance',
+            'Hormonal Imbalance',
         ],
     },
     {
-        id: 'oncological',
-        name: 'ONCOLOGICAL',
+        id: 'kidney',
+        name: 'KIDNEY',
         icon: <Shield className="w-5 h-5" />,
         color: '#ec4899',
         diseases: [
-            'Breast Cancer Risk',
-            'Lung Cancer Risk',
-            'Colorectal Cancer',
-            'Prostate Cancer',
-            'Skin Cancer Risk',
+            'Kidney Disease',
+            'Renal Failure',
         ],
     },
     {
-        id: 'musculoskeletal',
-        name: 'MUSCULOSKELETAL',
+        id: 'liver',
+        name: 'LIVER',
         icon: <Bone className="w-5 h-5" />,
         color: '#84cc16',
         diseases: [
-            'Osteoporosis',
-            'Arthritis',
-            'Back Problems',
-            'Joint Disorders',
-            'Muscle Atrophy',
+            'Liver Disease',
+            'Fatty Liver',
+            'Hepatitis',
         ],
     },
-    {
-        id: 'ophthalmological',
-        name: 'OPHTHALMOLOGICAL',
-        icon: <Eye className="w-5 h-5" />,
-        color: '#14b8a6',
-        diseases: [
-            'Glaucoma',
-            'Cataracts',
-            'Diabetic Retinopathy',
-            'Macular Degeneration',
-            'Vision Problems',
-        ],
-    },
-    {
-        id: 'general',
-        name: 'GENERAL HEALTH',
-        icon: <Stethoscope className="w-5 h-5" />,
-        color: '#64748b',
-        diseases: [
-            'Anemia',
-            'Vitamin Deficiencies',
-            'Liver Function',
-            'Kidney Disease',
-            'Immune Disorders',
-        ],
-    },
+
+
 ];
 
 export function Diseases() {
-    const [activeCategory, setActiveCategory] = useState('cardiovascular');
+    const [activeCategory, setActiveCategory] = useState('blood');
     const [hoveredDisease, setHoveredDisease] = useState(null);
 
     const activeDiseases = diseaseCategories.find((c) => c.id === activeCategory)?.diseases || [];
@@ -145,8 +105,8 @@ export function Diseases() {
                             <button
                                 key={category.id}
                                 className={`w-full flex items-center gap-3 p-4 text-left transition-transform duration-300 ease-out ${activeCategory === category.id
-                                        ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 relative z-10'
-                                        : 'bg-brutalist-bg'
+                                    ? 'bg-brutalist-fg text-brutalist-bg translate-x-1 sm:translate-x-2 relative z-10'
+                                    : 'bg-brutalist-bg'
                                     } ${index < diseaseCategories.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
                                 onMouseEnter={() => setActiveCategory(category.id)}
                             >
