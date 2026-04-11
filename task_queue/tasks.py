@@ -9,7 +9,8 @@ The three tasks run in order:
 """
 Important imports
 """
-import asyncio          
+import asyncio  
+from app.db.session import AsyncSessionLocal        
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
@@ -123,7 +124,12 @@ def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
         predictor = RiskPredictor()
 
         self.update_state(state="PROGRESS", meta={"step":"predicting"})
-        asyncio.run(_save_prediction(report_id, prediction_result))
+
+        prediction_result = predictor.predict(
+        metrics=metrics,
+        report_type=report_type
+        )
+        asyncio.run(_save_predictions(report_id, prediction_result))
 
         return {
             "status":"completed",
