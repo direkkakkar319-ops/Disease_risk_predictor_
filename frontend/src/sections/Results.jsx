@@ -152,6 +152,7 @@ export function Results() {
                 if (data.status === 'completed' && data.result) {
                     stopPolling();
                     localStorage.removeItem('healthinsight_pending_report_id');
+                    localStorage.setItem('healthinsight_latest_report_id', reportId);
                     const transformed = transformResult(data);
                     if (transformed) setReportData(transformed);
                     setLoading(false);
@@ -180,11 +181,26 @@ export function Results() {
         };
     }, [startPolling, stopPolling]);
 
-    // Resume poll after page refresh
+    // Resume poll if a report is still processing
     useEffect(() => {
         const pending = localStorage.getItem('healthinsight_pending_report_id');
         if (pending) startPolling(parseInt(pending, 10));
     }, [startPolling]);
+
+    // Restore last completed report immediately on mount (no polling needed)
+    useEffect(() => {
+        const latestId = localStorage.getItem('healthinsight_latest_report_id');
+        if (!latestId) return;
+        apiFetch(`/api/status/${latestId}`)
+            .then(res => (res.ok ? res.json() : null))
+            .then(data => {
+                if (data?.status === 'completed' && data.result) {
+                    const transformed = transformResult(data);
+                    if (transformed) setReportData(transformed);
+                }
+            })
+            .catch(() => {});
+    }, []); // runs once on mount only
 
     // ── Canvas radar chart ────────────────────────────────────────────────
     useEffect(() => {
