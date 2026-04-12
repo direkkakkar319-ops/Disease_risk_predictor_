@@ -20,7 +20,7 @@ from ml_models.model_utils import (
     get_ensemble_path,
 )
 from ml_models.neural_ensemble import load_ensemble
-from ml_models.xgboost.feature_engineering import build_feature_vector
+from ml_models.xgboost.feature_engineering import build_feature_vector, validate_ocr_metrics
 
 """
 Logger Set-up
@@ -253,7 +253,8 @@ class RiskPredictor:
             logger.error(exc)
             return self._fallback_response()
 
-        # ── 2. Build feature vector ───────────────────────────────────────
+        # ── 2. Validate OCR metrics coverage, then build feature vector ──
+        metrics, coverage = validate_ocr_metrics(metrics, report_type)
         feature_vector, feature_names = build_feature_vector(metrics, report_type)
         X = np.array(feature_vector, dtype=np.float32).reshape(1, -1)
 
@@ -298,14 +299,16 @@ class RiskPredictor:
         key_factors = _top_factors(shap_values, feature_names)
 
         return {
-            "risks":         risks,
-            "risk_level":    risk_level,
-            "key_factors":   key_factors,
+            "risks":           risks,
+            "risk_level":      risk_level,
+            "key_factors":     key_factors,
             "recommendations": _recommendations(risk_level, risks),
-            "shap_values":   shap_values,
-            "model_version": f"neural-ensemble-{report_type}-v1",
+            "shap_values":     shap_values,
+            "model_version":   f"neural-ensemble-{report_type}-v1",
+            # OCR quality metadata
+            "ocr_coverage":    coverage,
             # Raw pre-ensemble scores exposed for debugging / training
-            "raw_xgb_probas": {
+            "raw_xgb_probas":  {
                 label: round(float(p), 4)
                 for label, p in zip(disease_labels, raw_probas)
             },
