@@ -82,42 +82,73 @@ def _load_all_models(report_type: str) -> List[Tuple[str, str, Any]]:
 # Inference helpers
 # ---------------------------------------------------------------------------
 
+def _disease_probability(model: Any, X: np.ndarray) -> Tuple[float, int]:
+    """
+    Extracts the disease risk probability from a multi-class XGBoost model.
+
+    All 14 models use severity-level encoding:
+        Class 0 = healthy / no disease
+        Class 1 = mild disease
+        Class 2 = moderate disease
+        Class 3 = severe disease  (4-class models only)
+
+    Disease risk  = 1 - P(class 0)
+    This gives the probability that the patient has ANY level of the disease,
+    regardless of severity.  It is always in [0, 1] and correctly handles
+    both 3-class and 4-class models.
+
+    Also returns the predicted severity class for logging.
+    """
+    all_probas = model.predict_proba(X)[0]          # shape: (n_classes,)
+    p_healthy  = float(all_probas[0])               # P(no disease)
+    disease_risk = round(1.0 - p_healthy, 6)
+
+    # Severity class: index of the highest non-zero class probability
+    severity_class = int(np.argmax(all_probas))
+
+    return disease_risk, severity_class
+
+
 def _run_individual_models(
     loaded_models: List[Tuple[str, str, Any]],
     X: np.ndarray,
-) -> Tuple[List[str], np.ndarray]:
+) -> Tuple[List[str], np.ndarray, List[int]]:
     """
     Runs every individual disease model on the feature vector X.
 
     Returns
     -------
-    disease_labels : list of str
-    raw_probas     : 1-D numpy array, positive-class probability per disease
+    disease_labels   : list of str
+    raw_probas       : 1-D array — disease risk score per model (1 - P(class 0))
+    severity_classes : predicted severity class per model (0=none,1=mild,2=mod,3=severe)
     """
-    disease_labels: List[str] = []
-    raw_probas: List[float] = []
+    disease_labels: List[str]  = []
+    raw_probas:     List[float] = []
+    severity_classes: List[int] = []
 
     for disease_label, pkl_name, model in loaded_models:
         disease_labels.append(disease_label)
 
         if model is None:
-            # Model file missing — default to 0.0
             raw_probas.append(0.0)
+            severity_classes.append(0)
             continue
 
         try:
             if hasattr(model, "predict_proba"):
-                proba = float(model.predict_proba(X)[0][1])  # positive class
+                proba, sev = _disease_probability(model, X)
             else:
                 proba = float(model.predict(X)[0])
+                sev   = 1 if proba >= 0.5 else 0
         except Exception as exc:
             logger.warning(f"Inference failed for '{pkl_name}': {exc}")
-            proba = 0.0
+            proba, sev = 0.0, 0
 
         raw_probas.append(proba)
-        logger.debug(f"  {disease_label}: raw_proba={proba:.4f}")
+        severity_classes.append(sev)
+        logger.debug(f"  {disease_label}: risk={proba:.4f}  severity_class={sev}")
 
-    return disease_labels, np.array(raw_probas, dtype=np.float32)
+    return disease_labels, np.array(raw_probas, dtype=np.float32), severity_classes
 
 
 def _apply_ensemble(
@@ -145,12 +176,31 @@ def _compute_shap(
     model: Any,
     X: np.ndarray,
     feature_names: List[str],
+    severity_class: int = 1,
 ) -> Optional[Dict]:
+    """
+    Computes SHAP feature importance for a multi-class XGBoost model.
+
+    For multi-class models, shap_values() returns a list — one array per class.
+    We explain the predicted severity class (passed as `severity_class`).
+    If it is 0 (healthy), we fall back to class 1 (mild disease) so the
+    explanation always shows what features influence the disease direction.
+    """
     try:
         import shap
         explainer = shap.TreeExplainer(model)
-        sv = explainer.shap_values(X)
-        values = sv[0] if isinstance(sv, list) else sv[0]
+        sv = explainer.shap_values(X)   # list of (1, n_feat) arrays, one per class
+
+        if isinstance(sv, list):
+            # Multi-class: pick the disease class to explain
+            explain_class = severity_class if severity_class > 0 else 1
+            # Guard against models with fewer classes than expected
+            explain_class = min(explain_class, len(sv) - 1)
+            values = sv[explain_class][0]
+        else:
+            # Binary (shouldn't occur but handle gracefully)
+            values = sv[0]
+
         return {name: round(float(v), 6) for name, v in zip(feature_names, values)}
     except Exception as exc:
         logger.debug(f"SHAP skipped: {exc}")
@@ -259,12 +309,13 @@ class RiskPredictor:
         X = np.array(feature_vector, dtype=np.float32).reshape(1, -1)
 
         # ── 3. Run each individual disease model ─────────────────────────
-        disease_labels, raw_probas = _run_individual_models(loaded_models, X)
+        disease_labels, raw_probas, severity_classes = _run_individual_models(loaded_models, X)
 
         logger.info(
-            f"[{report_type}] Individual XGBoost probas: "
+            f"[{report_type}] Individual XGBoost risks (1-P(class0)): "
             + ", ".join(
-                f"{lbl}={p:.4f}" for lbl, p in zip(disease_labels, raw_probas)
+                f"{lbl}={p:.4f}(sev={s})"
+                for lbl, p, s in zip(disease_labels, raw_probas, severity_classes)
             )
         )
 
@@ -272,7 +323,7 @@ class RiskPredictor:
         final_probas = _apply_ensemble(report_type, raw_probas)
 
         logger.info(
-            f"[{report_type}] Ensemble calibrated probas: "
+            f"[{report_type}] Ensemble calibrated risks: "
             + ", ".join(
                 f"{lbl}={p:.4f}" for lbl, p in zip(disease_labels, final_probas)
             )
@@ -291,10 +342,13 @@ class RiskPredictor:
         shap_values: Optional[Dict] = None
         if risks:
             top_disease = max(risks, key=risks.get)
-            top_idx = disease_labels.index(top_disease)
+            top_idx     = disease_labels.index(top_disease)
             _, _, top_model = loaded_models[top_idx]
+            top_severity    = severity_classes[top_idx]
             if top_model is not None:
-                shap_values = _compute_shap(top_model, X, feature_names)
+                shap_values = _compute_shap(
+                    top_model, X, feature_names, severity_class=top_severity
+                )
 
         key_factors = _top_factors(shap_values, feature_names)
 
@@ -305,9 +359,14 @@ class RiskPredictor:
             "recommendations": _recommendations(risk_level, risks),
             "shap_values":     shap_values,
             "model_version":   f"neural-ensemble-{report_type}-v1",
+            # Severity class per disease: 0=none, 1=mild, 2=moderate, 3=severe
+            "severity": {
+                label: sev
+                for label, sev in zip(disease_labels, severity_classes)
+            },
             # OCR quality metadata
             "ocr_coverage":    coverage,
-            # Raw pre-ensemble scores exposed for debugging / training
+            # Raw pre-ensemble scores for debugging / ensemble training
             "raw_xgb_probas":  {
                 label: round(float(p), 4)
                 for label, p in zip(disease_labels, raw_probas)
