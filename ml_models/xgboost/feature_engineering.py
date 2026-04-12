@@ -1,10 +1,17 @@
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypedDict
 
 """
 Logger Set-up
 """
 logger = logging.getLogger(__name__)
+
+
+class MetricsCoverage(TypedDict):
+    """Returned by validate_ocr_metrics — describes extraction quality."""
+    found: List[str]       # keys successfully extracted from OCR
+    missing: List[str]     # keys not found → will use default values
+    coverage_pct: float    # percentage of expected features that were found
 
 """
 Unit Normalization Data
@@ -170,6 +177,87 @@ def normalize_units(metrics: Dict[str, Any]) -> Dict[str, Any]:
             normalized[key] = {"value": float(entry), "unit": "unknown"}
 
     return normalized
+
+def validate_ocr_metrics(
+    metrics: Dict[str, Any],
+    report_type: str,
+) -> Tuple[Dict[str, Any], MetricsCoverage]:
+    """
+    Validates OCR-extracted metrics against the expected features for the
+    given report type.
+
+    Purpose
+    -------
+    After PaddleOCR runs, not every metric may have been found (low image
+    quality, unusual formatting, missing fields).  This function:
+      - Identifies which expected features were actually extracted.
+      - Identifies which will fall back to their default values.
+      - Logs a summary so prediction quality is transparent.
+      - Returns the original metrics unchanged (no mutation) alongside
+        a coverage report.
+
+    Parameters
+    ----------
+    metrics     : The `structured_metrics` dict returned by OCRRunner,
+                  format: {key: {"value": float, "unit": str, "source": str}}
+    report_type : One of blood / lipid / vitamin_d / hormone / kidney / liver
+
+    Returns
+    -------
+    (metrics, coverage)
+      metrics   — original dict, passed through unchanged
+      coverage  — MetricsCoverage with found/missing/coverage_pct
+    """
+    feature_defs = FEATURE_MAP.get(report_type, GENERAL_FEATURES)
+    expected_keys = [feat_name for feat_name, _, _ in feature_defs]
+
+    found: List[str] = []
+    missing: List[str] = []
+
+    for key in expected_keys:
+        entry = metrics.get(key)
+        if entry is not None:
+            # Accept both dict-style {"value": ...} and raw float
+            if isinstance(entry, dict):
+                val = entry.get("value")
+                if val is not None:
+                    found.append(key)
+                    continue
+            else:
+                try:
+                    float(entry)
+                    found.append(key)
+                    continue
+                except (TypeError, ValueError):
+                    pass
+        missing.append(key)
+
+    total = len(expected_keys)
+    coverage_pct = round((len(found) / total * 100) if total > 0 else 0.0, 1)
+
+    coverage: MetricsCoverage = {
+        "found":        found,
+        "missing":      missing,
+        "coverage_pct": coverage_pct,
+    }
+
+    # Always log — gives visibility into OCR quality per prediction
+    logger.info(
+        f"[{report_type}] OCR metric coverage: {len(found)}/{total} "
+        f"({coverage_pct}%)  |  "
+        f"found={found}  |  "
+        f"missing (will use defaults)={missing}"
+    )
+
+    if coverage_pct < 50.0:
+        logger.warning(
+            f"[{report_type}] Low OCR coverage ({coverage_pct}%). "
+            "Prediction reliability may be reduced. "
+            "Check image quality or report format."
+        )
+
+    return metrics, coverage
+
 
 def build_feature_vector(
     metrics: Dict[str, Any],
