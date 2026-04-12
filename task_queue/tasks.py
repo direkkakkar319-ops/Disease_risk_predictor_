@@ -9,7 +9,6 @@ The three tasks run in order:
 """
 Important imports
 """
-import asyncio          
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
@@ -133,21 +132,31 @@ def predict_disease_risk(self, report_id: int, metrics: dict, report_type: str):
     """
     logger.info(f"[predict_disease_risk] Starting for report {report_id}")
     try:
-        self.update_state(state="PROGRESS", meta={"step": "loading_model"})
+        self.update_state(state="PROGRESS", meta={"step": "loading_models"})
         predictor = RiskPredictor()
 
-        self.update_state(state="PROGRESS", meta={"step":"predicting"})
-
+        self.update_state(state="PROGRESS", meta={"step": "predicting"})
         prediction_result = predictor.predict(
-        metrics=metrics,
-        report_type=report_type
+            metrics=metrics,
+            report_type=report_type,
         )
-        asyncio.run(_save_predictions(report_id, prediction_result))
+
+        coverage = prediction_result.get("ocr_coverage", {})
+        logger.info(
+            f"[predict_disease_risk] report {report_id} — "
+            f"risk_level={prediction_result.get('risk_level')}  "
+            f"coverage={coverage.get('coverage_pct')}%  "
+            f"risks={prediction_result.get('risks')}"
+        )
+
+        self.update_state(state="PROGRESS", meta={"step": "saving_results"})
+        _save_prediction(report_id, prediction_result)
 
         return {
-            "status": "completed",
-            "report_id": report_id,
+            "status":     "completed",
+            "report_id":  report_id,
             "risk_level": prediction_result.get("risk_level"),
+            "coverage_pct": coverage.get("coverage_pct"),
         }
 
     except Exception as exc:
@@ -256,12 +265,14 @@ def _save_prediction(report_id: int, prediction_result: dict):
             task_id=f"predict-{report_id}-{uuid.uuid4().hex[:8]}",
             status="completed",
             result={
-                "report_id": report_id,
-                "risks": prediction_result.get("risks", {}),
-                "risk_level": prediction_result.get("risk_level"),
-                "key_factors": prediction_result.get("key_factors", []),
+                "report_id":      report_id,
+                "risks":          prediction_result.get("risks", {}),
+                "risk_level":     prediction_result.get("risk_level"),
+                "key_factors":    prediction_result.get("key_factors", []),
                 "recommendations": prediction_result.get("recommendations", []),
-                "model_version": prediction_result.get("model_version"),
+                "model_version":  prediction_result.get("model_version"),
+                "raw_xgb_probas": prediction_result.get("raw_xgb_probas", {}),
+                "ocr_coverage":   prediction_result.get("ocr_coverage", {}),
             },
         )
         db.add(task_row)
