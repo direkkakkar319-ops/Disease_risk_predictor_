@@ -9,8 +9,7 @@ The three tasks run in order:
 """
 Important imports
 """
-import asyncio  
-from app.db.session import AsyncSessionLocal        
+import asyncio          
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
