@@ -113,15 +113,30 @@ export function UploadReportModal({ children }) {
             }
 
             const result = await response.json();
-            console.log("Upload result:", result);
+
+            // Collect report IDs from successful uploads
+            const reportIds = result
+                .filter(r => r.status === 'success' && r.id)
+                .map(r => r.id);
+
+            if (reportIds.length > 0) {
+                // Store first report id so Results section can resume polling on refresh
+                localStorage.setItem('healthinsight_pending_report_id', reportIds[0]);
+                // Notify Results + History sections
+                window.dispatchEvent(
+                    new CustomEvent('reportUploaded', { detail: { reportIds } })
+                );
+                // Scroll to results section
+                setTimeout(() => {
+                    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }
 
             // Reset state and close
             setFiles([]);
             setReportType(null);
             setError(null);
             setOpen(false);
-
-            // Optional: trigger success notification or refresh
         } catch (err) {
             console.error('Upload error:', err);
             setError(err.message);

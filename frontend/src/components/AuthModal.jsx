@@ -126,7 +126,10 @@ export function AuthModal({ children }) {
             }
 
             const loginData = await loginResponse.json();
-            localStorage.setItem('access_token', loginData.access_token);
+            localStorage.setItem('access_token',  loginData.access_token);
+            if (loginData.refresh_token) {
+                localStorage.setItem('refresh_token', loginData.refresh_token);
+            }
             setSuccess(true);
             setError(false);
             setTimeout(() => {
