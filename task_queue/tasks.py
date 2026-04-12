@@ -326,6 +326,7 @@ def _save_comparison(comparison_id: str, comparison_data: dict):
     try:
         comp = db.query(ReportComparison).filter(ReportComparison.id == comparison_id).first()
         if comp:
+            comp.status = "completed"
             comp.comparison_data = comparison_data
             comp.significant_changes = comparison_data.get("significant_changes", [])
             comp.trend_analysis = comparison_data["summary"]["overall_trend"]
