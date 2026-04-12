@@ -9,118 +9,131 @@ The three tasks run in order:
 """
 Important imports
 """
-import asyncio  
-from app.db.session import AsyncSessionLocal        
+import asyncio          
 import logging
 from datetime import datetime
 from task_queue.celery_app import celery_app
-from app.database import AsyncSessionLocal
 
 """
-Database Connection
+Database — use the SYNCHRONOUS session in Celery workers.
+asyncpg connections are tied to an event loop; Celery workers are plain
+synchronous processes. Mixing them causes:
+  'Future attached to a different loop' / 'another operation is in progress'
+The sync engine (psycopg2) has no such restriction and works perfectly here.
 """
+from app.database import SessionLocal
+
 from app.models import Report as MedicalReport, Task as Prediction
-# Note: Report Comparison model seems to be missing, using Task for now or a dummy
 try:
     from app.models import ReportComparison
 except ImportError:
-    ReportComparison = Prediction # Placeholder
+    ReportComparison = None
 
 """
 OCR and ML imports
 """
-from ml_models.paddle_ocr.ocr_runner import get_ocr_runner  
-from ml_models.predict import RiskPredictor 
+from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
+from ml_models.predict import RiskPredictor
 
 """
-Comaparision Service
+Comparison Service
 """
 from services.ml_service import ReportComparator
-from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
-"""TASKS ARE AS FOLLOWS"""
 
-"""
-Task 1 - OCR Preprocessing
-"""
+# ─────────────────────────────────────────────
+#  Helper — thin sync DB context manager
+# ─────────────────────────────────────────────
+def _get_db():
+    """Yield a synchronous SQLAlchemy session and close it after use."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────
+#  Task 1 — OCR Preprocessing
+# ─────────────────────────────────────────────
 @celery_app.task(
     bind=True,
     max_retries=3,
     name="task_queue.tasks.process_medical_report"
 )
-def process_medical_report(self, report_id:str, file_path:str, report_type:str):
+def process_medical_report(self, report_id: int, file_path: str, report_type: str):
     """
     Reads a medical report using PaddleOCR and extracts the lab values.
+
     Steps:
-        1. Mark the report as preprocessing in database.
+        1. Mark the report as 'preprocessing' in the database.
         2. Run OCR on the image.
         3. Extract text and lab values.
-        4. Save the data to database.
-        5. Kickoff prediction task 2-automatically
+        4. Save results to the database.
+        5. Kick off Task 2 (predict_disease_risk) automatically.
 
     Args:
-        report_id
-        file_path
-        report_type
+        report_id  — integer ID of the Report row
+        file_path  — absolute path to the uploaded image inside the container
+        report_type — one of: blood, lipid, vitamin_d, hormone, kidney, liver
     """
+    logger.info(f"[process_medical_report] Starting for report {report_id}, file={file_path}")
     try:
-        asyncio.run(_update_report_status(report_id, "preprocessing"))
-        self.update_state(state="PROGRESS", meta={"step":"intialising_ocr"})
+        _update_report_status(report_id, "preprocessing")
+        self.update_state(state="PROGRESS", meta={"step": "initialising_ocr"})
 
-        ocr_runner = get_ocr_runner()#gate keeping function
+        ocr_runner = get_ocr_runner()
         self.update_state(state="PROGRESS", meta={"step": "ocr_extraction"})
         result = ocr_runner.process_report(file_path, report_type)
+        logger.info(f"[process_medical_report] OCR done: {result['text_items']} items, "
+                    f"{len(result['structured_metrics'])} metrics")
 
-        self.update_state(state="PROGRESS", meta={"step":"saving_ocr_results"})
-        asyncio.run(_save_ocr_results(
-            report_id = report_id,
-            raw_text = result["raw_text"],
-            metrics = result["structured_metrics"],
-            tables = result.get("tables", []),
-            confidence = result.get("average_confidence", 0.0)
-            )
+        self.update_state(state="PROGRESS", meta={"step": "saving_ocr_results"})
+        _save_ocr_results(
+            report_id=report_id,
+            raw_text=result["raw_text"],
+            metrics=result["structured_metrics"],
+            confidence=result.get("average_confidence", 0.0),
         )
-        
+
+        # Kick off Task 2
         predict_disease_risk.delay(
             report_id,
             result["structured_metrics"],
-            report_type
+            report_type,
         )
 
-        return{
-            "status":"completed",
-            "report_id":report_id,
-            "metrics_extracted":len(result["structured_metrics"])
+        return {
+            "status": "completed",
+            "report_id": report_id,
+            "metrics_extracted": len(result["structured_metrics"]),
         }
-    
+
     except Exception as exc:
-        logger.error(f"[process_medical_report] failed for {report_id}: {exc}")
-        asyncio.run(_update_report_status(report_id, "failed"))
+        logger.error(f"[process_medical_report] failed for report {report_id}: {exc}", exc_info=True)
+        _update_report_status(report_id, "failed")
         raise self.retry(exc=exc)
 
-"""
-Task 2 - Disease Risk Prediction
-"""
-@celery_app.task(
-    bind = True,
-    max_retries = 2,
-    default_retry_delay = 30,
-    name = "task_queue.tasks.predict_disease_risk"
-)
-def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
-    """
-    Runs the XGBoost ML model on the extracted lab values and saves 
-    the disease risk predictions to the database
 
-    Args:
-        report_id
-        metrics
-        report_type
+# ─────────────────────────────────────────────
+#  Task 2 — Disease Risk Prediction
+# ─────────────────────────────────────────────
+@celery_app.task(
+    bind=True,
+    max_retries=2,
+    default_retry_delay=30,
+    name="task_queue.tasks.predict_disease_risk"
+)
+def predict_disease_risk(self, report_id: int, metrics: dict, report_type: str):
     """
+    Runs the XGBoost ML model on the extracted lab values and saves
+    the disease risk predictions to the database.
+    """
+    logger.info(f"[predict_disease_risk] Starting for report {report_id}")
     try:
-        self.update(state="PROGRESS", meta={"step":"loading model"})
+        self.update_state(state="PROGRESS", meta={"step": "loading_model"})
         predictor = RiskPredictor()
 
         self.update_state(state="PROGRESS", meta={"step":"predicting"})
@@ -132,212 +145,184 @@ def predict_disease_risk(self, report_id:str, metrics:dict,report_type:str):
         asyncio.run(_save_predictions(report_id, prediction_result))
 
         return {
-            "status":"completed",
-            "report_id":report_id,
-            "risk_level":prediction_result.get("risk level")
+            "status": "completed",
+            "report_id": report_id,
+            "risk_level": prediction_result.get("risk_level"),
         }
 
     except Exception as exc:
-        logger.error(f"[predict_disease_risk] failed for {report_id}:{exc}")
+        logger.error(f"[predict_disease_risk] failed for report {report_id}: {exc}", exc_info=True)
         raise self.retry(exc=exc)
 
-"""
-Task 3 - Report Comparision
-"""
-@celery_app.task(
-    bind = True,
-    max_retries = 2,
-    default_retry_delay = 30,
-    name = "task_queue.tasks.compare_reports"
-)
-def compare_reports(self, comparision_id:str, report_1_id:str, report_2_id:str):
-    """
-    Compare two health reports and saves the results in the database
-    
-    Args:
-        comparision_id
-        report_1_id
-        report_2_id
-    """
-    try:
-        self.update_state(state="PROGRESS", meta={"step":"fetching_reports"})
-        report_1 = asyncio.run(_get_report_data(report_1_id))
-        report_2 = asyncio.run(_get_report_data(report_2_id))
 
-        self.update_state(state="PROGRESS", meta={"step":"comparing"})
+# ─────────────────────────────────────────────
+#  Task 3 — Report Comparison
+# ─────────────────────────────────────────────
+@celery_app.task(
+    bind=True,
+    max_retries=2,
+    default_retry_delay=30,
+    name="task_queue.tasks.compare_reports"
+)
+def compare_reports(self, comparison_id: str, report_1_id: int, report_2_id: int):
+    """
+    Compare two health reports and save the results in the database.
+    """
+    logger.info(f"[compare_reports] Starting for comparison {comparison_id}")
+    try:
+        self.update_state(state="PROGRESS", meta={"step": "fetching_reports"})
+        report_1 = _get_report_data(report_1_id)
+        report_2 = _get_report_data(report_2_id)
+
+        self.update_state(state="PROGRESS", meta={"step": "comparing"})
         comparator = ReportComparator()
         comparison = comparator.compare_medical_reports(report_1, report_2)
 
-        self.update_state(state="PROGRESS", meta={"step":"saving_comparision"})
-        asyncio.run(_save_comparision(comparision_id, comparision))
+        self.update_state(state="PROGRESS", meta={"step": "saving_comparison"})
+        _save_comparison(comparison_id, comparison)
 
         return {
-            "status":"completed",
-            "comparision_id":comparision_id,
-            "trend":comparison["summary"]["overall_trend"]
+            "status": "completed",
+            "comparison_id": comparison_id,
+            "trend": comparison["summary"]["overall_trend"],
         }
 
     except Exception as exc:
-        logger.error(f"[compare_reports] failed for comparison {comparision_id}:{exc}")
+        logger.error(f"[compare_reports] failed for comparison {comparison_id}: {exc}", exc_info=True)
         raise self.retry(exc=exc)
 
-"""
-Private database helper `async` functions
 
-our database SQLAlchemy uses async/await for all the queries
-but celery uses tasks are regular `synchronous functions`
-asyncio.run() is the bridge — it lets a sync function call an async one.
-Each helper opens a DB session, does one job, then closes the session.
-"""
-async def _update_report_status(report_id:str, status:str):
-    """
-    Update the status column of a report row in the database
-    Sets processed_at timestamp when status becomes `completed`
-    """
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(MedicalReport).where(MedicalReport.id == report_id)
-        )
+# ─────────────────────────────────────────────
+#  Private synchronous DB helpers
+# ─────────────────────────────────────────────
 
-        report = result.scalar_one_or_none()# returns none if the report is not found
-        
+def _update_report_status(report_id: int, status: str):
+    """Update the status column of a report row."""
+    db = SessionLocal()
+    try:
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
         if report:
             report.status = status
-
             if status == "completed":
-                report.processed_at = datetime.utcnow() 
-            
-            # Keep changes 
-            await session.commit()
+                report.processed_at = datetime.utcnow()
+            db.commit()
+            logger.info(f"[_update_report_status] report {report_id} → {status}")
+        else:
+            logger.warning(f"[_update_report_status] report {report_id} not found")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_update_report_status] error: {e}", exc_info=True)
+        raise
+    finally:
+        db.close()
 
-async def _save_ocr_results(
-    report_id : str,
-    raw_text  : str,
-    metrics   : dict,
-    tables    : list,
-    confidence: float,
-    ):
+
+def _save_ocr_results(report_id: int, raw_text: str, metrics: dict, confidence: float):
     """
-    Saves everthing OCR has extracted from the image of the health report
-    It is called after OCR finishes task 1 
-    Marks the report as 'completed' and record the finish time
+    Save everything OCR extracted from the image.
+    Marks the report as 'ocr_complete' and records the finish time.
     """
-    async with AsyncSessionLocal() as session:
-
-        result = await session.execute(
-            select(MedicalReport).where(MedicalReport.id==report_id)
-        )
-
-        report = result.scalar_one_or_none()
-
+    db = SessionLocal()
+    try:
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
         if report:
-            # Each columns is filled with OCR output
             report.raw_text = raw_text
             report.extracted_metrics = metrics
             report.ocr_confidence = confidence
+            report.status = "ocr_complete"
+            report.processed_at = datetime.utcnow()
+            db.commit()
+            logger.info(f"[_save_ocr_results] report {report_id} saved, "
+                        f"{len(metrics)} metrics, confidence={confidence:.3f}")
+        else:
+            logger.warning(f"[_save_ocr_results] report {report_id} not found")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_save_ocr_results] error: {e}", exc_info=True)
+        raise
+    finally:
+        db.close()
 
-            # status updated and time recorded
+
+def _save_prediction(report_id: int, prediction_result: dict):
+    """
+    Save the ML model output as a Task row, linked by report_id.
+    Also marks the Report status as 'completed'.
+    """
+    db = SessionLocal()
+    try:
+        import uuid
+        task_row = Prediction(
+            task_id=f"predict-{report_id}-{uuid.uuid4().hex[:8]}",
+            status="completed",
+            result={
+                "report_id": report_id,
+                "risks": prediction_result.get("risks", {}),
+                "risk_level": prediction_result.get("risk_level"),
+                "key_factors": prediction_result.get("key_factors", []),
+                "recommendations": prediction_result.get("recommendations", []),
+                "model_version": prediction_result.get("model_version"),
+            },
+        )
+        db.add(task_row)
+
+        # Mark the parent report as fully done
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
+        if report:
             report.status = "completed"
             report.processed_at = datetime.utcnow()
 
-            await session.commit()
+        db.commit()
+        logger.info(f"[_save_prediction] saved prediction for report {report_id}, "
+                    f"risk_level={prediction_result.get('risk_level')}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_save_prediction] error: {e}", exc_info=True)
+        raise
+    finally:
+        db.close()
 
-async def _save_predictions(report_id:str, prediction_result:dict):
+
+def _get_report_data(report_id: int) -> dict:
     """
-    Creates a new row in the predictions table with the ML model output
-    Called after Task-2(Disease Risk Prediction[predict_disease_risk])
-    
-    prediction_result is a dictionary returned by RiskPredictor.predict():
-        risks           
-        risk_level  
-        shap_values    
-        model_version
-        recommendations 
-        key_factors
-    """   
-    async with AsyncSessionLocal() as session:
-        # user_id for linking it to prediction results
-        result = await session.execute(
-            select(MedicalReport).where(MedicalReport.id == report_id)
-        )
-        report = result.scalar_one_or_none()
-
+    Read a report from the database and return it as a plain dictionary.
+    Returns an empty dict if the report_id does not exist.
+    """
+    db = SessionLocal()
+    try:
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
         if report:
-            # one row in prediction table
-            prediction = Prediction(
-                user_id = report.user_id,
-                
-                report_id = report_id,
-
-                disease_risk = prediction_result.get("risks", {}),
-                
-                risk_level = prediction_result.get("risk_level"),
-                
-                #tells why model gave this score
-                shap_values = prediction_result.get("shap_values"),
-
-                model_version = prediction_result.get("model_version"),
-
-                recommendations = prediction_result.get("recommendations", []),
-
-                key_factors = prediction_result.get("key_factors", [])
-            )
-            # Stages new rows in sql
-            session.add(prediction)
-
-            await session.commit()
-
-async def _get_report_data(report_id:str) -> dict:
-    """
-    Reads report from the database and returns its data as a plain dictionary
-    Called by Task 3(compare reports)
-    Empty dictionary is returned if report_id does not exists in the database
-    """
-    async with AsyncSessionLocal() as session:
-
-        result = await session.execute(
-            select(MedicalReport).where(MedicalReport.id == report_id)
-        )
-
-        report = result.scalar_one_or_none()
-
-        if report:
-            return{
-                "structured metrics":report.extracted_metrics or {},
-
-                "raw text":report.raw_text or "",
-
-                "report_type":report.report_type,
-
-                "created_at":report.createdat.isoformat(),
+            return {
+                "structured_metrics": report.extracted_metrics or {},
+                "raw_text": report.raw_text or "",
+                "report_type": report.report_type,
+                "created_at": report.created_at.isoformat(),
             }
-
         return {}
+    finally:
+        db.close()
 
-async def _save_comparision(comparision_id:str, comparison_data:dict):
+
+def _save_comparison(comparison_id: str, comparison_data: dict):
     """
-    Saves the finished comparision of two reports
-    Returns to the report_comparision table
-    Called after task-3(Comparision)
-
-    comparision_data is a dict returned by ReportComparator.compare_medical_reports():
-        significant_changes
-        summary.overall_trend
+    Save a finished comparison of two reports.
     """
-    async with AsyncSessionLocal() as session:
-        
-        result = await session.execute(
-            select(ReportComparator).where(ReportComparator.id == comparision_id)
-        )
+    if ReportComparison is None:
+        logger.warning("[_save_comparison] ReportComparison model not available, skipping save")
+        return
 
-        comp = result.scalar_one_or_none()
-
+    db = SessionLocal()
+    try:
+        comp = db.query(ReportComparison).filter(ReportComparison.id == comparison_id).first()
         if comp:
-            # Entire comparison result
-            comp.comparision_data = comparison_data
-
+            comp.comparison_data = comparison_data
             comp.significant_changes = comparison_data.get("significant_changes", [])
-
             comp.trend_analysis = comparison_data["summary"]["overall_trend"]
-
-        await session.commit()
+            db.commit()
+            logger.info(f"[_save_comparison] saved comparison {comparison_id}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_save_comparison] error: {e}", exc_info=True)
+        raise
+    finally:
+        db.close()
