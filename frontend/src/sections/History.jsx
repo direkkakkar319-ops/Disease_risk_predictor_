@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     FileText, Calendar, Clock, ChevronRight,
-    Download, Trash2, Eye, Search, Filter,
+    Download, Eye, Search, Filter,
     TrendingUp, TrendingDown, Minus, Loader2,
 } from 'lucide-react';
-
-const API_BASE = 'http://127.0.0.1:8000';
+import { apiFetch } from '@/lib/api';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const REPORT_TYPE_LABELS = {
@@ -69,15 +68,13 @@ export function History() {
 
     // ── Fetch report list ─────────────────────────────────────────────────
     const fetchReports = useCallback(async () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
+        if (!localStorage.getItem('access_token')) return;
 
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_BASE}/api/reports`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiFetch('/api/reports');
+            if (res.status === 401) { setLoading(false); return; } // not logged in
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             setReports(data.map(transformReport));
@@ -106,14 +103,9 @@ export function History() {
 
         if (report.extractedMetrics !== null) return; // already loaded
 
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
         setDetailLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/reports/${report.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiFetch(`/api/reports/${report.id}`);
             if (!res.ok) return;
             const data = await res.json();
 

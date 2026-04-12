@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Info, Loader2 } from 'lucide-react';
-
-const API_BASE = 'http://127.0.0.1:8000';
+import { apiFetch } from '@/lib/api';
 
 // ── Demo / fallback data (shown when no real report is loaded) ────────────
 const DEMO_RISK_METRICS = [
@@ -105,6 +104,7 @@ export function Results() {
     const [reportData,   setReportData]   = useState(null);
     const [loading,      setLoading]      = useState(false);
     const [loadingStep,  setLoadingStep]  = useState('');
+    const [pollError,    setPollError]    = useState(null);
     const [selectedMetric, setSelectedMetric] = useState(null);
 
     const riskMetrics = reportData ? reportData.riskMetrics : DEMO_RISK_METRICS;
@@ -126,20 +126,24 @@ export function Results() {
     const startPolling = useCallback((reportId) => {
         stopPolling();
         setLoading(true);
+        setPollError(null);
         setLoadingStep('uploaded');
 
         let attempts = 0;
         pollingRef.current = setInterval(async () => {
             attempts++;
-            if (attempts > 60) { stopPolling(); setLoading(false); return; }
+            if (attempts > 60) {
+                stopPolling();
+                setLoading(false);
+                localStorage.removeItem('healthinsight_pending_report_id');
+                setPollError('Analysis timed out. Please try uploading again.');
+                return;
+            }
 
             try {
-                const token = localStorage.getItem('access_token');
-                if (!token) { stopPolling(); setLoading(false); return; }
-
-                const res = await fetch(`${API_BASE}/api/status/${reportId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const res = await apiFetch(`/api/status/${reportId}`);
+                // 401 after refresh attempt = user logged out
+                if (res.status === 401) { stopPolling(); setLoading(false); return; }
                 if (!res.ok) return;
                 const data = await res.json();
 
@@ -154,6 +158,8 @@ export function Results() {
                 } else if (data.status === 'failed') {
                     stopPolling();
                     setLoading(false);
+                    localStorage.removeItem('healthinsight_pending_report_id');
+                    setPollError('Report analysis failed. Please check the image quality and try again.');
                 }
             } catch {
                 // keep polling
@@ -325,6 +331,14 @@ export function Results() {
                                 {STEP_LABELS[loadingStep] ?? loadingStep}
                             </span>
                         </div>
+                    </div>
+                )}
+
+                {/* Error Banner */}
+                {pollError && (
+                    <div className="mb-8 p-4 border border-red-500 bg-red-500/5 flex items-center gap-3">
+                        <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                        <span className="text-xs font-mono text-red-500">{pollError}</span>
                     </div>
                 )}
 
