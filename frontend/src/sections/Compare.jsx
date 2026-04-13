@@ -259,8 +259,11 @@ export function Compare() {
                                                     setError(null);
                                                 }}
                                             >
-                                                <span className="text-sm font-mono">{formatType(r.report_type)}</span>
-                                                <span className="text-xs font-mono text-brutalist-muted ml-auto">{formatDate(r.created_at)}</span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm font-mono truncate">{r.filename}</span>
+                                                    <span className="text-xs font-mono text-brutalist-muted">{formatType(r.report_type)}</span>
+                                                </div>
+                                                <span className="text-xs font-mono text-brutalist-muted ml-auto shrink-0">{formatDate(r.created_at)}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -311,8 +314,11 @@ export function Compare() {
                                                         setError(null);
                                                     }}
                                                 >
-                                                    <span className="text-sm font-mono">{formatType(r.report_type)}</span>
-                                                    <span className="text-xs font-mono text-brutalist-muted ml-auto">{formatDate(r.created_at)}</span>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-sm font-mono truncate">{r.filename}</span>
+                                                        <span className="text-xs font-mono text-brutalist-muted">{formatType(r.report_type)}</span>
+                                                    </div>
+                                                    <span className="text-xs font-mono text-brutalist-muted ml-auto shrink-0">{formatDate(r.created_at)}</span>
                                                 </button>
                                             ))
                                         )}
