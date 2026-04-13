@@ -27,6 +27,8 @@ export function Compare() {
     const [comparing, setComparing]       = useState(false);
     const [comparisonResult, setComparisonResult] = useState(null);
     const [error, setError]               = useState(null);
+    const [history, setHistory]           = useState([]);
+    const [loadingHistory, setLoadingHistory] = useState(true);
 
     const pollRef    = useRef(null);
     const pollCount  = useRef(0);
@@ -41,6 +43,15 @@ export function Compare() {
             })
             .catch(() => setError('Failed to load reports'))
             .finally(() => setLoadingReports(false));
+    }, []);
+
+    // ── Load comparison history on mount ─────────────────────────────────
+    useEffect(() => {
+        apiFetch('/api/compare')
+            .then(res => (res.ok ? res.json() : Promise.reject()))
+            .then(data => setHistory(data))
+            .catch(() => {})
+            .finally(() => setLoadingHistory(false));
     }, []);
 
     // ── Refresh reports when a new upload completes ────────────────────────
@@ -91,6 +102,18 @@ export function Compare() {
                     stopPolling();
                     setComparing(false);
                     setComparisonResult(data);
+                    setHistory(prev => [
+                        {
+                            comparison_id:  data.comparison_id,
+                            report1_id:     data.report1_id,
+                            report2_id:     data.report2_id,
+                            report_type:    data.report_type,
+                            status:         data.status,
+                            trend_analysis: data.trend_analysis,
+                            created_at:     data.created_at,
+                        },
+                        ...prev.filter(h => h.comparison_id !== data.comparison_id),
+                    ]);
                 } else if (data.status === 'failed') {
                     stopPolling();
                     setComparing(false);
@@ -138,6 +161,17 @@ export function Compare() {
         }
     };
 
+    // ── Load a history item ───────────────────────────────────────────────
+    const loadHistoryItem = async (item) => {
+        const res = await apiFetch(`/api/compare/${item.comparison_id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setReport1Id(item.report1_id);
+        setReport2Id(item.report2_id);
+        setComparisonResult(data);
+        setError(null);
+    };
+
     // ── Derived values ─────────────────────────────────────────────────────
     const selected1 = reports.find(r => r.id === report1Id);
     const selected2 = reports.find(r => r.id === report2Id);
@@ -156,6 +190,7 @@ export function Compare() {
 
     const metrics         = comparisonResult?.comparison_data?.metrics ?? [];
     const summary         = comparisonResult?.comparison_data?.summary ?? null;
+    const riskComparison  = comparisonResult?.comparison_data?.risk_comparison ?? [];
     const improvedCount   = summary?.improved_count  ?? 0;
     const worsenedCount   = summary?.worsened_count  ?? 0;
     const totalMetrics    = summary?.total_metrics   ?? 0;
@@ -406,6 +441,54 @@ export function Compare() {
                             </span>
                         </div>
 
+                        {/* Risk Score Changes */}
+                        {riskComparison.length > 0 && (
+                            <div className="border border-brutalist-fg mb-8">
+                                <div className="border-b border-brutalist-fg px-4 py-3">
+                                    <h3 className="font-space text-lg font-bold text-brutalist-fg">
+                                        Risk Score Changes
+                                    </h3>
+                                </div>
+                                {riskComparison.map((item, index) => {
+                                    const isUnchanged = item.diff === 0;
+                                    return (
+                                        <div
+                                            key={item.disease}
+                                            className={`flex items-center justify-between px-4 py-3 ${index < riskComparison.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
+                                        >
+                                            <span className="font-mono text-sm text-brutalist-fg capitalize">
+                                                {item.disease.replace(/_/g, ' ')}
+                                            </span>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2 font-mono text-sm">
+                                                    <span className="text-brutalist-muted">
+                                                        {(item.r2_risk * 100).toFixed(1)}%
+                                                    </span>
+                                                    <ArrowRight className="w-3 h-3 text-brutalist-muted" />
+                                                    <span className={isUnchanged ? 'text-brutalist-muted' : item.improved ? 'text-green-500 font-bold' : 'text-red-500 font-bold'}>
+                                                        {(item.r1_risk * 100).toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                {isUnchanged ? (
+                                                    <span className="text-xs font-mono text-brutalist-muted px-2 py-0.5 border border-brutalist-muted">
+                                                        Unchanged
+                                                    </span>
+                                                ) : item.improved ? (
+                                                    <span className="text-xs font-mono px-2 py-0.5 border border-green-500 text-green-500 bg-green-500/10">
+                                                        Improved
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-mono px-2 py-0.5 border border-red-500 text-red-500 bg-red-500/10">
+                                                        Worsened
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {/* Comparison table */}
                         {metrics.length > 0 ? (
                             <div className="border border-brutalist-fg mb-8">
@@ -541,6 +624,60 @@ export function Compare() {
                             </div>
                         )}
                     </>
+                )}
+                {/* Past Comparisons */}
+                {!loadingHistory && (
+                    <div className="mt-12">
+                        <div className="flex items-center gap-4 border-b border-brutalist-fg pb-4 mb-0">
+                            <h3 className="font-space text-xl font-bold text-brutalist-fg">Past Comparisons</h3>
+                            {history.length > 0 && (
+                                <span className="text-xs font-mono text-brutalist-muted">{history.length} total</span>
+                            )}
+                        </div>
+
+                        {history.length === 0 ? (
+                            <div className="border border-brutalist-fg p-6 text-center">
+                                <p className="font-mono text-sm text-brutalist-muted">
+                                    No past comparisons yet. Run your first comparison above.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="border border-brutalist-fg border-t-0">
+                                {history.map((item, index) => (
+                                    <div
+                                        key={item.comparison_id}
+                                        className={`flex items-center justify-between px-4 py-3 hover:bg-brutalist-fg/5 transition-colors ${index < history.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <span className="font-mono text-sm text-brutalist-fg">
+                                                {formatType(item.report_type)}
+                                            </span>
+                                            <span className="text-xs font-mono text-brutalist-muted">
+                                                {formatDate(item.created_at)}
+                                            </span>
+                                            {item.trend_analysis && (
+                                                <span className={`text-xs font-mono px-2 py-0.5 border ${
+                                                    item.trend_analysis === 'IMPROVING'
+                                                        ? 'border-green-500 text-green-500 bg-green-500/10'
+                                                        : item.trend_analysis === 'WORSENING'
+                                                        ? 'border-red-500 text-red-500 bg-red-500/10'
+                                                        : 'border-brutalist-muted text-brutalist-muted bg-brutalist-muted/10'
+                                                }`}>
+                                                    {item.trend_analysis}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={() => loadHistoryItem(item)}
+                                            className="font-mono text-xs border border-brutalist-fg px-3 py-1 hover:bg-brutalist-fg/5 transition-colors"
+                                        >
+                                            Load
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </section>
