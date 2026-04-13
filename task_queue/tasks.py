@@ -303,11 +303,22 @@ def _get_report_data(report_id: int) -> dict:
     try:
         report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
         if report:
+            prediction = (
+                db.query(Prediction)
+                .filter(Prediction.task_id.like(f"predict-{report_id}-%"))
+                .order_by(Prediction.created_at.desc())
+                .first()
+            )
+            prediction_risks = (
+                prediction.result.get("risks", {})
+                if prediction and prediction.result else {}
+            )
             return {
                 "structured_metrics": report.extracted_metrics or {},
-                "raw_text": report.raw_text or "",
-                "report_type": report.report_type,
-                "created_at": report.created_at.isoformat(),
+                "raw_text":           report.raw_text or "",
+                "report_type":        report.report_type,
+                "created_at":         report.created_at.isoformat(),
+                "prediction_risks":   prediction_risks,
             }
         return {}
     finally:
