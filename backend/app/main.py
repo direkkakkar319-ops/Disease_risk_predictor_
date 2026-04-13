@@ -5,7 +5,7 @@ from alembic.config import Config
 from alembic import command
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import upload, status, reports
+from app.api import upload, status, reports, compare
 from app.config import settings, BASE_DIR
 from app.database import engine
 from app import models
@@ -39,6 +39,7 @@ def on_startup():
 app.include_router(upload.router,  prefix="/api", tags=["upload"])
 app.include_router(status.router,  prefix="/api", tags=["status"])
 app.include_router(reports.router, prefix="/api", tags=["reports"])
+app.include_router(compare.router, prefix="/api", tags=["compare"])
 app.include_router(auth_router)
 
 @app.get("/")

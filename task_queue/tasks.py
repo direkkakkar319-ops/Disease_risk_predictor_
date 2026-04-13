@@ -303,11 +303,22 @@ def _get_report_data(report_id: int) -> dict:
     try:
         report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
         if report:
+            prediction = (
+                db.query(Prediction)
+                .filter(Prediction.task_id.like(f"predict-{report_id}-%"))
+                .order_by(Prediction.created_at.desc())
+                .first()
+            )
+            prediction_risks = (
+                prediction.result.get("risks", {})
+                if prediction and prediction.result else {}
+            )
             return {
                 "structured_metrics": report.extracted_metrics or {},
-                "raw_text": report.raw_text or "",
-                "report_type": report.report_type,
-                "created_at": report.created_at.isoformat(),
+                "raw_text":           report.raw_text or "",
+                "report_type":        report.report_type,
+                "created_at":         report.created_at.isoformat(),
+                "prediction_risks":   prediction_risks,
             }
         return {}
     finally:
@@ -326,6 +337,7 @@ def _save_comparison(comparison_id: str, comparison_data: dict):
     try:
         comp = db.query(ReportComparison).filter(ReportComparison.id == comparison_id).first()
         if comp:
+            comp.status = "completed"
             comp.comparison_data = comparison_data
             comp.significant_changes = comparison_data.get("significant_changes", [])
             comp.trend_analysis = comparison_data["summary"]["overall_trend"]

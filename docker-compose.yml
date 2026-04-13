@@ -45,6 +45,8 @@ services:
       - ./ml_models:/app/ml_models
       - ./task_queue:/app/task_queue
       - ./backend/services:/app/services
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
     depends_on:
       db:
         condition: service_healthy
@@ -73,7 +75,7 @@ services:
     depends_on:
       - db
       - redis
-    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2
+    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2 -Q default,ocr,prediction,comparison
 
   beat:
     build:

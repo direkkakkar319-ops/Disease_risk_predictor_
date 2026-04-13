@@ -33,4 +33,19 @@ class Report(Base):
     ocr_confidence = Column(Float, nullable=True)
     processed_at = Column(DateTime, nullable=True)
 
+class ReportComparison(Base):
+    """Stores the result of comparing two same-type reports."""
+    __tablename__ = "report_comparisons"
+
+    id                  = Column(String, primary_key=True, index=True)  # UUID string
+    user_id             = Column(Integer, index=True)
+    report1_id          = Column(Integer, index=True)
+    report2_id          = Column(Integer, index=True)
+    report_type         = Column(String)
+    status              = Column(String, default="pending")  # pending/completed/failed
+    comparison_data     = Column(JSON, nullable=True)
+    significant_changes = Column(JSON, nullable=True)
+    trend_analysis      = Column(String, nullable=True)
+    created_at          = Column(DateTime(timezone=True), server_default=func.now())
+
 from app.auth.models import User
