@@ -11,6 +11,34 @@
 
 const API_BASE = 'http://127.0.0.1:8000';
 
+/**
+ * Decode the exp claim from a JWT without a library.
+ * Returns expiry as a Unix timestamp in ms, or null if unreadable.
+ */
+function getTokenExpiryMs(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp ? payload.exp * 1000 : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Proactively refresh the access token if it expires within 60 seconds.
+ * Called before every request so tokens never expire mid-session.
+ */
+async function refreshIfNeeded() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    const expiry = getTokenExpiryMs(token);
+    if (!expiry) return;
+    const THRESHOLD_MS = 60 * 1000;
+    if (Date.now() > expiry - THRESHOLD_MS) {
+        await tryRefresh();
+    }
+}
+
 async function tryRefresh() {
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) return false;
@@ -42,6 +70,7 @@ async function tryRefresh() {
  * @returns {Promise<Response>}
  */
 export async function apiFetch(path, opts = {}) {
+    await refreshIfNeeded();
     const token = localStorage.getItem('access_token');
 
     const headers = {
