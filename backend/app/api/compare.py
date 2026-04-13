@@ -70,6 +70,32 @@ async def trigger_comparison(
     return {"comparison_id": comparison_id}
 
 
+@router.get("/compare")
+async def list_comparisons(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the current user's past comparisons, newest first."""
+    comps = (
+        db.query(ReportComparison)
+        .filter(ReportComparison.user_id == current_user.id)
+        .order_by(ReportComparison.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "comparison_id":  c.id,
+            "report1_id":     c.report1_id,
+            "report2_id":     c.report2_id,
+            "report_type":    c.report_type,
+            "status":         c.status,
+            "trend_analysis": c.trend_analysis,
+            "created_at":     c.created_at.isoformat() if c.created_at else None,
+        }
+        for c in comps
+    ]
+
+
 @router.get("/compare/{comparison_id}")
 async def get_comparison(
     comparison_id: str,
