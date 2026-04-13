@@ -75,7 +75,7 @@ services:
     depends_on:
       - db
       - redis
-    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2
+    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2 -Q default,ocr,prediction,comparison
 
   beat:
     build:
