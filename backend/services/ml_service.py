@@ -80,9 +80,28 @@ class ReportComparator:
 
         significant = [m for m in metric_results if m["is_significant"]]
 
+        risks_1 = report_1.get("prediction_risks", {})
+        risks_2 = report_2.get("prediction_risks", {})
+        shared_diseases = set(risks_1.keys()) & set(risks_2.keys())
+
+        risk_comparison = []
+        for disease in sorted(shared_diseases):
+            r1 = round(float(risks_1[disease]), 4)
+            r2 = round(float(risks_2[disease]), 4)
+            diff = round(r1 - r2, 4)
+            improved = diff < 0  # lower disease risk is always better
+            risk_comparison.append({
+                "disease":  disease,
+                "r1_risk":  r1,
+                "r2_risk":  r2,
+                "diff":     diff,
+                "improved": improved,
+            })
+
         return {
             "metrics":             metric_results,
             "significant_changes": significant,
+            "risk_comparison":     risk_comparison,
             "summary": {
                 "overall_trend":  trend,
                 "improved_count":  improved_count,
