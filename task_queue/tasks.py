@@ -11,6 +11,7 @@ Important imports
 """
 import logging
 from datetime import datetime
+from celery.exceptions import MaxRetriesExceededError
 from task_queue.celery_app import celery_app
 
 """
@@ -198,7 +199,11 @@ def compare_reports(self, comparison_id: str, report_1_id: int, report_2_id: int
 
     except Exception as exc:
         logger.error(f"[compare_reports] failed for comparison {comparison_id}: {exc}", exc_info=True)
-        raise self.retry(exc=exc)
+        try:
+            raise self.retry(exc=exc)
+        except MaxRetriesExceededError:
+            _mark_comparison_failed(comparison_id)
+            raise
 
 
 # ─────────────────────────────────────────────
@@ -321,6 +326,24 @@ def _get_report_data(report_id: int) -> dict:
                 "prediction_risks":   prediction_risks,
             }
         return {}
+    finally:
+        db.close()
+
+
+def _mark_comparison_failed(comparison_id: str):
+    """Set a comparison row's status to 'failed' so the frontend stops polling."""
+    if ReportComparison is None:
+        return
+    db = SessionLocal()
+    try:
+        comp = db.query(ReportComparison).filter(ReportComparison.id == comparison_id).first()
+        if comp:
+            comp.status = "failed"
+            db.commit()
+            logger.info(f"[_mark_comparison_failed] comparison {comparison_id} → failed")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_mark_comparison_failed] error: {e}", exc_info=True)
     finally:
         db.close()
 

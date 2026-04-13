@@ -1,6 +1,7 @@
 """Compare API — trigger and fetch report comparisons."""
 
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ from app.auth.models import User
 from task_queue.celery_app import celery_app
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class CompareRequest(BaseModel):
@@ -52,21 +54,39 @@ async def trigger_comparison(
         )
 
     comparison_id = str(uuid.uuid4())
-    comp = ReportComparison(
-        id=comparison_id,
-        user_id=current_user.id,
-        report1_id=body.report1_id,
-        report2_id=body.report2_id,
-        report_type=r1.report_type,
-        status="pending",
-    )
-    db.add(comp)
-    db.commit()
+    try:
+        comp = ReportComparison(
+            id=comparison_id,
+            user_id=current_user.id,
+            report1_id=body.report1_id,
+            report2_id=body.report2_id,
+            report_type=r1.report_type,
+            status="pending",
+        )
+        db.add(comp)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"[trigger_comparison] DB error creating comparison row: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database error: {exc}")
 
-    celery_app.send_task(
-        'task_queue.tasks.compare_reports',
-        args=[comparison_id, body.report1_id, body.report2_id],
-    )
+    try:
+        celery_app.send_task(
+            'task_queue.tasks.compare_reports',
+            args=[comparison_id, body.report1_id, body.report2_id],
+        )
+    except Exception as exc:
+        logger.error(f"[trigger_comparison] Failed to queue task: {exc}", exc_info=True)
+        # Mark the row failed so the frontend doesn't poll forever
+        try:
+            comp = db.query(ReportComparison).filter(ReportComparison.id == comparison_id).first()
+            if comp:
+                comp.status = "failed"
+                db.commit()
+        except Exception:
+            db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to queue comparison task: {exc}")
+
     return {"comparison_id": comparison_id}
 
 

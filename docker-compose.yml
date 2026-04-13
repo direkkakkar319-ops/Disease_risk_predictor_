@@ -61,7 +61,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=${NEON_ASYNC_DB_URL}
+      - DATABASE_URL=${NEON_DB_URL}
       - ASYNC_DATABASE_URL=${NEON_ASYNC_DB_URL}
       - REDIS_URL=${REDIS_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
@@ -72,6 +72,8 @@ services:
       - ./ml_models:/app/ml_models
       - ./task_queue:/app/task_queue
       - ./backend/services:/app/services
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
     depends_on:
       - db
       - redis
