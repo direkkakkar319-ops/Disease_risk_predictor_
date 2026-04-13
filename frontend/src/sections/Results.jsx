@@ -1,47 +1,32 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { TrendingUp, AlertTriangle, CheckCircle, Info, Loader2 } from 'lucide-react';
+import { TrendingUp, AlertTriangle, CheckCircle, Info, Loader2, Upload } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 
-// ── Demo / fallback data (shown when no real report is loaded) ────────────
-const DEMO_RISK_METRICS = [
-    { name: 'Cardiovascular', value: 23, status: 'low',      trend: 'stable' },
-    { name: 'Diabetes Type 2', value: 67, status: 'moderate', trend: 'up'     },
-    { name: 'Hypertension',    value: 45, status: 'moderate', trend: 'down'   },
-    { name: 'Liver Function',  value: 12, status: 'low',      trend: 'stable' },
-    { name: 'Kidney Health',   value: 89, status: 'high',     trend: 'up'     },
-];
-
-const DEMO_BIOMARKERS = [
-    { name: 'Glucose',        value: 110,       unit: 'mg/dL', range: '70-100',  status: 'elevated' },
-    { name: 'Cholesterol',    value: 195,       unit: 'mg/dL', range: '<200',    status: 'normal'   },
-    { name: 'HbA1c',          value: 6.2,       unit: '%',     range: '<5.7',    status: 'elevated' },
-    { name: 'Blood Pressure', value: '135/85',  unit: 'mmHg',  range: '<120/80', status: 'elevated' },
-];
 
 // ── Reference ranges for common biomarkers ────────────────────────────────
 const REFERENCE_RANGES = {
-    glucose:          '70-100 mg/dL',
-    hemoglobin:       '12-17 g/dL',
-    hematocrit:       '36-52 %',
-    wbc:              '4.5-11 ×10³/µL',
-    rbc:              '4.2-5.9 ×10⁶/µL',
-    platelets:        '150-400 ×10³/µL',
-    creatinine:       '0.6-1.2 mg/dL',
-    bun:              '7-20 mg/dL',
-    total_cholesterol:'<200 mg/dL',
-    hdl:              '>40 mg/dL',
-    ldl:              '<100 mg/dL',
-    triglycerides:    '<150 mg/dL',
-    vldl:             '<30 mg/dL',
-    alt:              '7-56 U/L',
-    ast:              '10-40 U/L',
-    alp:              '44-147 U/L',
-    bilirubin_total:  '0.2-1.2 mg/dL',
-    albumin:          '3.5-5.0 g/dL',
-    vitamin_d:        '20-50 ng/mL',
-    tsh:              '0.4-4.0 mIU/L',
-    testosterone:     '300-1000 ng/dL',
-    egfr:             '>60 mL/min/1.73m²',
+    glucose: '70-100 mg/dL',
+    hemoglobin: '12-17 g/dL',
+    hematocrit: '36-52 %',
+    wbc: '4.5-11 ×10³/µL',
+    rbc: '4.2-5.9 ×10⁶/µL',
+    platelets: '150-400 ×10³/µL',
+    creatinine: '0.6-1.2 mg/dL',
+    bun: '7-20 mg/dL',
+    total_cholesterol: '<200 mg/dL',
+    hdl: '>40 mg/dL',
+    ldl: '<100 mg/dL',
+    triglycerides: '<150 mg/dL',
+    vldl: '<30 mg/dL',
+    alt: '7-56 U/L',
+    ast: '10-40 U/L',
+    alp: '44-147 U/L',
+    bilirubin_total: '0.2-1.2 mg/dL',
+    albumin: '3.5-5.0 g/dL',
+    vitamin_d: '20-50 ng/mL',
+    tsh: '0.4-4.0 mIU/L',
+    testosterone: '300-1000 ng/dL',
+    egfr: '>60 mL/min/1.73m²',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -63,10 +48,10 @@ function transformResult(statusData) {
     const { risks = {}, risk_level, key_factors = [], recommendations = [] } = result;
 
     const riskMetrics = Object.entries(risks).map(([name, value]) => ({
-        name:   formatLabel(name),
-        value:  Math.round(value * 100),
+        name: formatLabel(name),
+        value: Math.round(value * 100),
         status: riskToStatus(value),
-        trend:  'stable',
+        trend: 'stable',
     }));
 
     // Build biomarkers from extracted_metrics
@@ -74,12 +59,12 @@ function transformResult(statusData) {
         .slice(0, 4)
         .map(([key, entry]) => {
             const value = typeof entry === 'object' ? entry?.value : entry;
-            const unit  = typeof entry === 'object' ? (entry?.unit ?? '') : '';
+            const unit = typeof entry === 'object' ? (entry?.unit ?? '') : '';
             return {
-                name:   formatLabel(key),
-                value:  value ?? '—',
+                name: formatLabel(key),
+                value: value ?? '—',
                 unit,
-                range:  REFERENCE_RANGES[key] ?? 'N/A',
+                range: REFERENCE_RANGES[key] ?? 'N/A',
                 status: 'normal',
             };
         });
@@ -88,12 +73,12 @@ function transformResult(statusData) {
 }
 
 const STEP_LABELS = {
-    uploaded:       'Report received',
-    preprocessing:  'Preprocessing image…',
-    ocr_complete:   'OCR complete — running models…',
-    predicting:     'Running disease models…',
-    completed:      'Analysis complete',
-    failed:         'Analysis failed',
+    uploaded: 'Report received',
+    preprocessing: 'Preprocessing image…',
+    ocr_complete: 'OCR complete — running models…',
+    predicting: 'Running disease models…',
+    completed: 'Analysis complete',
+    failed: 'Analysis failed',
 };
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -101,14 +86,14 @@ export function Results() {
     const canvasRef = useRef(null);
     const pollingRef = useRef(null);
 
-    const [reportData,   setReportData]   = useState(null);
-    const [loading,      setLoading]      = useState(false);
-    const [loadingStep,  setLoadingStep]  = useState('');
-    const [pollError,    setPollError]    = useState(null);
+    const [reportData, setReportData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [loadingStep, setLoadingStep] = useState('');
+    const [pollError, setPollError] = useState(null);
     const [selectedMetric, setSelectedMetric] = useState(null);
 
-    const riskMetrics = reportData ? reportData.riskMetrics : DEMO_RISK_METRICS;
-    const biomarkers  = reportData ? reportData.biomarkers  : DEMO_BIOMARKERS;
+    const riskMetrics = reportData?.riskMetrics ?? [];
+    const biomarkers = reportData?.biomarkers ?? [];
 
     // Keep selectedMetric in sync when data changes
     useEffect(() => {
@@ -199,7 +184,7 @@ export function Results() {
                     if (transformed) setReportData(transformed);
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []); // runs once on mount only
 
     // ── Canvas radar chart ────────────────────────────────────────────────
@@ -212,17 +197,17 @@ export function Results() {
 
         const resizeCanvas = () => {
             const rect = canvas.getBoundingClientRect();
-            canvas.width  = rect.width  * window.devicePixelRatio;
+            canvas.width = rect.width * window.devicePixelRatio;
             canvas.height = rect.height * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         };
         resizeCanvas();
 
-        const width   = canvas.width  / window.devicePixelRatio;
-        const height  = canvas.height / window.devicePixelRatio;
-        const centerX = width  / 2;
+        const width = canvas.width / window.devicePixelRatio;
+        const height = canvas.height / window.devicePixelRatio;
+        const centerX = width / 2;
         const centerY = height / 2;
-        const radius  = Math.min(width, height) / 2 - 40;
+        const radius = Math.min(width, height) / 2 - 40;
 
         ctx.clearRect(0, 0, width, height);
 
@@ -267,10 +252,10 @@ export function Results() {
             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.closePath();
-        ctx.fillStyle   = 'rgba(249,115,22,0.2)';
+        ctx.fillStyle = 'rgba(249,115,22,0.2)';
         ctx.fill();
         ctx.strokeStyle = '#f97316';
-        ctx.lineWidth   = 2;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         // Data points
@@ -281,10 +266,10 @@ export function Results() {
             const y = centerY + Math.sin(angle) * radius * value;
             ctx.beginPath();
             ctx.arc(x, y, 5, 0, Math.PI * 2);
-            ctx.fillStyle   = '#f97316';
+            ctx.fillStyle = '#f97316';
             ctx.fill();
             ctx.strokeStyle = '#1a1a1a';
-            ctx.lineWidth   = 2;
+            ctx.lineWidth = 2;
             ctx.stroke();
         });
     }, [riskMetrics]);
@@ -293,18 +278,16 @@ export function Results() {
     const getStatusColor = (status) => {
         switch (status) {
             case 'low':
-            case 'normal':    return '#22c55e';
+            case 'normal': return '#22c55e';
             case 'moderate':
-            case 'elevated':  return '#f97316';
+            case 'elevated': return '#f97316';
             case 'high':
-            case 'critical':  return '#ef4444';
-            default:          return '#1a1a1a';
+            case 'critical': return '#ef4444';
+            default: return '#1a1a1a';
         }
     };
 
-    const recommendation = reportData
-        ? (reportData.recommendations?.[0] ?? 'No specific recommendations at this time.')
-        : 'Based on your HbA1c levels, consider consulting an endocrinologist for diabetes screening.';
+    const recommendation = reportData?.recommendations?.[0] ?? 'No specific recommendations at this time.';
 
     // ── Render ────────────────────────────────────────────────────────────
     return (
@@ -314,9 +297,7 @@ export function Results() {
                 {/* Section Header */}
                 <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
                     <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono text-brutalist-muted">
-                            {reportData ? '// SECTION: YOUR_RESULTS' : '// SECTION: SAMPLE_RESULTS'}
-                        </span>
+                        <span className="text-xs font-mono text-brutalist-muted">// SECTION: YOUR_RESULTS</span>
                         <span className="text-xs font-mono text-brutalist-muted">003</span>
                     </div>
                     {reportData && (
@@ -327,13 +308,13 @@ export function Results() {
                 </div>
 
                 <h2 className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg mb-4">
-                    {reportData ? 'Your Analysis Results' : 'Sample Analysis Results'}
+                    Your Analysis Results
                 </h2>
-                <p className="text-sm font-mono text-brutalist-muted mb-6 max-w-2xl">
-                    {reportData
-                        ? `Risk analysis for your ${reportData.reportType} report. Not a medical diagnosis.`
-                        : 'View a preview of what your health analysis dashboard looks like.'}
-                </p>
+                {reportData && (
+                    <p className="text-sm font-mono text-brutalist-muted mb-6 max-w-2xl">
+                        Risk analysis for your {reportData.reportType} report. Not a medical diagnosis.
+                    </p>
+                )}
 
                 {/* Processing Banner */}
                 {loading && (
@@ -358,6 +339,19 @@ export function Results() {
                     </div>
                 )}
 
+                {/* Empty state — no report uploaded yet */}
+                {!loading && !reportData && !pollError && (
+                    <div className="flex flex-col items-center justify-center py-24 border border-dashed border-brutalist-fg/40">
+                        <div className="w-16 h-16 border border-brutalist-fg/30 flex items-center justify-center mb-6">
+                            <Upload className="w-7 h-7 text-brutalist-fg/30" />
+                        </div>
+                        <p className="font-space font-bold text-lg text-brutalist-fg uppercase mb-2">No analysis yet</p>
+                        <p className="font-mono text-xs text-brutalist-muted text-center max-w-xs">
+                            Upload a medical report to see your personalised risk analysis here.
+                        </p>
+                    </div>
+                )}
+
                 {/* Risk Level Badge — real data only */}
                 {reportData && (
                     <div className="mb-8 inline-flex items-center gap-3 px-4 py-2 border border-brutalist-fg">
@@ -374,8 +368,8 @@ export function Results() {
                     </div>
                 )}
 
-                {/* Dashboard Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-brutalist-fg">
+                {/* Dashboard Grid — only when a report has been analysed */}
+                {reportData && <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-brutalist-fg">
 
                     {/* Risk Overview */}
                     <div className="border-b lg:border-b-0 lg:border-r border-brutalist-fg p-6">
@@ -387,11 +381,10 @@ export function Results() {
                             {riskMetrics.map((metric) => (
                                 <div
                                     key={metric.name}
-                                    className={`cursor-pointer transition-all p-3 border ${
-                                        selectedMetric?.name === metric.name
+                                    className={`cursor-pointer transition-all p-3 border ${selectedMetric?.name === metric.name
                                             ? 'border-brutalist-accent bg-brutalist-accent/5'
                                             : 'border-brutalist-fg/20 hover:border-brutalist-fg'
-                                    }`}
+                                        }`}
                                     onClick={() => setSelectedMetric(metric)}
                                 >
                                     <div className="flex items-center justify-between mb-2">
@@ -507,7 +500,7 @@ export function Results() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>}
             </div>
         </section>
     );

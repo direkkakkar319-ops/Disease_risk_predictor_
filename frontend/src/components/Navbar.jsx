@@ -34,6 +34,9 @@ export function Navbar() {
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('healthinsight_latest_report_id');
+        localStorage.removeItem('healthinsight_pending_report_id');
         setIsLoggedIn(false);
         window.location.reload();
     };
@@ -52,8 +55,8 @@ export function Navbar() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                    ? 'bg-brutalist-bg border-b border-brutalist-fg'
-                    : 'bg-transparent'
+                ? 'bg-brutalist-bg border-b border-brutalist-fg'
+                : 'bg-transparent'
                 }`}
         >
             <div className="mx-4 md:mx-6 lg:mx-8">
