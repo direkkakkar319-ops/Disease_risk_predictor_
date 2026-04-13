@@ -53,11 +53,11 @@ celery_app.conf.update(
     # how long to keep results of the completed task
     result_expires = 3600,
 
-    # Seperate queues for each tasks
+    # Separate queues for each task
     task_routes = {
-        "task_queue.tasks.process_medical_reports":{"queue":"ocr"},
-        "task_queue.tasks.process_disease_risk":{"queue":"prediction"},
-        "task_queue.tasks.compare_reports":{"queue":"comparison"}
+        "task_queue.tasks.process_medical_report": {"queue": "ocr"},
+        "task_queue.tasks.predict_disease_risk":   {"queue": "prediction"},
+        "task_queue.tasks.compare_reports":        {"queue": "comparison"},
     },
 
     # queue for un-listed tasks
