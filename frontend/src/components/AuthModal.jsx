@@ -113,7 +113,7 @@ export function AuthModal({ children }) {
             </DialogTrigger>
             <DialogContent 
                 showCloseButton={false}
-                overlayClassName="bg-black/5 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
+                overlayClassName="bg-black/5 dark:bg-black/40 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
                 className={`sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
             >
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
