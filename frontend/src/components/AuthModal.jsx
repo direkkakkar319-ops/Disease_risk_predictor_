@@ -126,7 +126,7 @@ export function AuthModal({ children }) {
                                 <DialogTitle className="font-space text-[40px] font-bold tracking-tight text-brutalist-fg uppercase animate-slide-up leading-none mt-2" style={{ animationDelay: '0ms' }}>
                                     LOG. IN.
                                 </DialogTitle>
-                                <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10">
+                                <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10 dark:hover:bg-brutalist-fg/20">
                                     ×
                                 </DialogClose>
                             </DialogHeader>
