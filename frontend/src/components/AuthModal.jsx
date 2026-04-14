@@ -172,7 +172,7 @@ export function AuthModal({ children }) {
 
                                 <Button 
                                     type="submit"
-                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
+                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
                                     style={{ animationDelay: '240ms', animationFillMode: 'both' }}
                                 >
                                     {success ? '// ACCESS GRANTED ✓' : (
