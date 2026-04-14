@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, X, FileText, Image as ImageIcon, Activity, ArrowRight, Droplets, Heart, Sun, Zap, Bean, FlaskConical } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 import {
     Dialog,
     DialogContent,
@@ -86,8 +87,7 @@ export function UploadReportModal({ children }) {
             return;
         }
 
-        const token = localStorage.getItem('access_token');
-        if (!token) {
+        if (!localStorage.getItem('access_token')) {
             setError('Please log in to upload reports.');
             return;
         }
@@ -99,11 +99,8 @@ export function UploadReportModal({ children }) {
         formData.append('report_type', reportType);
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/upload', {
+            const response = await apiFetch('/api/upload', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData,
             });
 
