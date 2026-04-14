@@ -141,7 +141,7 @@ export function AuthModal({ children }) {
                                         type="email" 
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className={`w-full h-10 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 placeholder-lowercase`}
+                                        className={`w-full h-10 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50 placeholder-lowercase`}
                                         placeholder="user@example.com"
                                     />
                                 </div>
