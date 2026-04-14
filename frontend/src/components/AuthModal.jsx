@@ -232,7 +232,7 @@ export function AuthModal({ children }) {
                                             type={showPassword ? "text" : "password"} 
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className={`w-full h-9 bg-transparent border ${error && !password ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40`}
+                                            className={`w-full h-9 bg-transparent border ${error && !password ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                             tabIndex={isLogin ? -1 : 0}
                                         />
