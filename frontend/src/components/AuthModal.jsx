@@ -162,7 +162,7 @@ export function AuthModal({ children }) {
                                         <button 
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent focus:outline-none transition-colors"
+                                            className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent dark:hover:text-brutalist-accent focus:outline-none transition-colors"
                                             tabIndex="-1"
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
