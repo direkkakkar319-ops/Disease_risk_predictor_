@@ -9,9 +9,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 
 export function AuthModal({ children }) {
-    const API_BASE = 'http://127.0.0.1:8000';
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
     
@@ -98,7 +98,7 @@ export function AuthModal({ children }) {
             loginFormData.append('password', password);
 
             if (!isLogin) {
-                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                const registerResponse = await apiFetch('/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -114,7 +114,7 @@ export function AuthModal({ children }) {
                 }
             }
 
-            const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+            const loginResponse = await apiFetch('/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: loginFormData,
