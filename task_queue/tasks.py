@@ -10,6 +10,7 @@ The three tasks run in order:
 Important imports
 """
 import logging
+import os
 from datetime import datetime
 from celery.exceptions import MaxRetriesExceededError
 from task_queue.celery_app import celery_app
@@ -41,6 +42,21 @@ Comparison Service
 from services.ml_service import ReportComparator
 
 logger = logging.getLogger(__name__)
+
+_USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+
+
+def _get_s3():
+    import boto3
+    from botocore.config import Config
+    return boto3.client(
+        "s3",
+        endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+        aws_access_key_id=os.getenv("S3_ACCESS_KEY"),
+        aws_secret_access_key=os.getenv("S3_SECRET_KEY"),
+        config=Config(signature_version="s3v4"),
+        region_name=os.getenv("S3_REGION", "us-east-1"),
+    )
 
 
 # ─────────────────────────────────────────────
@@ -80,13 +96,23 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         report_type — one of: blood, lipid, vitamin_d, hormone, kidney, liver
     """
     logger.info(f"[process_medical_report] Starting for report {report_id}, file={file_path}")
+    local_tmp = None
     try:
         _update_report_status(report_id, "preprocessing")
         self.update_state(state="PROGRESS", meta={"step": "initialising_ocr"})
 
+        # When running on Render (USE_S3=true) the file_path is an S3 key.
+        # Download it to a local /tmp file so PaddleOCR can read it.
+        if _USE_S3:
+            local_tmp = f"/tmp/{os.path.basename(file_path)}"
+            _get_s3().download_file(os.getenv("S3_BUCKET_NAME"), file_path, local_tmp)
+            ocr_path = local_tmp
+        else:
+            ocr_path = file_path
+
         ocr_runner = get_ocr_runner()
         self.update_state(state="PROGRESS", meta={"step": "ocr_extraction"})
-        result = ocr_runner.process_report(file_path, report_type)
+        result = ocr_runner.process_report(ocr_path, report_type)
         logger.info(f"[process_medical_report] OCR done: {result['text_items']} items, "
                     f"{len(result['structured_metrics'])} metrics")
 
@@ -115,6 +141,18 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         logger.error(f"[process_medical_report] failed for report {report_id}: {exc}", exc_info=True)
         _update_report_status(report_id, "failed")
         raise self.retry(exc=exc)
+
+    finally:
+        # Clean up local temp file
+        if local_tmp and os.path.exists(local_tmp):
+            os.remove(local_tmp)
+        # Delete from S3/Supabase now that OCR is done — file is never needed again
+        if _USE_S3:
+            try:
+                _get_s3().delete_object(Bucket=os.getenv("S3_BUCKET_NAME"), Key=file_path)
+                logger.info(f"[process_medical_report] deleted S3 object {file_path}")
+            except Exception as e:
+                logger.warning(f"[process_medical_report] failed to delete S3 object {file_path}: {e}")
 
 
 # ─────────────────────────────────────────────
