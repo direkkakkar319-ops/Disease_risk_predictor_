@@ -42,7 +42,6 @@ RUN python -c "from paddleocr import PaddleOCR; PaddleOCR()"
 COPY backend/ ./
 COPY task_queue/ ./task_queue/
 COPY ml_models/ ./ml_models/
-COPY services/ ./services/
 
 # Create the uploads directory for storing user-uploaded report images
 # -p flag prevents errors if the directory already exists
