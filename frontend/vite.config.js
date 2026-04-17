@@ -11,4 +11,7 @@ export default defineConfig({
             "@": path.resolve(__dirname, "./src"),
         },
     },
+    server: {
+        allowedHosts: ["medscan-ai-s7t1.onrender.com"],
+    },
 });
