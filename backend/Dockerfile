@@ -55,4 +55,7 @@ EXPOSE 8000
 # app.main:app   → points to the FastAPI instance in app/main.py
 # --host 0.0.0.0 → listen on all network interfaces (required inside Docker)
 # --port 8000    → run on port 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY backend/start.sh ./start.sh
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
