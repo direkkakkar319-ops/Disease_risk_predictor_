@@ -56,6 +56,6 @@ EXPOSE 8000
 # --host 0.0.0.0 → listen on all network interfaces (required inside Docker)
 # --port 8000    → run on port 8000
 COPY backend/start.sh ./start.sh
-RUN chmod +x start.sh
+RUN sed -i 's/\r//' start.sh && chmod +x start.sh
 
 CMD ["./start.sh"]
