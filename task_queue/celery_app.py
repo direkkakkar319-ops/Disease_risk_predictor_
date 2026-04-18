@@ -31,37 +31,27 @@ celery_app = Celery(
 """
 Celerey Configuration
 """
+_use_ssl = CELERY_BROKER_URL.startswith("rediss://")
+_ssl_opts = {"ssl_cert_reqs": "none"} if _use_ssl else {}
+
 celery_app.conf.update(
-    # Format for sending/reciving tasks
     task_serializer = "json",
     accept_content = ["json"],
     result_serializer = "json",
-    
-    # Timezone
     timezone = "UTC",
     enable_utc = True,
-    
-    # Track task progress
     task_time_limit = 300,
-    
-    # Number of tasks a worker will pick at a time
-    worker_process_multiplier = 1,
-
-    # Number of worker processes
-    worker_concurrency = int(os.getenv("CELERY_WORKER_CONCURRENCY", "4")),
-
-    # how long to keep results of the completed task
+    worker_concurrency = 1,
     result_expires = 3600,
+    broker_connection_retry_on_startup = True,
 
-    # Separate queues for each task
-    task_routes = {
-        "task_queue.tasks.process_medical_report": {"queue": "ocr"},
-        "task_queue.tasks.predict_disease_risk":   {"queue": "prediction"},
-        "task_queue.tasks.compare_reports":        {"queue": "comparison"},
-    },
+    # SSL for Upstash rediss:// URLs
+    broker_use_ssl = _ssl_opts if _use_ssl else None,
+    redis_backend_use_ssl = _ssl_opts if _use_ssl else None,
 
-    # queue for un-listed tasks
-    task_default_queue = "default"
+    # All tasks go to default queue so the single worker handles everything
+    task_default_queue = "default",
+    task_routes = {},
 )
 
 """
@@ -70,24 +60,8 @@ Worker lifecycle hooks
 
 @worker_process_init.connect
 def _init_worker(**kwargs):
-    """
-    Runs once when each worker process starts.(before reciving any task)
-    We load the OCR model here so it makes it ready in the memory before 
-    the first task arrives. 
-
-    **kwargs is needed as celery passes extra info to this function
-    Without it error would be thrown by Python
-    """
-    logger.info(f"Worker process initialising--Loading the OCR engine........")
-
-    try:
-        # import in function prevents crash if PaddleOCR is not installed
-        from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
-        get_ocr_runner()#paddle ocr engine is loaded here
-        logger.info("OCR engine is successfully loaded")
-    
-    except Exception as exc:
-        logger.error(f"Failed to pre-load OCR engine:{exc}")
+    # Skip pre-loading on memory-constrained deployments; OCR runner uses its own cache
+    logger.info("Worker process initialising — OCR engine will load on first task")
 
 @worker_ready.connect
 def on_worker_ready(**kwargs):
