@@ -10,6 +10,7 @@ The three tasks run in order:
 Important imports
 """
 import logging
+import os
 from datetime import datetime
 from celery.exceptions import MaxRetriesExceededError
 from task_queue.celery_app import celery_app
@@ -29,18 +30,28 @@ try:
 except ImportError:
     ReportComparison = None
 
-"""
-OCR and ML imports
-"""
-from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
-from ml_models.predict import RiskPredictor
+import requests
 
-"""
-Comparison Service
-"""
 from services.ml_service import ReportComparator
 
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "").rstrip("/")
+
 logger = logging.getLogger(__name__)
+
+_USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+
+
+def _get_s3():
+    import boto3
+    from botocore.config import Config
+    return boto3.client(
+        "s3",
+        endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+        aws_access_key_id=os.getenv("S3_ACCESS_KEY"),
+        aws_secret_access_key=os.getenv("S3_SECRET_KEY"),
+        config=Config(signature_version="s3v4"),
+        region_name=os.getenv("S3_REGION", "us-east-1"),
+    )
 
 
 # ─────────────────────────────────────────────
@@ -80,41 +91,68 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         report_type — one of: blood, lipid, vitamin_d, hormone, kidney, liver
     """
     logger.info(f"[process_medical_report] Starting for report {report_id}, file={file_path}")
+    local_tmp = None
     try:
         _update_report_status(report_id, "preprocessing")
-        self.update_state(state="PROGRESS", meta={"step": "initialising_ocr"})
+        self.update_state(state="PROGRESS", meta={"step": "downloading_file"})
 
-        ocr_runner = get_ocr_runner()
-        self.update_state(state="PROGRESS", meta={"step": "ocr_extraction"})
-        result = ocr_runner.process_report(file_path, report_type)
-        logger.info(f"[process_medical_report] OCR done: {result['text_items']} items, "
-                    f"{len(result['structured_metrics'])} metrics")
+        if _USE_S3:
+            local_tmp = f"/tmp/{os.path.basename(file_path)}"
+            _get_s3().download_file(os.getenv("S3_BUCKET_NAME"), file_path, local_tmp)
+            image_path = local_tmp
+        else:
+            image_path = file_path
 
-        self.update_state(state="PROGRESS", meta={"step": "saving_ocr_results"})
+        self.update_state(state="PROGRESS", meta={"step": "calling_ml_service"})
+        logger.info(f"[process_medical_report] Calling ML service at {ML_SERVICE_URL}")
+
+        with open(image_path, "rb") as f:
+            response = requests.post(
+                f"{ML_SERVICE_URL}/analyze",
+                files={"file": (os.path.basename(image_path), f)},
+                data={"report_type": report_type},
+                timeout=300,
+            )
+        response.raise_for_status()
+        result = response.json()
+
+        ocr_result = result
+        prediction = result["prediction"]
+
+        logger.info(f"[process_medical_report] ML service done: "
+                    f"{len(ocr_result['structured_metrics'])} metrics, "
+                    f"risk_level={prediction.get('risk_level')}")
+
+        self.update_state(state="PROGRESS", meta={"step": "saving_results"})
         _save_ocr_results(
             report_id=report_id,
-            raw_text=result["raw_text"],
-            metrics=result["structured_metrics"],
-            confidence=result.get("average_confidence", 0.0),
+            raw_text=ocr_result["raw_text"],
+            metrics=ocr_result["structured_metrics"],
+            confidence=ocr_result.get("ocr_confidence", 0.0),
         )
-
-        # Kick off Task 2
-        predict_disease_risk.delay(
-            report_id,
-            result["structured_metrics"],
-            report_type,
-        )
+        _save_prediction(report_id, prediction)
 
         return {
             "status": "completed",
             "report_id": report_id,
-            "metrics_extracted": len(result["structured_metrics"]),
+            "metrics_extracted": len(ocr_result["structured_metrics"]),
+            "risk_level": prediction.get("risk_level"),
         }
 
     except Exception as exc:
         logger.error(f"[process_medical_report] failed for report {report_id}: {exc}", exc_info=True)
         _update_report_status(report_id, "failed")
         raise self.retry(exc=exc)
+
+    finally:
+        if local_tmp and os.path.exists(local_tmp):
+            os.remove(local_tmp)
+        if _USE_S3:
+            try:
+                _get_s3().delete_object(Bucket=os.getenv("S3_BUCKET_NAME"), Key=file_path)
+                logger.info(f"[process_medical_report] deleted S3 object {file_path}")
+            except Exception as e:
+                logger.warning(f"[process_medical_report] failed to delete S3 object {file_path}: {e}")
 
 
 # ─────────────────────────────────────────────

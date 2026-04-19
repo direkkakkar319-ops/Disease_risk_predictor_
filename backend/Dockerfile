@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 # Copy only requirements.txt first (before the rest of the code)
 # This allows Docker to cache the pip install layer separately —
 # if your code changes but requirements.txt doesn't, pip won't re-run
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install all Python dependencies from requirements.txt
 # --no-cache-dir → skip saving pip's download cache, keeps image size smaller
@@ -38,9 +38,10 @@ RUN pip install --no-cache-dir --timeout 300 --retries 10 -r requirements.txt
 # With this, models are baked into the image and ready immediately
 RUN python -c "from paddleocr import PaddleOCR; PaddleOCR()"
 
-# Copy the entire project source code into /app inside the container
-# Done AFTER pip install so that code changes don't invalidate the dependency cache layer
-COPY . .
+# Copy backend source, then repo-root modules that the backend imports
+COPY backend/ ./
+COPY task_queue/ ./task_queue/
+COPY ml_models/ ./ml_models/
 
 # Create the uploads directory for storing user-uploaded report images
 # -p flag prevents errors if the directory already exists
@@ -54,4 +55,7 @@ EXPOSE 8000
 # app.main:app   → points to the FastAPI instance in app/main.py
 # --host 0.0.0.0 → listen on all network interfaces (required inside Docker)
 # --port 8000    → run on port 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY backend/start.sh ./start.sh
+RUN sed -i 's/\r//' start.sh && chmod +x start.sh
+
+CMD ["./start.sh"]
