@@ -26,3 +26,4 @@ shap==0.44.1
 numpy==1.26.4
 scikit-learn==1.4.2
 boto3==1.34.0
+slowapi==0.1.9
