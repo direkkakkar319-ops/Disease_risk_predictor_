@@ -1,151 +1,112 @@
-# docker-compose.yml
-# Defines and connects all services needed to run the full application stack
-
-version: '3.8'  # Docker Compose file format version — 3.8 supports healthcheck conditions
-
 services:
-
-  # ─────────────────────────────────────────
-  # PostgreSQL Database
-  # Stores users, reports, predictions, lab values
-  # ─────────────────────────────────────────
   db:
-    image: postgres:15-alpine         # Use official Postgres 15 (alpine = lightweight Linux)
+    image: postgres:15-alpine
     environment:
-      POSTGRES_DB: disease_predictor  # Creates this database on first startup
-      POSTGRES_USER: postgres         # Default superuser username
-      POSTGRES_PASSWORD: password     # Password for the above user
+      POSTGRES_DB: disease_predictor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
-      - "5432:5432"                   # Expose Postgres to your host machine (host:container)
-                                      # Lets you connect via pgAdmin or DBeaver locally
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Persist DB data in a named volume
-                                                # Without this, all data is lost on restart
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Check if Postgres is accepting connections
-      interval: 5s   # Run the check every 5 seconds
-      timeout: 5s    # Fail the check if it takes more than 5 seconds
-      retries: 5     # Mark as unhealthy after 5 consecutive failures
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-
-  # ─────────────────────────────────────────
-  # Redis
-  # Used as Celery's message broker and result backend
-  # Queues OCR/ML tasks sent by the FastAPI app
-  # ─────────────────────────────────────────
   redis:
-    image: redis:7-alpine   # Official Redis 7 image (alpine = lightweight)
+    image: redis:7-alpine
     ports:
-      - "6379:6379"         # Expose Redis to host machine for debugging with redis-cli
+      - "6379:6379"
     volumes:
-      - redis_data:/data    # Persist queued tasks and results across restarts
+      - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]  # Redis responds with PONG if healthy
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-
-  # ─────────────────────────────────────────
-  # FastAPI Application
-  # Main backend — handles HTTP requests, triggers OCR and ML tasks
-  # ─────────────────────────────────────────
   api:
     build:
-      context: ./backend      # Build image using files inside the ./backend folder
-      dockerfile: Dockerfile  # Use this specific Dockerfile inside ./backend
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"           # Expose FastAPI to host — access at http://localhost:8000
+      - "8000:8000"
+    env_file:
+      - .env
     environment:
-      # Async DB URL used by SQLAlchemy with asyncpg driver (for FastAPI async routes)
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/disease_predictor
-      # Sync DB URL used by Alembic migrations and sync SQLAlchemy operations
-      - SYNC_DATABASE_URL=postgresql://postgres:password@db:5432/disease_predictor
-      # Redis connection URL for direct Redis access (caching etc.)
-      - REDIS_URL=redis://redis:6379/0
-      # Celery broker — Redis acts as the message queue for task distribution
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      # Celery result backend — Redis stores task results (OCR output, predictions)
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=${NEON_DB_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
     volumes:
-      - ./data:/app/data      # Mount local ./data folder so uploaded reports are shared
-                              # between host and container (persists outside container)
+      - upload_data:/app/data/raw_uploads
+      - ./ml_models:/app/ml_models
+      - ./task_queue:/app/task_queue
+      - ./backend/services:/app/services
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
     depends_on:
       db:
-        condition: service_healthy    # Wait until Postgres passes healthcheck before starting
+        condition: service_healthy
       redis:
-        condition: service_healthy    # Wait until Redis passes healthcheck before starting
+        condition: service_healthy
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    # Overrides Dockerfile CMD — adds --reload flag for hot reloading during development
 
-
-  # ─────────────────────────────────────────
-  # Celery Worker
-  # Processes background tasks: OCR extraction, XGBoost predictions
-  # Runs the same backend image but with a different start command
-  # ─────────────────────────────────────────
   worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/disease_predictor
-      - SYNC_DATABASE_URL=postgresql://postgres:password@db:5432/disease_predictor
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - PADDLE_USE_GPU=false   # Force PaddleOCR to use CPU (no GPU in Docker by default)
+      - DATABASE_URL=${NEON_DB_URL}
+      - ASYNC_DATABASE_URL=${NEON_ASYNC_DB_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - PADDLE_USE_GPU=false
     volumes:
-      - ./data:/app/data                # Access uploaded report images for OCR processing
-      - ./ml_models:/app/ml_models      # Mount XGBoost model files so worker can load them
+      - upload_data:/app/data/raw_uploads
+      - ./ml_models:/app/ml_models
+      - ./task_queue:/app/task_queue
+      - ./backend/services:/app/services
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
     depends_on:
-      - db      # Needs DB to save OCR results and predictions
-      - redis   # Needs Redis to receive tasks from the queue
-    command: celery -A queue.celery_app worker --loglevel=info --concurrency=2
-    # celery worker         → starts a Celery task consumer
-    # -A queue.celery_app   → points to the Celery app instance in queue/celery_app.py
-    # --loglevel=info       → print task start/success/failure logs
-    # --concurrency=2       → run 2 tasks in parallel (tune based on CPU cores)
+      - db
+      - redis
+    command: celery -A task_queue.celery_app worker --loglevel=info --concurrency=2 -Q default,ocr,prediction,comparison
 
-
-  # ─────────────────────────────────────────
-  # Celery Beat
-  # Scheduler — triggers periodic/scheduled tasks (e.g. cleanup jobs, report checks)
-  # ─────────────────────────────────────────
   beat:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0  # Pushes scheduled tasks into Redis queue
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
     depends_on:
-      - redis   # Only needs Redis to enqueue scheduled tasks
-    command: celery -A queue.celery_app beat --loglevel=info
-    # celery beat   → runs the scheduler (not a task executor — just enqueues tasks on schedule)
-    # Workers (above) actually execute whatever beat enqueues
+      - redis
+    volumes:
+      - ./task_queue:/app/task_queue
+      - ./ml_models:/app/ml_models
+      - ./backend/services:/app/services
+    command: celery -A task_queue.celery_app beat --loglevel=info
 
-
-  # ─────────────────────────────────────────
-  # Flower — Celery Monitoring Dashboard
-  # Visual UI to monitor task queues, workers, successes and failures
-  # Access at http://localhost:5555
-  # ─────────────────────────────────────────
   flower:
-    image: mher/flower:latest           # Official Flower monitoring tool image
+    image: mher/flower:latest
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0  # Connect Flower to Redis to read queue stats
-      - FLOWER_PORT=5555                         # Port Flower dashboard runs on
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - FLOWER_PORT=5555
     ports:
-      - "5555:5555"   # Access Flower UI at http://localhost:5555
+      - "5555:5555"
     depends_on:
-      - redis         # Needs Redis to inspect task queues and worker status
+      - redis
 
-
-# ─────────────────────────────────────────
-# Named Volumes
-# Declared here so Docker manages them — data persists even if containers are stopped/removed
-# ─────────────────────────────────────────
 volumes:
-  postgres_data:  # Stores all PostgreSQL database files
-  redis_data:     # Stores Redis task queue and result data
+  postgres_data:
+  redis_data:
+  upload_data:

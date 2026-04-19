@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { Upload, X, FileText, Image as ImageIcon, Activity, ArrowRight } from 'lucide-react';
+import { Upload, X, FileText, Image as ImageIcon, Activity, ArrowRight, Droplets, Heart, Sun, Zap, Bean, FlaskConical } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
+const REPORT_TYPES = [
+    { value: 'blood', label: 'BLOOD', icon: Droplets, description: 'CBC / Blood Panel' },
+    { value: 'lipid', label: 'LIPID', icon: Heart, description: 'Cholesterol / Lipid Profile' },
+    { value: 'vitamin_d', label: 'VITAMIN D', icon: Sun, description: 'Vitamin D Levels' },
+    { value: 'hormone', label: 'HORMONE', icon: Zap, description: 'Thyroid / Hormone Panel' },
+    { value: 'kidney', label: 'KIDNEY', icon: Bean, description: 'Kidney Function Test' },
+    { value: 'liver', label: 'LIVER', icon: FlaskConical, description: 'Liver Function Test' },
+];
+
 export function UploadReportModal({ children }) {
     const [open, setOpen] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [files, setFiles] = useState([]);
+    const [reportType, setReportType] = useState(null);
     const [error, setError] = useState(null);
 
     const handleDrag = (e) => {
@@ -31,7 +42,7 @@ export function UploadReportModal({ children }) {
     const processFiles = (incomingFiles) => {
         setError(null);
         let hasError = false;
-        
+
         const validFiles = Array.from(incomingFiles).filter(file => {
             if (file.size > MAX_FILE_SIZE) {
                 setError(`File ${file.name} exceeds the 50MB limit.`);
@@ -69,19 +80,70 @@ export function UploadReportModal({ children }) {
         setError(null);
     };
 
-    const handleUpload = () => {
-        // Pass files to existing model/analysis pipeline here
-        console.log("Analyzing files:", files);
-        
-        // Reset state and close
-        setFiles([]);
-        setError(null);
-        setOpen(false);
+    const handleUpload = async () => {
+        if (files.length === 0) return;
+        if (!reportType) {
+            setError('Please select a report type before uploading.');
+            return;
+        }
+
+        if (!localStorage.getItem('access_token')) {
+            setError('Please log in to upload reports.');
+            return;
+        }
+
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append('files', file);
+        });
+        formData.append('report_type', reportType);
+
+        try {
+            const response = await apiFetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Upload failed');
+            }
+
+            const result = await response.json();
+
+            // Collect report IDs from successful uploads
+            const reportIds = result
+                .filter(r => r.status === 'success' && r.id)
+                .map(r => r.id);
+
+            if (reportIds.length > 0) {
+                // Store first report id so Results section can resume polling on refresh
+                localStorage.setItem('healthinsight_pending_report_id', reportIds[0]);
+                // Notify Results + History sections
+                window.dispatchEvent(
+                    new CustomEvent('reportUploaded', { detail: { reportIds } })
+                );
+                // Scroll to results section
+                setTimeout(() => {
+                    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }
+
+            // Reset state and close
+            setFiles([]);
+            setReportType(null);
+            setError(null);
+            setOpen(false);
+        } catch (err) {
+            console.error('Upload error:', err);
+            setError(err.message);
+        }
     };
 
     const handleOpenChange = (newOpen) => {
         if (!newOpen) {
             setFiles([]);
+            setReportType(null);
             setError(null);
         }
         setOpen(newOpen);
@@ -116,8 +178,43 @@ export function UploadReportModal({ children }) {
                         <span className="text-xs font-mono tracking-wider uppercase text-brutalist-fg group-hover:text-brutalist-bg transition-colors">DICOM</span>
                     </div>
                 </div>
-                
-                <div 
+
+                {/* Report Type Selector */}
+                <div className="mb-8">
+                    <p className="font-space font-bold text-sm sm:text-base tracking-tight text-brutalist-fg uppercase mb-4">
+                        SELECT REPORT TYPE
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {REPORT_TYPES.map((type) => {
+                            const Icon = type.icon;
+                            const isSelected = reportType === type.value;
+                            return (
+                                <button
+                                    key={type.value}
+                                    type="button"
+                                    onClick={() => { setReportType(type.value); setError(null); }}
+                                    className={`flex flex-col items-center justify-center gap-2 py-4 px-3 border-2 transition-all duration-200 cursor-pointer group/rt ${isSelected
+                                            ? 'border-brutalist-accent bg-brutalist-accent text-brutalist-bg shadow-[4px_4px_0px_0px] shadow-brutalist-accent/40'
+                                            : 'border-brutalist-fg bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg'
+                                        }`}
+                                >
+                                    <Icon className={`w-5 h-5 transition-colors ${isSelected ? 'text-brutalist-bg' : 'text-brutalist-fg group-hover/rt:text-brutalist-bg'
+                                        }`} />
+                                    <span className={`text-xs font-mono tracking-wider uppercase font-bold transition-colors ${isSelected ? 'text-brutalist-bg' : 'text-brutalist-fg group-hover/rt:text-brutalist-bg'
+                                        }`}>
+                                        {type.label}
+                                    </span>
+                                    <span className={`text-[10px] font-mono tracking-wide transition-colors ${isSelected ? 'text-brutalist-bg/70' : 'text-brutalist-muted group-hover/rt:text-brutalist-bg/70'
+                                        }`}>
+                                        {type.description}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div
                     className={`relative border-2 border-dashed ${dragActive ? 'border-brutalist-accent bg-brutalist-accent/5' : 'border-brutalist-fg'} transition-all duration-200 p-8 sm:p-12 flex flex-col items-center justify-center cursor-pointer group overflow-hidden`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
@@ -131,27 +228,27 @@ export function UploadReportModal({ children }) {
                         </div>
                     )}
 
-                    <input 
-                        type="file" 
-                        multiple 
+                    <input
+                        type="file"
+                        multiple
                         accept=".pdf,.jpg,.jpeg,.png,.dcm,.dicom"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                         onChange={handleChange}
                     />
-                    
+
                     <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-brutalist-fg bg-brutalist-bg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform relative z-10">
                         <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-brutalist-fg" />
                     </div>
-                    
+
                     <p className="font-space font-bold text-lg sm:text-xl tracking-tight text-brutalist-fg text-center uppercase mb-2 relative z-10">
                         DRAG & DROP YOUR FILES HERE
                     </p>
                     <p className="font-mono text-xs text-brutalist-muted text-center mb-6 uppercase tracking-wider relative z-10">
                         Supported: PDF, JPG, PNG, DICOM
                     </p>
-                    
-                    <Button 
-                        variant="outline" 
+
+                    <Button
+                        variant="outline"
                         type="button"
                         className="bg-transparent hover:bg-brutalist-fg text-brutalist-fg hover:text-brutalist-bg text-xs font-mono uppercase h-10 px-6 sm:px-8 rounded-none border border-brutalist-fg transition-colors relative z-10 pointer-events-none"
                     >
@@ -183,9 +280,9 @@ export function UploadReportModal({ children }) {
                                         </div>
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     type="button"
-                                    onClick={(e) => { e.stopPropagation(); removeFile(index); }} 
+                                    onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-brutalist-muted hover:text-red-500 transition-colors z-10 p-2 bg-brutalist-bg"
                                     aria-label="Remove file"
                                 >
@@ -199,15 +296,15 @@ export function UploadReportModal({ children }) {
                 )}
 
                 <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         className="font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-transparent text-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg uppercase tracking-widest h-12 px-6 sm:px-8 w-full sm:w-auto"
                         onClick={() => handleOpenChange(false)}
                     >
                         CANCEL
                     </Button>
-                    <Button 
-                        disabled={files.length === 0}
+                    <Button
+                        disabled={files.length === 0 || !reportType}
                         className="font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-accent hover:border-brutalist-accent uppercase tracking-widest h-12 px-6 sm:px-8 w-full sm:w-auto flex items-center justify-center gap-3 group/btn disabled:opacity-50 disabled:hover:bg-brutalist-fg disabled:hover:border-brutalist-fg disabled:cursor-not-allowed"
                         onClick={handleUpload}
                     >

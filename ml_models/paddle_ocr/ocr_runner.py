@@ -1,78 +1,139 @@
-from paddleocr import PaddleOCR, PPStructureV3
-from PIL import Image
 import cv2
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 import logging
 import re
 import os
 
+# Bug 5 fix: the original try block set _PADDLE_AVAILABLE = True unconditionally
+# without actually importing anything. The import must be inside the try block.
+try:
+    from paddleocr import PaddleOCR, PPStructureV3
+    _PADDLE_AVAILABLE = True
+except ImportError:
+    _PADDLE_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
+
+"""
+OCRRunner - Singleton class
+"""
 class OCRRunner:
+    """
+    Wraps PP-OCRv5 (text detection + recognition) and PP-StructureV3
+    (layout analysis + table extraction) in a Singleton — heavy models are
+    loaded once per process.
+    """
+
+    # Class-level variable — shared across ALL instances.
+    # Holds the one and only OCRRunner object once created.
     _instance = None
-    
+
+    """
+    __new__ is Python's object ALLOCATOR — it runs BEFORE __init__
+    every single time you write OCRRunner() or get_ocr_runner().
+    """
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(OCRRunner, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
-    
+
     def __init__(self):
+        """
+        Guard 1 - prevents re-run of PaddleOCR init
+        """
         if self._initialized:
             return
-            
+
+        """
+        Guard 2 - checks if PaddleOCR is installed
+        """
+        if not _PADDLE_AVAILABLE:
+            raise RuntimeError(
+                "PaddleOCR is not installed.\n"
+                "Run: pip install paddlepaddle paddleocr"
+            )
+
+        """These are set in .env and injected by docker-compose"""
         self.use_gpu = os.getenv('PADDLE_USE_GPU', 'false').lower() == 'true'
         self.lang = os.getenv('PADDLE_OCR_LANG', 'en')
-        
+
         logger.info(f"Initializing PaddleOCR (GPU: {self.use_gpu}, Lang: {self.lang})")
-        
-        # Initialize OCR engine
-        self.ocr_engine = PaddleOCR(
-            use_angle_cls=True,
-            lang=self.lang,
-            use_gpu=self.use_gpu,
-            show_log=False,
-            enable_mkldnn=not self.use_gpu,
-            limit_side_len=960,
-            det_db_thresh=0.3,
-            det_db_box_thresh=0.5,
-            rec_batch_num=6,
-            drop_score=0.5,
-            ocr_version='PP-OCRv5'
-        )
-        
-        # Initialize StructureV3 for tables
-        self.structure_engine = PPStructureV3(
-            use_doc_orientation_classify=True,
-            use_doc_unwarping=True,
-            lang=self.lang
-        )
-        
+
+        """
+        Bug 4 fix: PaddleOCR 3.4.0 completely changed its constructor API.
+        Parameters like use_gpu, use_angle_cls, show_log, enable_mkldnn,
+        ocr_version, limit_side_len, det_db_thresh etc. no longer exist.
+        The new API only accepts model-selection and pipeline-toggle params.
+        GPU selection is now handled via the PaddlePaddle backend automatically.
+        """
+        try:
+            self.ocr_engine = PaddleOCR(
+                lang=self.lang,
+                use_doc_orientation_classify=False,  # skip page rotation on plain scans
+                use_doc_unwarping=False,             # skip dewarping for flat images
+                use_textline_orientation=True,       # keep per-line angle correction
+            )
+            logger.info("PaddleOCR (text engine) initialised successfully")
+        except Exception as e:
+            logger.warning(f"PaddleOCR init failed ({e}), retrying with minimal params")
+            self.ocr_engine = PaddleOCR(lang=self.lang)
+            logger.info("PaddleOCR (text engine) initialised successfully (minimal params)")
+
+        """
+        Initialize StructureV3 for table analysis.
+        PPStructureV3 understands the layout of the page and extracts tables.
+        """
+        try:
+            self.structure_engine = PPStructureV3(
+                use_doc_orientation_classify=False,   # saves memory in CPU mode
+                use_doc_unwarping=False,               # skip for clean scans
+                lang=self.lang
+            )
+            logger.info("PPStructureV3 (table engine) initialised successfully")
+        except Exception as e:
+            logger.warning(f"PPStructureV3 failed to initialise ({e}). Table extraction disabled.")
+            self.structure_engine = None
+
+        """Make Guard 1 skip future inits"""
         self._initialized = True
-        logger.info("PaddleOCR initialized successfully")
-    
+        logger.info("OCRRunner fully initialised")
+
+    """
+    Image Preprocessing
+    Steps:
+    1. Grayscale Conversion
+    2. Denoise
+    3. CLAHE (Contrast Limited Adaptive Histogram Equalisation)
+    """
     def preprocess_image(self, image_path: str) -> np.ndarray:
         """Preprocess image for better OCR accuracy."""
         img = cv2.imread(image_path)
         if img is None:
             raise ValueError(f"Cannot load image: {image_path}")
-        
-        # Convert to grayscale
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Denoise
         denoised = cv2.fastNlMeansDenoising(gray, None, 10, 7, 21)
-        
-        # Contrast enhancement
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         enhanced = clahe.apply(denoised)
-        
+
         return enhanced
-    
+
+
+    """
+    Public extraction methods
+    """
     def extract_text(self, image_path: str, preprocess: bool = True) -> List[Dict]:
-        """Extract text from image."""
+        """
+        Run OCR on an image and return all detected text in reading order.
+        Uses PaddleOCR 3.4 .predict() API (replaces deprecated .ocr()).
+        Each item in the returned list is:
+            { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        """
+        temp_path = None
         try:
             if preprocess:
                 temp_path = f"{image_path}_temp.jpg"
@@ -81,73 +142,121 @@ class OCRRunner:
                 input_path = temp_path
             else:
                 input_path = image_path
-            
-            result = self.ocr_engine.ocr(input_path, cls=True)
-            
-            if preprocess and os.path.exists(temp_path):
-                os.remove(temp_path)
-            
-            extracted = []
-            if result and result[0]:
-                for line in result[0]:
-                    bbox = line[0]
-                    text, confidence = line[1]
-                    extracted.append({
-                        'text': text,
-                        'confidence': float(confidence),
-                        'bbox': bbox
-                    })
-            
-            # Sort by reading order
-            extracted.sort(key=lambda x: (self._get_center(x['bbox'])[1], self._get_center(x['bbox'])[0]))
-            
-            return extracted
-            
+
+            # PaddleOCR 3.4: use predict() — ocr() is deprecated
+            results = self.ocr_engine.predict(input_path)
+
         except Exception as e:
-            logger.error(f"Text extraction failed: {e}")
+            logger.error(f"Text extraction failed: {e}", exc_info=True)
             raise
-    
+
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
+
+        extracted: List[Dict] = []
+
+        # PaddleOCR 3.4 returns a list of result dicts, one per image.
+        # Each dict has: rec_texts (list[str]), rec_scores (list[float]),
+        # rec_polys (list of polygon arrays).
+        for page_result in (results or []):
+            if not page_result:
+                continue
+            texts  = page_result.get('rec_texts', [])
+            scores = page_result.get('rec_scores', [])
+            polys  = page_result.get('rec_polys', [])
+
+            for text, score, poly in zip(texts, scores, polys):
+                if not text.strip():
+                    continue
+                # Convert numpy polygon to list-of-[x,y] for JSON serialisability
+                bbox = poly.tolist() if hasattr(poly, 'tolist') else list(poly)
+                extracted.append({
+                    'text': text,
+                    'confidence': float(score),
+                    'bbox': bbox
+                })
+
+        # Sort by reading order (top-to-bottom, left-to-right)
+        extracted.sort(
+            key=lambda x: (
+                self._get_center(x['bbox'])[1],
+                self._get_center(x['bbox'])[0]
+            ))
+
+        return extracted
+
     def extract_tables(self, image_path: str) -> List[Dict]:
-        """Extract tables using PP-StructureV3."""
+        """
+        Extract tables using PP-StructureV3.
+        Returns an empty list if the engine is unavailable.
+        """
+        if self.structure_engine is None:
+            return []
+
         try:
             result = self.structure_engine.predict(input=image_path)
             tables = []
-            
+
             for res in result:
-                if res.get('type') == 'table':
+                # PPStructureV3 result items are dict-like objects
+                item_type = res.get('type', '') if isinstance(res, dict) else getattr(res, 'type', '')
+                if item_type == 'table':
+                    item_res = res.get('res', {}) if isinstance(res, dict) else getattr(res, 'res', {})
                     tables.append({
-                        'html': res.get('res', {}).get('html', ''),
-                        'data': res.get('res', {}).get('data', []),
-                        'bbox': res.get('bbox', [])
+                        'html': item_res.get('html', '') if isinstance(item_res, dict) else '',
+                        'data': item_res.get('data', []) if isinstance(item_res, dict) else [],
+                        'bbox': res.get('bbox', []) if isinstance(res, dict) else []
                     })
-            
+
             return tables
-            
+
         except Exception as e:
-            logger.error(f"Table extraction failed: {e}")
+            logger.error(f"Table extraction failed: {e}", exc_info=True)
             return []
-    
+
+    """
+    Complete processing pipeline for medical reports.
+    Main entry point — orchestrates the full OCR pipeline.
+    """
     def process_report(self, image_path: str, report_type: str) -> Dict[str, Any]:
-        """Complete processing pipeline for medical reports."""
+        """
+        Complete processing pipeline for medical reports.
+        Returns a dict with:
+            raw_text            - full concatenated text from the image
+            structured_metrics  - parsed key/value pairs for the report type
+            tables              - table data extracted by PPStructureV3
+            average_confidence  - mean OCR confidence score (image quality indicator)
+            text_items          - number of text fragments detected
+        """
         logger.info(f"Processing {report_type} report: {image_path}")
-        
-        # Extract text
+
+        # Step 1: extract raw text
         text_data = self.extract_text(image_path)
         full_text = '\n'.join([item['text'] for item in text_data])
-        
-        # Extract tables
+
+        # Step 2: extract tables
         tables = self.extract_tables(image_path)
-        
-        # Parse metrics based on report type
-        if report_type == 'blood':
-            metrics = self._parse_blood_report(text_data, tables)
-        elif report_type == 'lipid':
-            metrics = self._parse_lipid_profile(text_data, tables)
-        else:
-            metrics = self._parse_general(text_data)
-        
-        avg_confidence = sum(item['confidence'] for item in text_data) / len(text_data) if text_data else 0
-        
+
+        # Step 3: parse into structured metrics
+        parsers = {
+            'blood':    self._parse_blood_report,
+            'lipid':    self._parse_lipid_profile,
+            'vitamin_d': self._parse_vitamin_d,
+            'hormone':  self._parse_hormone_report,
+            'kidney':   self._parse_kidney_function_report,
+            'liver':    self._parse_liver_function_report
+        }
+
+        parse_fn = parsers.get(report_type, lambda t, _: self._parse_general(t))
+        metrics = parse_fn(text_data, tables)
+
+        # Step 4: compute average OCR confidence
+        avg_confidence = (
+            sum(item['confidence'] for item in text_data) / len(text_data)
+            if text_data else 0
+        )
+
         return {
             'raw_text': full_text,
             'structured_metrics': metrics,
@@ -155,23 +264,28 @@ class OCRRunner:
             'average_confidence': round(avg_confidence, 3),
             'text_items': len(text_data)
         }
-    
+
+
+    '''
+    Private parsers — one per report type
+    '''
+
     def _parse_blood_report(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
-        """Parse blood test metrics."""
-        metrics = {}
+        """Parse blood test (CBC / Blood Panel) metrics."""
         text = ' '.join([item['text'] for item in text_data])
-        
+
         patterns = {
-            'wbc': r'(?:WBC|White\s+Blood\s+Cell)[\s:]+([\d.]+)',
-            'rbc': r'(?:RBC|Red\s+Blood\s+Cell)[\s:]+([\d.]+)',
-            'hemoglobin': r'(?:Hemoglobin|HGB|Hb)[\s:]+([\d.]+)',
-            'hematocrit': r'(?:Hematocrit|HCT)[\s:]+([\d.]+)',
-            'platelets': r'(?:Platelets|PLT)[\s:]+([\d.]+)',
-            'glucose': r'(?:Glucose|Fasting\s+Glucose)[\s:]+([\d.]+)',
-            'creatinine': r'(?:Creatinine)[\s:]+([\d.]+)',
-            'bun': r'(?:BUN)[\s:]+([\d.]+)',
+            'wbc':          r'(?:WBC|White\s+Blood\s+Cell)[\s:)]+([0-9.]+)',
+            'rbc':          r'(?:RBC|Red\s+Blood\s+Cell)[\s:)]+([0-9.]+)',
+            'hemoglobin':   r'(?:Hemoglobin|HGB|Hb)[\s:)]+([0-9.]+)',
+            'hematocrit':   r'(?:Hematocrit|HCT)[\s:)]+([0-9.]+)',
+            'platelets':    r'(?:Platelets|PLT)[\s:)]+([0-9.]+)',
+            'glucose':      r'(?:Glucose|Fasting\s+Glucose)[\s:)]+([0-9.]+)',
+            'creatinine':   r'(?:Creatinine)[\s:)]+([0-9.]+)',
+            'bun':          r'(?:BUN)[\s:)]+([0-9.]+)',
         }
-        
+
+        metrics: Dict[str, Any] = {}
         for key, pattern in patterns.items():
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
@@ -183,26 +297,25 @@ class OCRRunner:
                     }
                 except ValueError:
                     continue
-        
-        # Extract from tables if available
+
         if tables and not metrics:
             metrics = self._extract_from_tables(tables)
-        
+
         return metrics
-    
+
     def _parse_lipid_profile(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
         """Parse lipid profile metrics."""
-        metrics = {}
         text = ' '.join([item['text'] for item in text_data])
-        
+
         patterns = {
-            'total_cholesterol': r'(?:Total\s+Cholesterol|T\.?\s*Chol)[\s:]+([\d.]+)',
-            'hdl': r'(?:HDL)[\s:]+([\d.]+)',
-            'ldl': r'(?:LDL)[\s:]+([\d.]+)',
-            'triglycerides': r'(?:Triglycerides|TG)[\s:]+([\d.]+)',
-            'vldl': r'(?:VLDL)[\s:]+([\d.]+)',
+            'total_cholesterol': r'(?:Total\s+Cholesterol|T\.?\s*Chol)[\s:)]+([0-9.]+)',
+            'hdl':               r'(?:HDL)[\s:)]+([0-9.]+)',
+            'ldl':               r'(?:LDL)[\s:)]+([0-9.]+)',
+            'triglycerides':     r'(?:Triglycerides|TG)[\s:)]+([0-9.]+)',
+            'vldl':              r'(?:VLDL)[\s:)]+([0-9.]+)',
         }
-        
+
+        metrics: Dict[str, Any] = {}
         for key, pattern in patterns.items():
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
@@ -214,18 +327,151 @@ class OCRRunner:
                     }
                 except ValueError:
                     continue
-        
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+
         return metrics
-    
+
+    def _parse_vitamin_d(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
+        """Parse Vitamin-D report metrics."""
+        text = ' '.join(item["text"] for item in text_data)
+
+        patterns = {
+            'vitamin_d': r'(?:25[\s\-]?(?:OH|Hydroxy)?\s*Vitamin\s*D|Vitamin\s*D|Vit\s*D)[\s:)]+([0-9.]+)'
+        }
+
+        metrics: Dict[str, Any] = {}
+        for key, pattern in patterns.items():
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                try:
+                    metrics[key] = {
+                        'value': float(matches[0]),
+                        'unit': 'ng/mL',
+                        'source': 'text'
+                    }
+                except ValueError:
+                    continue
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+
+        return metrics
+
+    def _parse_hormone_report(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
+        """Parse Hormone/Thyroid report metrics."""
+        text = ' '.join(item["text"] for item in text_data)
+
+        patterns = {
+            'tsh':          r'(?:TSH|T\.?\s*S\.?\s*H)[\s:)]+([0-9.]+)',
+            't3':           r'(?:T3|Free\s*T3|Triiodothyronine)[\s:)]+([0-9.]+)',
+            't4':           r'(?:T4|Free\s*T4|Thyroxine)[\s:)]+([0-9.]+)',
+            'testosterone': r'(?:Testosterone|Total\s*Testosterone)[\s:)]+([0-9.]+)',
+            'estradiol':    r'(?:Estradiol|Estrogen|E2)[\s:)]+([0-9.]+)',
+            'progesterone': r'(?:Progesterone)[\s:)]+([0-9.]+)',
+            'prolactin':    r'(?:Prolactin)[\s:)]+([0-9.]+)',
+            'lh':           r'(?:LH|Luteinizing\s*Hormone)[\s:)]+([0-9.]+)',
+            'fsh':          r'(?:FSH|Follicle\s*Stimulating\s*Hormone)[\s:)]+([0-9.]+)',
+            'cortisol':     r'(?:Cortisol)[\s:)]+([0-9.]+)',
+        }
+
+        metrics: Dict[str, Any] = {}
+        for key, pattern in patterns.items():
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                try:
+                    metrics[key] = {
+                        'value': float(matches[0]),
+                        'unit': self._infer_unit(key),
+                        'source': 'text'
+                    }
+                except ValueError:
+                    continue
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+
+        return metrics
+
+    def _parse_kidney_function_report(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
+        """Parse Kidney Function report metrics."""
+        text = ' '.join(item["text"] for item in text_data)
+
+        patterns = {
+            'creatinine': r'(?:Creatinine)[\s:)]+([0-9.]+)',
+            'bun':        r'(?:BUN|Blood\s+Urea\s+Nitrogen)[\s:)]+([0-9.]+)',
+            'urea':       r'(?:Urea)[\s:)]+([0-9.]+)',
+            'uric_acid':  r'(?:Uric\s+Acid)[\s:)]+([0-9.]+)',
+            'egfr':       r'(?:eGFR|GFR)[\s:)]+([0-9.]+)',
+        }
+
+        metrics: Dict[str, Any] = {}
+        for key, pattern in patterns.items():
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                try:
+                    metrics[key] = {
+                        'value': float(matches[0]),
+                        'unit': self._infer_unit(key),
+                        'source': 'text'
+                    }
+                except ValueError:
+                    continue
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+
+        return metrics
+
+    def _parse_liver_function_report(self, text_data: List[Dict], tables: List[Dict]) -> Dict[str, Any]:
+        """Parse Liver Function report metrics."""
+        text = ' '.join(item["text"] for item in text_data)
+
+        patterns = {
+            'bilirubin_total':    r'(?:Total\s+Bilirubin|Bilirubin\s+Total)[\s:)]+([0-9.]+)',
+            'bilirubin_direct':   r'(?:Direct\s+Bilirubin)[\s:)]+([0-9.]+)',
+            'bilirubin_indirect': r'(?:Indirect\s+Bilirubin)[\s:)]+([0-9.]+)',
+            'alt':                r'(?:ALT|SGPT)[\s:)]+([0-9.]+)',
+            'ast':                r'(?:AST|SGOT)[\s:)]+([0-9.]+)',
+            'alp':                r'(?:ALP|Alkaline\s+Phosphatase)[\s:)]+([0-9.]+)',
+            'albumin':            r'(?:Albumin)[\s:)]+([0-9.]+)',
+            'total_protein':      r'(?:Total\s+Protein)[\s:)]+([0-9.]+)',
+        }
+
+        metrics: Dict[str, Any] = {}
+        for key, pattern in patterns.items():
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                try:
+                    metrics[key] = {
+                        'value': float(matches[0]),
+                        'unit': self._infer_unit(key),
+                        'source': 'text'
+                    }
+                except ValueError:
+                    continue
+
+        if tables and not metrics:
+            metrics = self._extract_from_tables(tables)
+
+        return metrics
+
+    """
+    General Parser
+    """
     def _parse_general(self, text_data: List[Dict]) -> Dict[str, Any]:
-        """General health report parsing."""
+        """General health report parsing — returns raw text lines."""
         return {
             'extracted_lines': [item['text'] for item in text_data],
             'line_count': len(text_data)
         }
-    
+
+    """
+    Fallback table parser
+    """
     def _extract_from_tables(self, tables: List[Dict]) -> Dict[str, Any]:
-        """Extract metrics from table data."""
+        """Extract metrics from table data when regex parsing yields nothing."""
         metrics = {}
         for table in tables:
             for row in table.get('data', []):
@@ -241,31 +487,69 @@ class OCRRunner:
                     except (ValueError, IndexError):
                         continue
         return metrics
-    
+
+    """
+    Utility helpers
+    """
     def _infer_unit(self, metric_name: str) -> str:
-        """Infer unit for common metrics."""
+        """Infer measurement unit for common metrics."""
         units = {
-            'wbc': '10^3/uL',
-            'rbc': '10^6/uL',
-            'hemoglobin': 'g/dL',
-            'hematocrit': '%',
-            'platelets': '10^3/uL',
-            'glucose': 'mg/dL',
-            'creatinine': 'mg/dL',
-            'bun': 'mg/dL',
+            'wbc':            '10^3/uL',
+            'rbc':            '10^6/uL',
+            'hemoglobin':     'g/dL',
+            'hematocrit':     '%',
+            'platelets':      '10^3/uL',
+            'glucose':        'mg/dL',
+            'creatinine':     'mg/dL',
+            'bun':            'mg/dL',
+            'urea':           'mg/dL',
+            'uric_acid':      'mg/dL',
+            'egfr':           'mL/min/1.73m²',
+            'tsh':            'mIU/L',
+            't3':             'pg/mL',
+            't4':             'ng/dL',
+            'testosterone':   'ng/dL',
+            'estradiol':      'pg/mL',
+            'progesterone':   'ng/mL',
+            'prolactin':      'ng/mL',
+            'lh':             'mIU/mL',
+            'fsh':            'mIU/mL',
+            'cortisol':       'µg/dL',
+            'bilirubin_total':    'mg/dL',
+            'bilirubin_direct':   'mg/dL',
+            'bilirubin_indirect': 'mg/dL',
+            'alt':            'U/L',
+            'ast':            'U/L',
+            'alp':            'U/L',
+            'albumin':        'g/dL',
+            'total_protein':  'g/dL',
         }
         return units.get(metric_name, 'unknown')
-    
+
     def _get_center(self, bbox: List[List[float]]) -> tuple:
-        """Calculate center of bounding box."""
+        """
+        Calculate center of bounding box.
+        The centre is the average of all 4 x-coordinates and all 4
+        y-coordinates. Used by extract_text() to sort detected text
+        fragments into reading order (top-to-bottom, left-to-right).
+        """
         x = sum(p[0] for p in bbox) / len(bbox)
         y = sum(p[1] for p in bbox) / len(bbox)
-        
         return (x, y)
 
-# Global instance
-_ocr_runner = None
 
+"""
+Module-level singleton accessor
+"""
+# Global instance — only one OCRRunner ever exists in a worker process
+_ocr_runner: Optional[OCRRunner] = None
+
+
+"""
+Two layers of protection against accidental double-init:
+    1. This function checks _ocr_runner before calling OCRRunner().
+    2. OCRRunner.__new__ + __init__ guard against it at the class level.
+"""
 def get_ocr_runner() -> OCRRunner:
     """Get or create OCR runner singleton."""
     global _ocr_runner

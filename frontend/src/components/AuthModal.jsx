@@ -9,6 +9,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 
 export function AuthModal({ children }) {
     const [open, setOpen] = useState(false);
@@ -25,6 +26,7 @@ export function AuthModal({ children }) {
     
     // Status state
     const [error, setError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [shake, setShake] = useState(false);
 
@@ -40,6 +42,7 @@ export function AuthModal({ children }) {
         setPassword('');
         setConfirmPassword('');
         setError(false);
+        setErrorMessage('');
         setSuccess(false);
         setShake(false);
         setIsLogin(true);
@@ -50,20 +53,34 @@ export function AuthModal({ children }) {
     const toggleMode = () => {
         setIsLogin(!isLogin);
         setError(false);
+        setErrorMessage('');
         setSuccess(false);
         setPassword('');
         setConfirmPassword('');
     };
 
-    const triggerErrorShake = () => {
+    const triggerErrorShake = (message = 'Authentication failed') => {
         setError(true);
+        setErrorMessage(message);
         setShake(true);
         setTimeout(() => setShake(false), 300);
     };
 
-    const handleSubmit = (e) => {
+    const getErrorMessage = async (response, fallbackMessage) => {
+        try {
+            const errorData = await response.json();
+            if (typeof errorData?.detail === 'string') return errorData.detail;
+            if (Array.isArray(errorData?.detail)) return errorData.detail.map((item) => item.msg).join(', ');
+            return fallbackMessage;
+        } catch {
+            return fallbackMessage;
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(false);
+        setErrorMessage('');
 
         if (!email || !password) {
             triggerErrorShake();
@@ -75,22 +92,54 @@ export function AuthModal({ children }) {
             return;
         }
 
-        // Mock success
-        setSuccess(true);
-        setError(false);
-        
-        if (isLogin) {
+        try {
+            const loginFormData = new URLSearchParams();
+            loginFormData.append('username', email);
+            loginFormData.append('password', password);
+
+            if (!isLogin) {
+                const registerResponse = await apiFetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        username: email,
+                        password,
+                    }),
+                });
+
+                if (!registerResponse.ok) {
+                    const message = await getErrorMessage(registerResponse, 'Signup failed');
+                    throw new Error(message);
+                }
+            }
+
+            const loginResponse = await apiFetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: loginFormData,
+            });
+
+            if (!loginResponse.ok) {
+                const message = await getErrorMessage(loginResponse, 'Login failed');
+                throw new Error(message);
+            }
+
+            const loginData = await loginResponse.json();
+            localStorage.setItem('access_token',  loginData.access_token);
+            if (loginData.refresh_token) {
+                localStorage.setItem('refresh_token', loginData.refresh_token);
+            }
+            setSuccess(true);
+            setError(false);
             setTimeout(() => {
                 setOpen(false);
-                setTimeout(resetForm, 500); // Wait for fade out
+                setTimeout(resetForm, 500);
+                window.location.reload();
             }, 800);
-        } else {
-            setTimeout(() => {
-                setSuccess(false);
-                setIsLogin(true);
-                setPassword('');
-                setConfirmPassword('');
-            }, 1000);
+        } catch (err) {
+            console.error('Auth error:', err);
+            triggerErrorShake(err instanceof Error ? err.message : 'Authentication failed');
         }
     };
 
@@ -149,7 +198,7 @@ export function AuthModal({ children }) {
                                 <div className="flex flex-col gap-1.5 animate-slide-up relative" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
                                     <label className="font-mono text-[11px] font-bold tracking-widest uppercase text-brutalist-fg flex items-center">
                                         PASSWORD
-                                        {error && <span className="text-red-500 text-[10px] ml-2">// AUTH FAILED</span>}
+                                        {error && <span className="text-red-500 text-[10px] ml-2">{`// ${errorMessage}`}</span>}
                                     </label>
                                     <div className="relative group">
                                         <input 
