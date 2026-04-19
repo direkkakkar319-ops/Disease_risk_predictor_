@@ -14,21 +14,14 @@ const navLinks = [
 
 export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
-    const [isDark, setIsDark] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+    const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('access_token'));
 
     useEffect(() => {
-        const root = document.documentElement;
-        setIsDark(root.classList.contains('dark'));
-
         const handleScroll = () => {
             setScrolled(window.scrollY > 50);
         };
         window.addEventListener('scroll', handleScroll);
-
-        const token = localStorage.getItem('access_token');
-        setIsLoggedIn(!!token);
-
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
