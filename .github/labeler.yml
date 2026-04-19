@@ -1,0 +1,23 @@
+frontend:
+  - changed-files:
+    - any-glob-to-any-file: 'frontend/**'
+
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 'backend/**'
+
+task-queue:
+  - changed-files:
+    - any-glob-to-any-file: 'task_queue/**'
+
+database:
+  - changed-files:
+    - any-glob-to-any-file: 'backend/alembic/**'
+
+workflows:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+
+ml-models:
+  - changed-files:
+    - any-glob-to-any-file: 'ml_models/**'
