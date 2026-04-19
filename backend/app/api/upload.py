@@ -10,7 +10,6 @@ from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from task_queue.tasks import process_medical_report
 
-from app.config import settings, BASE_DIR
 
 router = APIRouter()
 

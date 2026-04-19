@@ -47,5 +47,3 @@ class ReportComparison(Base):
     significant_changes = Column(JSON, nullable=True)
     trend_analysis      = Column(String, nullable=True)
     created_at          = Column(DateTime(timezone=True), server_default=func.now())
-
-from app.auth.models import User
