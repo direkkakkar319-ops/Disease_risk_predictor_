@@ -1,8 +1,10 @@
 """Auth API routes for register, login, and refresh."""
 
 from datetime import timedelta
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.auth.models import User
@@ -18,10 +20,12 @@ from app.auth.config import auth_settings
 from app.database import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(user_in: UserRegister, db: Session = Depends(get_db)) -> UserRead:
+@limiter.limit("3/minute")
+def register(request: Request, user_in: UserRegister, db: Session = Depends(get_db)) -> UserRead:
     """Create a new user account."""
     existing = (
         db.query(User)
@@ -43,7 +47,8 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)) -> UserRead:
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> TokenResponse:
+@limiter.limit("5/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> TokenResponse:
     """Verify credentials and return JWT tokens."""
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -60,7 +65,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh(refresh_token: str = Body(..., embed=True)) -> TokenResponse:
+@limiter.limit("10/minute")
+def refresh(request: Request, refresh_token: str = Body(..., embed=True)) -> TokenResponse:
     """Exchange a refresh token for a new access token."""
     from jose import ExpiredSignatureError, JWTError, jwt
 
