@@ -113,8 +113,8 @@ export function AuthModal({ children }) {
             </DialogTrigger>
             <DialogContent 
                 showCloseButton={false}
-                overlayClassName="bg-black/5 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
-                className={`sm:max-w-[400px] bg-[#f0ede6] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
+                overlayClassName="bg-black/5 dark:bg-black/40 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
+                className={`sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
             >
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
                     {/* The Two Forms Container */}
@@ -126,7 +126,7 @@ export function AuthModal({ children }) {
                                 <DialogTitle className="font-space text-[40px] font-bold tracking-tight text-brutalist-fg uppercase animate-slide-up leading-none mt-2" style={{ animationDelay: '0ms' }}>
                                     LOG. IN.
                                 </DialogTitle>
-                                <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10">
+                                <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10 dark:hover:bg-brutalist-fg/20 dark:hover:bg-brutalist-fg/20">
                                     ×
                                 </DialogClose>
                             </DialogHeader>
@@ -141,7 +141,7 @@ export function AuthModal({ children }) {
                                         type="email" 
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className={`w-full h-10 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 placeholder-lowercase`}
+                                        className={`w-full h-10 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50 placeholder-lowercase`}
                                         placeholder="user@example.com"
                                     />
                                 </div>
@@ -156,13 +156,13 @@ export function AuthModal({ children }) {
                                             type={showPassword ? "text" : "password"} 
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className={`w-full h-10 bg-transparent border ${error ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40`}
+                                            className={`w-full h-10 bg-transparent border ${error ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                         />
                                         <button 
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent focus:outline-none transition-colors"
+                                            className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent dark:hover:text-brutalist-accent dark:hover:text-brutalist-accent dark:hover:text-brutalist-accent focus:outline-none transition-colors"
                                             tabIndex="-1"
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -172,7 +172,7 @@ export function AuthModal({ children }) {
 
                                 <Button 
                                     type="submit"
-                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
+                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
                                     style={{ animationDelay: '240ms', animationFillMode: 'both' }}
                                 >
                                     {success ? '// ACCESS GRANTED ✓' : (
@@ -217,7 +217,7 @@ export function AuthModal({ children }) {
                                         type="email" 
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className={`w-full h-9 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40`}
+                                        className={`w-full h-9 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                         placeholder="user@example.com"
                                         tabIndex={isLogin ? -1 : 0}
                                     />
@@ -232,7 +232,7 @@ export function AuthModal({ children }) {
                                             type={showPassword ? "text" : "password"} 
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className={`w-full h-9 bg-transparent border ${error && !password ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40`}
+                                            className={`w-full h-9 bg-transparent border ${error && !password ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                             tabIndex={isLogin ? -1 : 0}
                                         />
@@ -257,7 +257,7 @@ export function AuthModal({ children }) {
                                             type={showConfirmPassword ? "text" : "password"} 
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className={`w-full h-9 bg-transparent border ${error && !passwordsMatch ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40`}
+                                            className={`w-full h-9 bg-transparent border ${error && !passwordsMatch ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                             tabIndex={isLogin ? -1 : 0}
                                         />
@@ -274,7 +274,7 @@ export function AuthModal({ children }) {
 
                                 <Button 
                                     type="submit"
-                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
+                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
                                     tabIndex={isLogin ? -1 : 0}
                                 >
                                     {success ? '// ACCOUNT CREATED ✓' : (
