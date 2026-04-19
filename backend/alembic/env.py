@@ -9,7 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.config import settings
 from app.database import Base
-import app.models
+import app.models  # noqa: F401 — registers models with Base.metadata for autogenerate
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
