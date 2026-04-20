@@ -7,8 +7,6 @@ on:
         description: "Issue number to summarize"
         required: true
         type: number
-  issues:
-    types: [opened]
 
 jobs:
   summarize:
