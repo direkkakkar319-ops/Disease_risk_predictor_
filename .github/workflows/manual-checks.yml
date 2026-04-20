@@ -1,0 +1,57 @@
+name: Manual Checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: "Which check to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend-lint
+          - frontend-build
+
+jobs:
+  backend-lint:
+    if: ${{ inputs.check == 'all' || inputs.check == 'backend-lint' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff
+        run: ruff check backend/
+
+  frontend-build:
+    if: ${{ inputs.check == 'all' || inputs.check == 'frontend-build' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Build
+        run: npm run build
+        working-directory: frontend
