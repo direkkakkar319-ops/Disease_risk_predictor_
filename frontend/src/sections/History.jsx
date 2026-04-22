@@ -153,6 +153,7 @@ export function History() {
                 }
             }
             const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
             // block
         } catch (error) {
             console.error('Download error:', error);
