@@ -24,6 +24,7 @@ import { apiFetch } from '@/lib/api';
  * - Brutalist UI design with custom borders
  * - Dynamic success state presentation
  * - Centered overlay on successful authentication
+ * - Dark mode compatible overlays
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
