@@ -126,6 +126,9 @@ async def download_report(
             config=Config(signature_version="s3v4"),
             region_name=os.getenv("S3_REGION", "us-east-1"),
         )
-        pass
+        try:
+            pass
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"S3 download error: {str(e)}")
     else:
         pass
