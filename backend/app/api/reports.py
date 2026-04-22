@@ -127,6 +127,15 @@ async def download_report(
             region_name=os.getenv("S3_REGION", "us-east-1"),
         )
         try:
+            url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={
+                    'Bucket': os.getenv("S3_BUCKET_NAME"),
+                    'Key': file_path,
+                    'ResponseContentDisposition': f'attachment; filename="{report.filename}"'
+                },
+                ExpiresIn=3600
+            )
             pass
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"S3 download error: {str(e)}")
