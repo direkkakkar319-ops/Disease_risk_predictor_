@@ -142,6 +142,16 @@ export function History() {
             });
             if (!res.ok) throw new Error('Download failed');
             let filename = report.fileName || `report-${report.id}.pdf`;
+            const disposition = res.headers.get('content-disposition');
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const filenameRegex = /filename[^;=
+]*=((['"]).*?\2|[^;
+]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) { 
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
             // block
         } catch (error) {
             console.error('Download error:', error);
