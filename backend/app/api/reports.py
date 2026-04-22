@@ -116,6 +116,16 @@ async def download_report(
     _USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
 
     if _USE_S3:
+        import boto3
+        from botocore.config import Config
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+            aws_access_key_id=os.getenv("S3_ACCESS_KEY"),
+            aws_secret_access_key=os.getenv("S3_SECRET_KEY"),
+            config=Config(signature_version="s3v4"),
+            region_name=os.getenv("S3_REGION", "us-east-1"),
+        )
         pass
     else:
         pass
