@@ -46,6 +46,7 @@ import { apiFetch } from '@/lib/api';
  * @returns {ReactElement} The AuthModal component
  * 
  * Design System:
+ * - Uses brutalist theme variables
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
