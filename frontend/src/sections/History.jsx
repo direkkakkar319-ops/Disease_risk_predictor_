@@ -158,6 +158,8 @@ export function History() {
             a.style.display = 'none';
             a.href = url;
             a.download = filename;
+            document.body.appendChild(a);
+            a.click();
             // block
         } catch (error) {
             console.error('Download error:', error);
