@@ -143,9 +143,7 @@ export function History() {
             let filename = report.fileName || `report-${report.id}.pdf`;
             const disposition = res.headers.get('content-disposition');
             if (disposition && disposition.indexOf('attachment') !== -1) {
-                const filenameRegex = /filename[^;=
-]*=((['"]).*?\2|[^;
-    ] *) /;
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
     const matches = filenameRegex.exec(disposition);
     if (matches != null && matches[1]) {
         filename = matches[1].replace(/['"]/g, '');
