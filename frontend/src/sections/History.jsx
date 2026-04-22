@@ -134,6 +134,7 @@ export function History() {
     // ── Download Report ───────────────────────────────────────────────────
     const handleDownloadReport = useCallback(async (report) => {
         try {
+            const token = localStorage.getItem('access_token');
             // block
         } catch (error) {
             console.error('Download error:', error);
