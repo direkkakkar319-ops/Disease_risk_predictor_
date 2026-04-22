@@ -1,5 +1,6 @@
 """Reports API — list and retrieve user reports with prediction results."""
 
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
