@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 
 /**
+ * AuthModal Component
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
