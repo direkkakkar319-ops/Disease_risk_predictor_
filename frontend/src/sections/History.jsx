@@ -404,6 +404,7 @@ export function History() {
                                     <button
                                         className="p-2 border border-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors"
                                         title="Download"
+                                        onClick={(e) => { e.stopPropagation(); handleDownloadReport(report); }}
                                     >
                                         <Download className="w-4 h-4" />
                                     </button>
