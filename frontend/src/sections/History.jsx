@@ -156,6 +156,8 @@ export function History() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
             // block
         } catch (error) {
             console.error('Download error:', error);
