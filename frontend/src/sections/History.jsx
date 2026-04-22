@@ -160,7 +160,8 @@ export function History() {
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            // block
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         } catch (error) {
             console.error('Download error:', error);
             alert('Failed to download the report.');
