@@ -152,6 +152,7 @@ export function History() {
                     filename = matches[1].replace(/['"]/g, '');
                 }
             }
+            const blob = await res.blob();
             // block
         } catch (error) {
             console.error('Download error:', error);
