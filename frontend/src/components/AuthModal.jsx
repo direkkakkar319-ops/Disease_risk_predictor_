@@ -23,6 +23,7 @@ import { apiFetch } from '@/lib/api';
  * - Password visibility toggle
  * - Brutalist UI design with custom borders
  * - Dynamic success state presentation
+ * - Centered overlay on successful authentication
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
