@@ -19,6 +19,7 @@ import { apiFetch } from '@/lib/api';
  * 
  * Features:
  * - Smooth sliding between Log In and Sign Up panes
+ * - Form validation and shake animation on error
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
