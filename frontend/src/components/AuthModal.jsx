@@ -11,7 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 
-export function AuthModal({ children }) {
+/**
+({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
     
@@ -355,3 +356,4 @@ export function AuthModal({ children }) {
 }
 
 export default AuthModal;
+
