@@ -33,6 +33,7 @@ import { apiFetch } from '@/lib/api';
  * - password: Stores the input password
  * - confirmPassword: For signup validation
  * - showPassword: Toggles password masking
+ * - error: Indicates if an authentication error occurred
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
