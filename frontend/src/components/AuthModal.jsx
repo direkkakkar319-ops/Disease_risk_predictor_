@@ -11,46 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 
-/**
- * AuthModal Component
- * 
- * This component renders the authentication modal which includes
- * both the Log In and Sign Up forms.
- * 
- * Features:
- * - Smooth sliding between Log In and Sign Up panes
- * - Form validation and shake animation on error
- * - Password visibility toggle
- * - Brutalist UI design with custom borders
- * - Dynamic success state presentation
- * - Centered overlay on successful authentication
- * - Dark mode compatible overlays
- * 
- * State Management:
- * - open: Controls modal visibility
- * - isLogin: Toggles between login and signup modes
- * - email: Stores the input email
- * - password: Stores the input password
- * - confirmPassword: For signup validation
- * - showPassword: Toggles password masking
- * - error: Indicates if an authentication error occurred
- * - success: Triggers the success overlay and redirects
- * 
- * Navigation & Animation:
- * - Uses a w-[200%] container to hold both forms
- * - transform translateX shifts the active form into view
- * - Overlay appears on successful auth with centered message
- * 
- * @param {Object} props - Component properties
- * @param {ReactNode} props.children - Trigger element to open the modal
- * @returns {ReactElement} The AuthModal component
- * 
- * Design System:
- * - Uses brutalist theme variables
- * - Implements custom shadow and border utilities
- * - Responsive design for desktop and mobile
- */
-({ children }) {
+export function AuthModal({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
     
