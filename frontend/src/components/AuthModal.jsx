@@ -30,6 +30,7 @@ import { apiFetch } from '@/lib/api';
  * - open: Controls modal visibility
  * - isLogin: Toggles between login and signup modes
  * - email: Stores the input email
+ * - password: Stores the input password
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
