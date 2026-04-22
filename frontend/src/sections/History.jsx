@@ -167,7 +167,6 @@ document.body.removeChild(a);
 }
     }, []);
 
-// ── Filtering ─────────────────────────────────────────────────────────
 const filteredReports = reports.filter((r) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
