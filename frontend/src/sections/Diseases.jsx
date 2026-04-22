@@ -71,7 +71,7 @@ const diseaseCategories = [
 export function Diseases() {
     const [activeCategory, setActiveCategory] = useState('blood');
     const [hoveredDisease, setHoveredDisease] = useState(null);
-    const totalDiseases = 50;
+    const totalDiseases = 14;
 
     const activeDiseases = diseaseCategories.find((c) => c.id === activeCategory)?.diseases || [];
     const activeColor = diseaseCategories.find((c) => c.id === activeCategory)?.color || '#1a1a1a';
