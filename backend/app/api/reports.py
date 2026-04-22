@@ -113,4 +113,6 @@ async def download_report(
 
     file_path = report.file_path
 
+    _USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+
     pass
