@@ -17,6 +17,7 @@ import { apiFetch } from '@/lib/api';
  * This component renders the authentication modal which includes
  * both the Log In and Sign Up forms.
  * 
+ * Features:
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
