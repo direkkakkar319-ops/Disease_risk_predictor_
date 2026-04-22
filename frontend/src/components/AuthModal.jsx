@@ -22,6 +22,7 @@ import { apiFetch } from '@/lib/api';
  * - Form validation and shake animation on error
  * - Password visibility toggle
  * - Brutalist UI design with custom borders
+ * - Dynamic success state presentation
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
