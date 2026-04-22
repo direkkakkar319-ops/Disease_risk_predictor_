@@ -92,3 +92,12 @@ async def get_report(
         "processed_at":      report.processed_at.isoformat() if report.processed_at else None,
         "prediction":        task.result if task else None,
     }
+
+
+@router.get("/reports/{report_id}/download")
+async def download_report(
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    pass
