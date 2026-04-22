@@ -136,7 +136,7 @@ async def download_report(
                 },
                 ExpiresIn=3600
             )
-            pass
+            return RedirectResponse(url=url)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"S3 download error: {str(e)}")
     else:
