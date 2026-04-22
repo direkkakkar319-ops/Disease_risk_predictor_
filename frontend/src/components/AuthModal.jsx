@@ -42,6 +42,7 @@ import { apiFetch } from '@/lib/api';
  * - Overlay appears on successful auth with centered message
  * 
  * @param {Object} props - Component properties
+ * @param {ReactNode} props.children - Trigger element to open the modal
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
