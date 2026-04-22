@@ -18,6 +18,7 @@ import { apiFetch } from '@/lib/api';
  * both the Log In and Sign Up forms.
  * 
  * Features:
+ * - Smooth sliding between Log In and Sign Up panes
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
