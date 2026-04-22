@@ -35,6 +35,7 @@ import { apiFetch } from '@/lib/api';
  * - showPassword: Toggles password masking
  * - error: Indicates if an authentication error occurred
  * - success: Triggers the success overlay and redirects
+ * 
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
