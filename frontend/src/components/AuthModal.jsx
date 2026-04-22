@@ -14,6 +14,7 @@ import { apiFetch } from '@/lib/api';
 /**
  * AuthModal Component
  * 
+ * This component renders the authentication modal which includes
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
