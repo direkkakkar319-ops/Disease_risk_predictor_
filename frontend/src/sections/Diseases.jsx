@@ -71,6 +71,7 @@ const diseaseCategories = [
 export function Diseases() {
     const [activeCategory, setActiveCategory] = useState('blood');
     const [hoveredDisease, setHoveredDisease] = useState(null);
+    const totalDiseases = 50;
 
     const activeDiseases = diseaseCategories.find((c) => c.id === activeCategory)?.diseases || [];
     const activeColor = diseaseCategories.find((c) => c.id === activeCategory)?.color || '#1a1a1a';
@@ -91,7 +92,7 @@ export function Diseases() {
                 </div>
 
                 <h2 className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg mb-4">
-                    14 Diseases Detected
+                    {totalDiseases}+ Diseases Detected
                 </h2>
                 <p className="text-sm font-mono text-brutalist-muted mb-12 max-w-2xl">
                     Our AI models are trained on millions of medical records to identify
