@@ -108,4 +108,7 @@ async def download_report(
         Report.user_id == current_user.id,
     ).first()
 
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
     pass
