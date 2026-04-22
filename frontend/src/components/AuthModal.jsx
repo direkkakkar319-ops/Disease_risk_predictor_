@@ -48,6 +48,7 @@ import { apiFetch } from '@/lib/api';
  * Design System:
  * - Uses brutalist theme variables
  * - Implements custom shadow and border utilities
+ * - Responsive design for desktop and mobile
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
