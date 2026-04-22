@@ -25,6 +25,7 @@ import { apiFetch } from '@/lib/api';
  * - Dynamic success state presentation
  * - Centered overlay on successful authentication
  * - Dark mode compatible overlays
+ * 
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
