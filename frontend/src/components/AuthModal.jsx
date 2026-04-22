@@ -40,6 +40,7 @@ import { apiFetch } from '@/lib/api';
  * - Uses a w-[200%] container to hold both forms
  * - transform translateX shifts the active form into view
  * - Overlay appears on successful auth with centered message
+ * 
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
