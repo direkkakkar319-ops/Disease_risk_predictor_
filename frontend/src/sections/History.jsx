@@ -131,6 +131,11 @@ export function History() {
         }
     }, []);
 
+    // ── Download Report ───────────────────────────────────────────────────
+    const handleDownloadReport = useCallback(async (report) => {
+        // block
+    }, []);
+
     // ── Filtering ─────────────────────────────────────────────────────────
     const filteredReports = reports.filter((r) => {
         const q = searchQuery.toLowerCase();
