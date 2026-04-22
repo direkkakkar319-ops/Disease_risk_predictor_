@@ -244,7 +244,7 @@ return (
             <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
                 <div className="flex items-center gap-4">
                     <span className="text-xs font-mono text-brutalist-muted">// SECTION: REPORT_HISTORY</span>
-                    <span className="text-xs font-mono text-brutalist-muted">007</span>
+                    <span className="text-xs font-mono text-brutalist-muted">004</span>
                 </div>
                 <button
                     onClick={fetchReports}
