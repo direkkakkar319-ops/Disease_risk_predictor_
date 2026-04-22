@@ -25,7 +25,7 @@ export function Partners() {
               // PARTNERS: HEALTHCARE_NETWORK
                         </span>
                         <span className="text-xs font-mono text-brutalist-muted">
-                            006
+                            008
                         </span>
                     </div>
                 </div>
