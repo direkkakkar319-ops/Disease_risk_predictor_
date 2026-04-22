@@ -140,6 +140,7 @@ export function History() {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            if (!res.ok) throw new Error('Download failed');
             // block
         } catch (error) {
             console.error('Download error:', error);
