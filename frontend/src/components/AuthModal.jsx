@@ -37,6 +37,7 @@ import { apiFetch } from '@/lib/api';
  * - success: Triggers the success overlay and redirects
  * 
  * Navigation & Animation:
+ * - Uses a w-[200%] container to hold both forms
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
