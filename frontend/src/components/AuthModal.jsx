@@ -27,6 +27,7 @@ import { apiFetch } from '@/lib/api';
  * - Dark mode compatible overlays
  * 
  * State Management:
+ * - open: Controls modal visibility
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
