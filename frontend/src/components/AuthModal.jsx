@@ -21,6 +21,7 @@ import { apiFetch } from '@/lib/api';
  * - Smooth sliding between Log In and Sign Up panes
  * - Form validation and shake animation on error
  * - Password visibility toggle
+ * - Brutalist UI design with custom borders
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
