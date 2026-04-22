@@ -142,4 +142,9 @@ async def download_report(
     else:
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="File not found on server")
-        pass
+        
+        return FileResponse(
+            path=file_path,
+            filename=report.filename,
+            media_type=report.content_type or mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        )
