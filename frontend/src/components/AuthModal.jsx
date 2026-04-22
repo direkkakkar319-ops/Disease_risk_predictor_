@@ -41,6 +41,7 @@ import { apiFetch } from '@/lib/api';
  * - transform translateX shifts the active form into view
  * - Overlay appears on successful auth with centered message
  * 
+ * @param {Object} props - Component properties
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
