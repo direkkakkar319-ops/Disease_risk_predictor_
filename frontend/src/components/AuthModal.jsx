@@ -28,6 +28,7 @@ import { apiFetch } from '@/lib/api';
  * 
  * State Management:
  * - open: Controls modal visibility
+ * - isLogin: Toggles between login and signup modes
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
