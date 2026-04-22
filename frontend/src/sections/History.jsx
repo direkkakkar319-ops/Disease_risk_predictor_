@@ -154,6 +154,8 @@ export function History() {
             }
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
             // block
         } catch (error) {
             console.error('Download error:', error);
