@@ -204,6 +204,22 @@ import { apiFetch } from '@/lib/api';
                 overlayClassName="bg-black/5 dark:bg-black/40 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
                 className={`sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
             >
+                {/* SUCCESS OVERLAY */}
+                <div 
+                    className={`absolute inset-0 z-50 flex items-center justify-center p-6 bg-[#f0ede6] dark:bg-[#1a1a1a] transition-opacity duration-300 ${
+                        success ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    }`}
+                >
+                    <div className="w-full h-full border border-brutalist-fg flex items-center justify-center">
+                        <Button 
+                            type="button"
+                            className="bg-[#22c55e] hover:bg-[#16a34a] border border-brutalist-fg text-[#1a1a1a] font-mono font-bold text-xs tracking-widest uppercase rounded-none h-11 px-8 flex items-center justify-center gap-2"
+                        >
+                            {isLogin ? '// ACCESS GRANTED ✓' : '// ACCOUNT CREATED ✓'}
+                        </Button>
+                    </div>
+                </div>
+
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
                     {/* The Two Forms Container */}
                     <div className="flex w-full">
@@ -260,15 +276,11 @@ import { apiFetch } from '@/lib/api';
 
                                 <Button 
                                     type="submit"
-                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
+                                    className="w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up"
                                     style={{ animationDelay: '240ms', animationFillMode: 'both' }}
                                 >
-                                    {success ? '// ACCESS GRANTED ✓' : (
-                                        <>
-                                            ENTER SYSTEM
-                                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1.5 transition-transform" />
-                                        </>
-                                    )}
+                                    ENTER SYSTEM
+                                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1.5 transition-transform" />
                                 </Button>
                             </form>
 
@@ -362,15 +374,11 @@ import { apiFetch } from '@/lib/api';
 
                                 <Button 
                                     type="submit"
-                                    className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
+                                    className="w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors"
                                     tabIndex={isLogin ? -1 : 0}
                                 >
-                                    {success ? '// ACCOUNT CREATED ✓' : (
-                                        <>
-                                            CREATE ACCESS
-                                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1.5 transition-transform" />
-                                        </>
-                                    )}
+                                    CREATE ACCESS
+                                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1.5 transition-transform" />
                                 </Button>
                             </form>
 
