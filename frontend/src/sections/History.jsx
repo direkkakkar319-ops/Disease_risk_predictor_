@@ -135,6 +135,11 @@ export function History() {
     const handleDownloadReport = useCallback(async (report) => {
         try {
             const token = localStorage.getItem('access_token');
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reports/${report.id}/download`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             // block
         } catch (error) {
             console.error('Download error:', error);
