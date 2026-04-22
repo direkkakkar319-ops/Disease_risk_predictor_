@@ -111,4 +111,6 @@ async def download_report(
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
 
+    file_path = report.file_path
+
     pass
