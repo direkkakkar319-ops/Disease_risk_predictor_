@@ -140,4 +140,6 @@ async def download_report(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"S3 download error: {str(e)}")
     else:
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on server")
         pass
