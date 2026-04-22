@@ -45,6 +45,7 @@ import { apiFetch } from '@/lib/api';
  * @param {ReactNode} props.children - Trigger element to open the modal
  * @returns {ReactElement} The AuthModal component
  * 
+ * Design System:
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
