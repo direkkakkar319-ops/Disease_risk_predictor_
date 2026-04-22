@@ -133,7 +133,12 @@ export function History() {
 
     // ── Download Report ───────────────────────────────────────────────────
     const handleDownloadReport = useCallback(async (report) => {
-        // block
+        try {
+            // block
+        } catch (error) {
+            console.error('Download error:', error);
+            alert('Failed to download the report.');
+        }
     }, []);
 
     // ── Filtering ─────────────────────────────────────────────────────────
