@@ -36,6 +36,7 @@ import { apiFetch } from '@/lib/api';
  * - error: Indicates if an authentication error occurred
  * - success: Triggers the success overlay and redirects
  * 
+ * Navigation & Animation:
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
