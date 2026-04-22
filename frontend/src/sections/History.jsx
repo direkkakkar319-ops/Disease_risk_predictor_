@@ -141,6 +141,7 @@ export function History() {
                 }
             });
             if (!res.ok) throw new Error('Download failed');
+            let filename = report.fileName || `report-${report.id}.pdf`;
             // block
         } catch (error) {
             console.error('Download error:', error);
