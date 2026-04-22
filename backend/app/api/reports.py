@@ -103,4 +103,9 @@ async def download_report(
     """
     Download the original uploaded file for a report.
     """
+    report = db.query(Report).filter(
+        Report.id == report_id,
+        Report.user_id == current_user.id,
+    ).first()
+
     pass
