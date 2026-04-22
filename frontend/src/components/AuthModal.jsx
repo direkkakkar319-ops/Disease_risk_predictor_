@@ -32,6 +32,7 @@ import { apiFetch } from '@/lib/api';
  * - email: Stores the input email
  * - password: Stores the input password
  * - confirmPassword: For signup validation
+ * - showPassword: Toggles password masking
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
