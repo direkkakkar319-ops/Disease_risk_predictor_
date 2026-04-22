@@ -31,6 +31,7 @@ import { apiFetch } from '@/lib/api';
  * - isLogin: Toggles between login and signup modes
  * - email: Stores the input email
  * - password: Stores the input password
+ * - confirmPassword: For signup validation
 ({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
