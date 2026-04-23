@@ -133,8 +133,6 @@ export function AuthModal({ children }) {
             setSuccess(true);
             setError(false);
             setTimeout(() => {
-                setOpen(false);
-                setTimeout(resetForm, 500);
                 window.location.reload();
             }, 800);
         } catch (err) {
