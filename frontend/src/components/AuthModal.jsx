@@ -167,18 +167,16 @@ export function AuthModal({ children }) {
             >
                 {/* SUCCESS OVERLAY */}
                 <div 
-                    className={`absolute inset-0 z-50 flex items-center justify-center p-6 bg-[#f0ede6] dark:bg-[#1a1a1a] transition-opacity duration-300 ${
+                    className={`absolute inset-0 z-50 flex items-center justify-center bg-[#f0ede6] dark:bg-[#1a1a1a] transition-opacity duration-300 ${
                         success ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                     }`}
                 >
-                    <div className="w-full h-full border border-brutalist-fg flex items-center justify-center">
-                        <Button 
-                            type="button"
-                            className="bg-[#22c55e] hover:bg-[#16a34a] border border-brutalist-fg text-[#1a1a1a] font-mono font-bold text-xs tracking-widest uppercase rounded-none h-11 px-8 flex items-center justify-center gap-2"
-                        >
-                            {isLogin ? '// ACCESS GRANTED ✓' : '// ACCOUNT CREATED ✓'}
-                        </Button>
-                    </div>
+                    <Button 
+                        type="button"
+                        className="bg-[#22c55e] hover:bg-[#16a34a] border border-brutalist-fg text-[#1a1a1a] font-mono font-bold text-xs tracking-widest uppercase rounded-none h-11 px-8 flex items-center justify-center gap-2"
+                    >
+                        {isLogin ? '// ACCESS GRANTED ✓' : '// ACCOUNT CREATED ✓'}
+                    </Button>
                 </div>
 
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
