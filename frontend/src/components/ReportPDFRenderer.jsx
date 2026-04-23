@@ -36,13 +36,13 @@ export const ReportPDFRenderer = forwardRef(({ reportData }, ref) => {
                 const canvas = await html2canvas(element, {
                     scale: 2, // Higher resolution
                     useCORS: true,
+                    allowTaint: true,
                     logging: false,
                     backgroundColor: '#ffffff'
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 
-                // Calculate dimensions for A4 PDF
                 const pdf = new jsPDF({
                     orientation: 'portrait',
                     unit: 'mm',
@@ -50,9 +50,21 @@ export const ReportPDFRenderer = forwardRef(({ reportData }, ref) => {
                 });
 
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                let imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                let imgWidth = pdfWidth;
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                // Scale down to fit on a single page if it's too tall
+                if (imgHeight > pageHeight - 20) { 
+                    const ratio = (pageHeight - 20) / imgHeight;
+                    imgHeight = imgHeight * ratio;
+                    imgWidth = imgWidth * ratio;
+                }
+
+                // Center horizontally
+                const xOffset = (pdfWidth - imgWidth) / 2;
+
+                pdf.addImage(imgData, 'PNG', xOffset, 10, imgWidth, imgHeight);
                 pdf.save(reportData?.filename ? `report-${reportData.filename}.pdf` : `report-analysis.pdf`);
                 return true;
             } catch (error) {
@@ -157,12 +169,14 @@ export const ReportPDFRenderer = forwardRef(({ reportData }, ref) => {
     return (
         <div 
             style={{ 
-                position: 'fixed', 
-                top: '-9999px', 
-                left: '-9999px', 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
                 width: '1000px', // Fixed width ensures consistent PDF generation layout
                 background: '#ffffff',
                 zIndex: -9999,
+                opacity: 0.01,
+                pointerEvents: 'none',
                 color: '#1a1a1a', // brutalist-fg
             }}
         >
