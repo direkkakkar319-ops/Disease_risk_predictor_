@@ -1,6 +1,9 @@
 """Reports API — list and retrieve user reports with prediction results."""
 
+import os
+import mimetypes
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -89,3 +92,59 @@ async def get_report(
         "processed_at":      report.processed_at.isoformat() if report.processed_at else None,
         "prediction":        task.result if task else None,
     }
+
+
+@router.get("/reports/{report_id}/download")
+async def download_report(
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Download the original uploaded file for a report.
+    """
+    report = db.query(Report).filter(
+        Report.id == report_id,
+        Report.user_id == current_user.id,
+    ).first()
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    file_path = report.file_path
+
+    _USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+
+    if _USE_S3:
+        import boto3
+        from botocore.config import Config
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+            aws_access_key_id=os.getenv("S3_ACCESS_KEY"),
+            aws_secret_access_key=os.getenv("S3_SECRET_KEY"),
+            config=Config(signature_version="s3v4"),
+            region_name=os.getenv("S3_REGION", "us-east-1"),
+        )
+        try:
+            url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={
+                    'Bucket': os.getenv("S3_BUCKET_NAME"),
+                    'Key': file_path,
+                    'ResponseContentDisposition': f'attachment; filename="{report.filename}"'
+                },
+                ExpiresIn=3600
+            )
+            return RedirectResponse(url=url)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"S3 download error: {str(e)}")
+    else:
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on server")
+        
+        return FileResponse(
+            path=file_path,
+            filename=report.filename,
+            media_type=report.content_type or mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        )
