@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Info, Loader2, Upload } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
-
+import { REFERENCE_RANGES, riskToStatus, formatLabel, transformResult } from '@/lib/reportUtils';
 
 // ── Reference ranges for common biomarkers ────────────────────────────────
 const REFERENCE_RANGES = {
