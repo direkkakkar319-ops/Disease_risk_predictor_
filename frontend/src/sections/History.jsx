@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     FileText, Calendar, Clock, ChevronRight,
     Download, Eye, Search, Filter,
     TrendingUp, TrendingDown, Minus, Loader2,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { ReportPDFRenderer } from '@/components/ReportPDFRenderer';
+import { transformResult } from '@/lib/reportUtils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const REPORT_TYPE_LABELS = {
@@ -65,6 +67,9 @@ export function History() {
     const [selectedReport, setSelectedReport] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const [pdfReportData, setPdfReportData] = useState(null);
+    const [pdfGeneratingId, setPdfGeneratingId] = useState(null);
+    const pdfRendererRef = useRef(null);
 
     // ── Fetch report list ─────────────────────────────────────────────────
     const fetchReports = useCallback(async () => {
@@ -133,36 +138,37 @@ export function History() {
 
     const handleDownloadReport = useCallback(async (report) => {
         try {
-            const token = localStorage.getItem('access_token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reports/${report.id}/download`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            setPdfGeneratingId(report.id);
+            const res = await apiFetch(`/api/status/${report.id}`);
+            if (!res.ok) throw new Error('Failed to fetch full report details');
+            const data = await res.json();
+            
+            if (data?.status === 'completed' && data.result) {
+                const transformed = transformResult(data);
+                if (transformed) {
+                    setPdfReportData(transformed);
+                    // Wait for React to mount/update the offscreen renderer with new data
+                    setTimeout(async () => {
+                        try {
+                            if (pdfRendererRef.current) {
+                                await pdfRendererRef.current.generatePDF();
+                            }
+                        } catch (err) {
+                            console.error("PDF generation error:", err);
+                            alert('Failed to generate PDF.');
+                        } finally {
+                            setPdfGeneratingId(null);
+                        }
+                    }, 500); // Give it a moment to render the canvas completely
+                    return;
                 }
-            });
-            if (!res.ok) throw new Error('Download failed');
-            let filename = report.fileName || `report-${report.id}.pdf`;
-            const disposition = res.headers.get('content-disposition');
-            if (disposition && disposition.indexOf('attachment') !== -1) {
-                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-    const matches = filenameRegex.exec(disposition);
-    if (matches != null && matches[1]) {
-        filename = matches[1].replace(/['"]/g, '');
-    }
-}
-const blob = await res.blob();
-const url = window.URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.style.display = 'none';
-a.href = url;
-a.download = filename;
-document.body.appendChild(a);
-a.click();
-window.URL.revokeObjectURL(url);
-document.body.removeChild(a);
+            }
+            throw new Error('Report is not fully processed yet or data is missing.');
         } catch (error) {
-    console.error('Download error:', error);
-    alert('Failed to download the report.');
-}
+            console.error('Download error:', error);
+            alert('Failed to generate the report PDF.');
+            setPdfGeneratingId(null);
+        }
     }, []);
 
 const filteredReports = reports.filter((r) => {
@@ -397,11 +403,16 @@ return (
                                     <Eye className="w-4 h-4" />
                                 </button>
                                 <button
-                                    className="p-2 border border-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors"
+                                    className="p-2 border border-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors disabled:opacity-50"
                                     title="Download"
                                     onClick={(e) => { e.stopPropagation(); handleDownloadReport(report); }}
+                                    disabled={pdfGeneratingId === report.id}
                                 >
-                                    <Download className="w-4 h-4" />
+                                    {pdfGeneratingId === report.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Download className="w-4 h-4" />
+                                    )}
                                 </button>
                                 <ChevronRight className="w-4 h-4 text-brutalist-muted ml-2" />
                             </div>
@@ -512,6 +523,8 @@ return (
                     </div>
                 </div>
             )}
+            
+            <ReportPDFRenderer ref={pdfRendererRef} reportData={pdfReportData} />
         </div>
     </section>
 );
