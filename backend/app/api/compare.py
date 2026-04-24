@@ -9,20 +9,20 @@ Endpoints:
   GET  /api/compare/{id}         — poll for status/result of a specific comparison
 
 Flow:
-  1. Client sends { report1_id, report2_id }
-  2. API validates: both reports exist, belong to the user, same type, both completed
-  3. A ReportComparison row is created with status="pending"
-  4. compare_reports Celery task is queued with the comparison_id
-  5. Client polls GET /api/compare/{id} until status="completed"
-  6. Worker calls ReportComparator.compare_medical_reports() which diffs the
-     extracted_metrics between the two reports (done locally, NOT on HF Space)
+1. Client sends { report1_id, report2_id }
+2. API validates: both reports exist, belong to the user, same type, both completed
+3. A ReportComparison row is created with status="pending"
+4. compare_reports Celery task is queued with the comparison_id
+5. Client polls GET /api/compare/{id} until status="completed"
+6. Worker calls ReportComparator.compare_medical_reports() which diffs the
+   extracted_metrics between the two reports (done locally, NOT on HF Space)
 
 Why local comparison instead of HF Space?
-  Comparison is a simple metric diff — no OCR or ML inference needed.
-  It runs fast enough on the API server without burning HF compute.
+Comparison is a simple metric diff — no OCR or ML inference needed.
+It runs fast enough on the API server without burning HF compute.
 
 Error safety: if the Celery task fails to queue, the row is immediately
-  marked "failed" so the frontend stops polling and shows an error.
+marked "failed" so the frontend stops polling and shows an error.
 """
 
 import uuid
