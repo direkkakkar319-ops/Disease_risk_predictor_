@@ -1,4 +1,25 @@
-"""Auth API routes for register, login, and refresh."""
+"""
+Auth routes (router.py)
+=========================
+Three endpoints, all under /auth:
+
+  POST /auth/register  — create account (rate-limited: 3/min)
+  POST /auth/login     — exchange username+password for tokens (rate-limited: 5/min)
+  POST /auth/refresh   — exchange refresh token for a new access token (rate-limited: 10/min)
+
+Rate limits are enforced by slowapi using the client's IP address.
+They protect against brute-force attacks without requiring session state.
+
+Login uses OAuth2PasswordRequestForm which expects form-encoded body fields
+(username, password), not JSON. The frontend must send
+  Content-Type: application/x-www-form-urlencoded
+when calling /auth/login.
+
+Refresh endpoint:
+  Does NOT require a DB lookup — it only decodes and validates the JWT.
+  Extracts the username from the "sub" claim and issues a new access token.
+  The same refresh token is returned unchanged (no rotation on every refresh).
+"""
 
 from datetime import timedelta
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status

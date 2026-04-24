@@ -1,3 +1,22 @@
+// ─── UploadReportModal.jsx — File upload entry point ─────────────────────────
+//
+// Wraps any trigger element (via `children`) in a Dialog.
+// Upload flow:
+//   1. User selects a report type (blood/lipid/vitamin_d/hormone/kidney/liver)
+//      — this is required because the backend needs it to pick the right XGBoost models
+//   2. User drops/selects files (PDF, JPG, PNG, DICOM supported)
+//   3. handleUpload() POSTs to /api/upload with FormData containing files + report_type
+//   4. On success:
+//      a. Stores the first report ID in localStorage as 'healthinsight_pending_report_id'
+//         so Results.jsx can resume polling if the page is refreshed mid-analysis
+//      b. Fires a 'reportUploaded' DOM event with { reportIds } — Results.jsx and
+//         History.jsx both listen for this to start polling / refresh their list
+//      c. Scrolls the user to the #results section automatically
+//
+// Why FormData? The /api/upload endpoint accepts multipart/form-data because it needs
+// to receive binary file content alongside the report_type string field.
+// apiFetch() is used so the Authorization header is automatically attached.
+
 import React, { useState } from 'react';
 import { Upload, X, FileText, Image as ImageIcon, Activity, ArrowRight, Droplets, Heart, Sun, Zap, Bean, FlaskConical } from 'lucide-react';
 import { apiFetch } from '@/lib/api';

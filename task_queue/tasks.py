@@ -156,8 +156,14 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
 
 
 # ─────────────────────────────────────────────
-#  Task 2 — Disease Risk Prediction
+#  Task 2 — Disease Risk Prediction (UNUSED / DEAD CODE)
 # ─────────────────────────────────────────────
+# NOTE: predict_disease_risk is NOT called by process_medical_report.
+# Originally this was a second chained task: OCR → predict.
+# It was superseded when the HF Space /analyze endpoint was updated to return
+# BOTH the OCR result and the prediction in a single response.
+# Now process_medical_report gets everything in one HTTP call and saves it directly.
+# This task remains as a local fallback if ML_SERVICE_URL is unset.
 @celery_app.task(
     bind=True,
     max_retries=2,

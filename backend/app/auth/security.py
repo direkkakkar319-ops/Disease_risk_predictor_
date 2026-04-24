@@ -1,4 +1,23 @@
-"""Security helpers for hashing passwords and creating JWTs."""
+"""
+Security helpers (security.py)
+================================
+Handles two concerns:
+  1. Password hashing — bcrypt via passlib (work factor=12 rounds)
+  2. JWT creation — python-jose (HS256, SECRET_KEY from auth_settings)
+
+Token types:
+  access  — short-lived (30 min), used on every API request in Authorization header
+  refresh — long-lived (7 days), used ONLY to obtain a new access token via
+            POST /auth/refresh when the access token expires
+
+Each token encodes { "sub": username, "exp": expiry_timestamp, "type": "access"|"refresh" }
+The "type" claim lets /auth/refresh reject access tokens passed by mistake.
+
+bcrypt backend selection:
+  On some environments (e.g. Render's Python 3.10 slim image), the C-extension
+  bcrypt may not be available. _init_bcrypt_backend() falls back to the pure-
+  Python builtin so the app doesn't crash on startup.
+"""
 
 from datetime import datetime, timedelta, timezone
 import os

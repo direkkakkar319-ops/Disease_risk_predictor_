@@ -1,3 +1,23 @@
+// ─── Results.jsx — Live analysis dashboard ────────────────────────────────────
+//
+// This section is responsible for:
+//   1. LISTENING for the 'reportUploaded' custom DOM event fired by UploadReportModal
+//   2. POLLING /api/status/{reportId} every 3 seconds until status === 'completed'
+//   3. RENDERING the risk dashboard (radar chart + risk bars + biomarkers)
+//
+// Polling design:
+//   - Uses setInterval stored in a ref (pollingRef) so it survives re-renders.
+//   - Stops after 60 attempts (~3 min) to avoid infinite polling on hung tasks.
+//   - On page refresh: reads 'healthinsight_pending_report_id' from localStorage
+//     so it can resume polling mid-analysis without losing the report.
+//   - On mount: reads 'healthinsight_latest_report_id' to restore the last result
+//     without polling (report is already done).
+//
+// Radar chart:
+//   - Drawn on a raw <canvas> using the 2D API (no chart library dependency).
+//   - Each disease risk maps to an axis; the polygon area = combined risk footprint.
+//   - Re-drawn whenever riskMetrics changes via a useEffect dependency.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Info, Loader2, Upload } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
@@ -5,6 +25,7 @@ import { REFERENCE_RANGES, riskToStatus, formatLabel, transformResult } from '@/
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
+// Maps backend task status to a human-readable progress message shown during analysis.
 const STEP_LABELS = {
     uploaded: 'Report received',
     preprocessing: 'Preprocessing image…',
@@ -16,8 +37,8 @@ const STEP_LABELS = {
 
 // ── Component ─────────────────────────────────────────────────────────────
 export function Results() {
-    const canvasRef = useRef(null);
-    const pollingRef = useRef(null);
+    const canvasRef = useRef(null);    // ref to <canvas> for radar chart drawing
+    const pollingRef = useRef(null);   // holds the setInterval id so we can cancel it
 
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);

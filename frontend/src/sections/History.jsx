@@ -1,3 +1,22 @@
+// ─── History.jsx — Past reports browser ───────────────────────────────────────
+//
+// Fetches the current user's full report list from GET /api/reports.
+// The list endpoint returns lightweight summary data (no OCR text, no full predictions).
+// Full detail (extracted_metrics, prediction) is loaded lazily only when the user
+// clicks a row (handleSelectReport → GET /api/reports/{id}).
+//
+// PDF download flow:
+//   1. User clicks Download → handleDownloadReport()
+//   2. Fetches full report data from /api/status/{id} (same endpoint as Results polling)
+//   3. Transforms the data with transformResult() (same util as Results.jsx)
+//   4. Sets pdfReportData state, which feeds a hidden <ReportPDFRenderer> component
+//      mounted at the bottom of this section
+//   5. After 500ms (render settle time), calls pdfRendererRef.current.generatePDF()
+//      which uses @react-pdf/renderer to build and download the PDF
+//
+// The hidden offscreen ReportPDFRenderer pattern is used because @react-pdf/renderer
+// needs to be in the React tree to generate PDFs — it can't run imperatively outside.
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     FileText, Calendar, Clock, ChevronRight,

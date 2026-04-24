@@ -1,3 +1,24 @@
+"""
+Upload endpoint (upload.py)
+============================
+POST /api/upload — accepts one or more files + a report_type string.
+
+Storage strategy (controlled by USE_S3 env var):
+  USE_S3=true  → uploads go to Supabase S3 bucket "medscan-uploads"
+                  stored as "uploads/{user_id}_{random8hex}.{ext}"
+  USE_S3=false → uploads go to /app/data/raw_uploads (Docker shared volume)
+                  used in local dev / Docker Compose
+
+After saving the file, a Report row is immediately written to the DB with
+status="uploaded", and then process_medical_report.delay(...) queues the
+Celery task asynchronously. The response returns immediately (don't wait for OCR).
+
+Why queue immediately and not wait?
+  OCR + ML on HF Space can take 30-120 seconds. FastAPI would time out or
+  block a request slot for the entire duration. Celery lets the API return
+  a report ID instantly and the frontend polls separately.
+"""
+
 import os
 import shutil
 from pathlib import Path
@@ -22,6 +43,8 @@ _USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
 
 
 def _get_s3_client():
+    # Lazy import: boto3 is only needed in production (USE_S3=true).
+    # Avoids import error on local dev machines where boto3 may not be installed.
     import boto3
     from botocore.config import Config
     return boto3.client(
@@ -41,6 +64,11 @@ async def upload_reports(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """
+    Accept one or more files, store them, create a Report DB row for each,
+    and queue a Celery task. Returns immediately with report IDs.
+    The frontend polls /api/status/{id} to track progress.
+    """
     if report_type not in VALID_REPORT_TYPES:
         raise HTTPException(
             status_code=422,
@@ -55,6 +83,7 @@ async def upload_reports(
     for file in files:
         try:
             file_extension = Path(file.filename).suffix
+            # Prefix with user_id to namespace files; random hex prevents collisions.
             unique_filename = f"{current_user.id}_{os.urandom(8).hex()}{file_extension}"
 
             if _USE_S3:
@@ -64,13 +93,15 @@ async def upload_reports(
                     os.getenv("S3_BUCKET_NAME"),
                     s3_key,
                 )
-                stored_path = s3_key
+                stored_path = s3_key   # worker will download from S3 using this key
             else:
                 local_path = UPLOAD_DIR / unique_filename
                 with local_path.open("wb") as buffer:
                     shutil.copyfileobj(file.file, buffer)
-                stored_path = str(local_path)
+                stored_path = str(local_path)  # worker reads directly from shared volume
 
+            # Persist the Report row BEFORE queuing the task so the worker can
+            # look up report_id in the DB even if the task starts immediately.
             new_report = Report(
                 filename=file.filename,
                 content_type=file.content_type,
@@ -83,6 +114,7 @@ async def upload_reports(
             db.commit()
             db.refresh(new_report)
 
+            # .delay() = async Celery call; enqueues to Redis, returns immediately.
             process_medical_report.delay(
                 new_report.id,
                 stored_path,

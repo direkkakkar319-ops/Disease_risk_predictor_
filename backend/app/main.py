@@ -1,4 +1,21 @@
-"""App entrypoint that creates the FastAPI application."""
+"""
+FastAPI application entrypoint (main.py)
+=========================================
+Responsibilities:
+  1. Create the FastAPI app and attach global middleware (CORS, rate limiting)
+  2. Register all API routers under /api and /auth prefixes
+  3. Run Alembic migrations on startup so the DB schema is always up-to-date
+
+Key design decisions:
+  • CORS uses allow_origin_regex rather than a list so localhost dev works on
+    any port (5173, 3000, etc.) without re-configuring.
+  • slowapi (SlowAPI) rate-limiter uses the client's IP as the key. Per-route
+    limits are set with @limiter.limit("N/minute") decorators in each router.
+  • Alembic migrations run automatically on startup (on_startup hook) so
+    Render deployments never require manual migration steps. Falls back to
+    SQLAlchemy create_all if Alembic fails (e.g. first-ever cold start with
+    no alembic_version table).
+"""
 
 import logging
 from alembic.config import Config
@@ -21,7 +38,8 @@ app = FastAPI(title=settings.PROJECT_NAME)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Set up CORS middleware
+# CORS: regex allows localhost on any port (dev) + production Render domain.
+# allow_credentials=True is needed so the frontend can send the Authorization header.
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https://medscan-ai-s7t1\.onrender\.com$",

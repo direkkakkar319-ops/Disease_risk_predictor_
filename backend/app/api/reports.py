@@ -1,4 +1,28 @@
-"""Reports API — list and retrieve user reports with prediction results."""
+"""
+Reports API (reports.py)
+=========================
+Three endpoints:
+
+  GET /api/reports          — lightweight list of all the user's reports
+  GET /api/reports/{id}     — full detail for one report (includes OCR + prediction)
+  GET /api/reports/{id}/download — serve the original uploaded file
+
+List vs detail split:
+  The list endpoint returns only summary fields (id, filename, status, risk_level)
+  to keep the History page fast — no large OCR text or full JSON prediction payload.
+  Detail is fetched on-demand when the user clicks a report row.
+
+Linking reports to predictions:
+  There is no FK between reports and tasks tables. The link is a naming
+  convention: task_id = "predict-{report_id}-{uuid}". Queries use .like()
+  pattern matching: Task.task_id.like(f"predict-{report_id}-%")
+
+Download endpoint:
+  USE_S3=true  → generates a pre-signed S3 URL (expires in 1 hour) and
+                  redirects the browser to it. The file is served directly
+                  from Supabase S3, not through the FastAPI server.
+  USE_S3=false → serves the file directly via FileResponse from local disk.
+"""
 
 import os
 import mimetypes
