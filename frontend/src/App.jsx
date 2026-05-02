@@ -9,21 +9,10 @@ import { Pricing } from '@/sections/Pricing';
 import { Partners } from '@/sections/Partners';
 import { History } from '@/sections/History';
 import { Compare } from '@/sections/Compare';
-import { useEffect } from 'react';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
 
 function App() {
-    useEffect(() => {
-        if (sessionStorage.getItem('loginSuccess') === 'true') {
-            toast.success('Hey you are successfully logged in');
-            sessionStorage.removeItem('loginSuccess');
-        }
-    }, []);
-
     return (
         <div className="min-h-screen bg-brutalist-bg dot-pattern">
-            <Toaster position="top-center" richColors />
             <Navbar />
             <main>
                 <Hero />

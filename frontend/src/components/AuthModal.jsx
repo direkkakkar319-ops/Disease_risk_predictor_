@@ -132,7 +132,6 @@ export function AuthModal({ children }) {
             }
             setSuccess(true);
             setError(false);
-            sessionStorage.setItem('loginSuccess', 'true');
             setTimeout(() => {
                 setOpen(false);
                 setTimeout(resetForm, 500);
