@@ -3,6 +3,7 @@ import { Activity, Moon, Sun, History, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadReportModal } from './UploadReportModal';
 import { AuthModal } from './AuthModal';
+import { toast } from 'sonner';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -53,6 +54,13 @@ export function Navbar() {
         } else {
             root.classList.add('dark');
             setIsDark(true);
+        }
+    };
+
+    const handleUploadClick = (e) => {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            toast.error('Please log in first to upload a report');
         }
     };
 
@@ -137,13 +145,22 @@ export function Navbar() {
                                 </button>
                             </AuthModal>
                         )}
-                        <UploadReportModal>
+                        {isLoggedIn ? (
+                            <UploadReportModal>
+                                <Button
+                                    className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
+                                >
+                                    Upload Report
+                                </Button>
+                            </UploadReportModal>
+                        ) : (
                             <Button
+                                onClick={handleUploadClick}
                                 className="bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs font-mono tracking-wider uppercase h-9 px-4 rounded-none border border-brutalist-fg"
                             >
                                 Upload Report
                             </Button>
-                        </UploadReportModal>
+                        )}
                     </div>
                 </nav>
             </div>

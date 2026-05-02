@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FileText, Scan, Brain, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { UploadReportModal } from '@/components/UploadReportModal';
+import { toast } from 'sonner';
 
 const steps = [
     { id: '1', x: 15, y: 50, label: 'UPLOAD', icon: <FileText className="w-4 h-4" />, side: 'left' },
@@ -13,6 +15,14 @@ const steps = [
 export function Hero() {
     const canvasRef = useRef(null);
     const [activeStep, setActiveStep] = useState(null);
+    const isLoggedIn = !!localStorage.getItem('access_token');
+
+    const handleAnalyzeClick = (e) => {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            toast.error('Please log in first to upload a report');
+        }
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -155,14 +165,28 @@ export function Hero() {
 
                 {/* CTA Button */}
                 <div className="flex justify-center mb-16">
-                    <Button
-                        className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
-                    >
-                        <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
-                            <ArrowRight className="w-4 h-4 text-white" />
-                        </span>
-                        Analyze Your Report
-                    </Button>
+                    {isLoggedIn ? (
+                        <UploadReportModal>
+                            <Button
+                                className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                            >
+                                <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
+                                    <ArrowRight className="w-4 h-4 text-white" />
+                                </span>
+                                Analyze Your Report
+                            </Button>
+                        </UploadReportModal>
+                    ) : (
+                        <Button
+                            onClick={handleAnalyzeClick}
+                            className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                        >
+                            <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
+                                <ArrowRight className="w-4 h-4 text-white" />
+                            </span>
+                            Analyze Your Report
+                        </Button>
+                    )}
                 </div>
 
                 {/* Stats */}
