@@ -51,9 +51,11 @@ export function Navbar() {
         if (isDark) {
             root.classList.remove('dark');
             setIsDark(false);
+            localStorage.setItem('theme', 'light');
         } else {
             root.classList.add('dark');
             setIsDark(true);
+            localStorage.setItem('theme', 'dark');
         }
     };
 
