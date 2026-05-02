@@ -168,7 +168,7 @@ export function Hero() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12">
                     {[
-                        { value: '50+', label: 'Diseases Detected' },
+                        { value: '14', label: 'Diseases Detected' },
                         { value: '99.2%', label: 'Accuracy Rate' },
                         { value: '2M+', label: 'Reports Analyzed' },
                         { value: '<30s', label: 'Analysis Time' },

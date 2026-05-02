@@ -33,7 +33,7 @@ const pricingTiers = [
         icon: <Users className="w-5 h-5" />,
         features: [
             { text: 'Unlimited reports', included: true },
-            { text: 'Full disease detection (50+)', included: true },
+            { text: 'Full disease detection (14)', included: true },
             { text: 'PDF & Excel downloads', included: true },
             { text: 'Unlimited data retention', included: true },
             { text: 'Advanced visualizations', included: true },
@@ -54,7 +54,7 @@ const pricingTiers = [
         icon: <Building2 className="w-5 h-5" />,
         features: [
             { text: 'Unlimited everything', included: true },
-            { text: 'All 50+ diseases', included: true },
+            { text: 'All 14 diseases', included: true },
             { text: 'White-label reports', included: true },
             { text: 'Unlimited retention', included: true },
             { text: 'Custom dashboards', included: true },
