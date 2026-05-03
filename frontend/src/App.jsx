@@ -1,13 +1,3 @@
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { Hero } from '@/sections/Hero';
-import { HowItWorks } from '@/sections/HowItWorks';
-import { Diseases } from '@/sections/Diseases';
-import { Results } from '@/sections/Results';
-import { Security } from '@/sections/Security';
-import { Pricing } from '@/sections/Pricing';
-import { Partners } from '@/sections/Partners';
-import { History } from '@/sections/History';
 import { Compare } from '@/sections/Compare';
 import { useEffect } from 'react';
 import { Toaster } from '@/components/ui/sonner';
