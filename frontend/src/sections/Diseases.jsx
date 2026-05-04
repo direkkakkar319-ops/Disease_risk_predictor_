@@ -91,7 +91,7 @@ export function Diseases() {
                 </div>
 
                 <h2 className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg mb-4">
-                    50+ Diseases Detected
+                    14 Diseases Detected
                 </h2>
                 <p className="text-sm font-mono text-brutalist-muted mb-12 max-w-2xl">
                     Our AI models are trained on millions of medical records to identify
