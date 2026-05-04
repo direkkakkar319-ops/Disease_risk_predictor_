@@ -33,7 +33,7 @@ const pricingTiers = [
         icon: <Users className="w-5 h-5" />,
         features: [
             { text: 'Unlimited reports', included: true },
-            { text: 'Full disease detection (50+)', included: true },
+            { text: 'Full disease detection (14)', included: true },
             { text: 'PDF & Excel downloads', included: true },
             { text: 'Unlimited data retention', included: true },
             { text: 'Advanced visualizations', included: true },
@@ -54,7 +54,7 @@ const pricingTiers = [
         icon: <Building2 className="w-5 h-5" />,
         features: [
             { text: 'Unlimited everything', included: true },
-            { text: 'All 50+ diseases', included: true },
+            { text: 'All 14 diseases', included: true },
             { text: 'White-label reports', included: true },
             { text: 'Unlimited retention', included: true },
             { text: 'Custom dashboards', included: true },
@@ -117,8 +117,8 @@ export function Pricing() {
                         <div
                             key={tier.id}
                             className={`relative ${index < pricingTiers.length - 1
-                                    ? 'border-b md:border-b-0 md:border-r border-brutalist-fg'
-                                    : ''
+                                ? 'border-b md:border-b-0 md:border-r border-brutalist-fg'
+                                : ''
                                 } ${tier.recommended ? 'bg-brutalist-fg text-brutalist-bg' : 'bg-brutalist-bg'}`}
                         >
                             {/* Recommended Badge */}
@@ -136,8 +136,8 @@ export function Pricing() {
                                     <div className="flex items-center gap-3">
                                         <div
                                             className={`w-10 h-10 border flex items-center justify-center ${tier.recommended
-                                                    ? 'border-brutalist-accent bg-brutalist-accent'
-                                                    : 'border-current'
+                                                ? 'border-brutalist-accent bg-brutalist-accent'
+                                                : 'border-current'
                                                 }`}
                                         >
                                             {tier.icon}
@@ -197,10 +197,10 @@ export function Pricing() {
                                             )}
                                             <span
                                                 className={`text-sm font-mono ${feature.included
-                                                        ? tier.recommended
-                                                            ? 'text-brutalist-bg'
-                                                            : 'text-brutalist-fg'
-                                                        : 'text-brutalist-muted/50'
+                                                    ? tier.recommended
+                                                        ? 'text-brutalist-bg'
+                                                        : 'text-brutalist-fg'
+                                                    : 'text-brutalist-muted/50'
                                                     }`}
                                             >
                                                 {feature.text}
@@ -212,8 +212,8 @@ export function Pricing() {
                                 {/* CTA Button */}
                                 <Button
                                     className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${tier.recommended
-                                            ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
-                                            : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
+                                        ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
+                                        : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
                                         }`}
                                 >
                                     {tier.cta}
