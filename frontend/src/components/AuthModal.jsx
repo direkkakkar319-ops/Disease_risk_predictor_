@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
@@ -14,16 +14,16 @@ import { apiFetch } from '@/lib/api';
 export function AuthModal({ children }) {
     const [open, setOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
-    
+
     // Form state
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    
+
     // Visibility state
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    
+
     // Status state
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -126,12 +126,13 @@ export function AuthModal({ children }) {
             }
 
             const loginData = await loginResponse.json();
-            localStorage.setItem('access_token',  loginData.access_token);
+            localStorage.setItem('access_token', loginData.access_token);
             if (loginData.refresh_token) {
                 localStorage.setItem('refresh_token', loginData.refresh_token);
             }
             setSuccess(true);
             setError(false);
+            sessionStorage.setItem('loginSuccess', 'true');
             setTimeout(() => {
                 setOpen(false);
                 setTimeout(resetForm, 500);
@@ -160,7 +161,7 @@ export function AuthModal({ children }) {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent 
+            <DialogContent
                 showCloseButton={false}
                 overlayClassName="bg-black/5 dark:bg-black/40 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
                 className={`sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
@@ -168,7 +169,7 @@ export function AuthModal({ children }) {
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
                     {/* The Two Forms Container */}
                     <div className="flex w-full">
-                        
+
                         {/* ----------------- LOG IN FORM ----------------- */}
                         <div className="w-1/2 pr-6 shrink-0 flex flex-col items-stretch">
                             <DialogHeader className="mb-4 !flex-row items-start justify-between">
@@ -181,13 +182,13 @@ export function AuthModal({ children }) {
                             </DialogHeader>
 
                             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                                
+
                                 <div className="flex flex-col gap-1.5 animate-slide-up group" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
                                     <label className="font-mono text-[11px] font-bold tracking-widest uppercase text-brutalist-fg">
                                         EMAIL
                                     </label>
-                                    <input 
-                                        type="email" 
+                                    <input
+                                        type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className={`w-full h-10 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50 placeholder-lowercase`}
@@ -201,14 +202,14 @@ export function AuthModal({ children }) {
                                         {error && <span className="text-red-500 text-[10px] ml-2">{`// ${errorMessage}`}</span>}
                                     </label>
                                     <div className="relative group">
-                                        <input 
-                                            type={showPassword ? "text" : "password"} 
+                                        <input
+                                            type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className={`w-full h-10 bg-transparent border ${error ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                         />
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent dark:hover:text-brutalist-accent dark:hover:text-brutalist-accent dark:hover:text-brutalist-accent focus:outline-none transition-colors"
@@ -219,7 +220,7 @@ export function AuthModal({ children }) {
                                     </div>
                                 </div>
 
-                                <Button 
+                                <Button
                                     type="submit"
                                     className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white dark:hover:text-white dark:hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors animate-slide-up ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
                                     style={{ animationDelay: '240ms', animationFillMode: 'both' }}
@@ -234,8 +235,8 @@ export function AuthModal({ children }) {
                             </form>
 
                             <div className="mt-4 pt-4 border-t border-brutalist-fg/20 flex justify-center animate-slide-up" style={{ animationDelay: '320ms', animationFillMode: 'both' }}>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={toggleMode}
                                     className="font-mono text-[10px] text-brutalist-fg uppercase tracking-widest hover:text-brutalist-accent transition-colors font-bold"
                                     tabIndex={isLogin ? 0 : -1}
@@ -257,13 +258,13 @@ export function AuthModal({ children }) {
                             </DialogHeader>
 
                             <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-                                
+
                                 <div className="flex flex-col gap-1">
                                     <label className="font-mono text-[10px] font-bold tracking-widest uppercase text-brutalist-fg">
                                         EMAIL
                                     </label>
-                                    <input 
-                                        type="email" 
+                                    <input
+                                        type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className={`w-full h-9 bg-transparent border ${error && !email ? 'border-red-500' : 'border-brutalist-fg'} px-3 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
@@ -277,15 +278,15 @@ export function AuthModal({ children }) {
                                         PASSWORD
                                     </label>
                                     <div className="relative group">
-                                        <input 
-                                            type={showPassword ? "text" : "password"} 
+                                        <input
+                                            type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className={`w-full h-9 bg-transparent border ${error && !password ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                             tabIndex={isLogin ? -1 : 0}
                                         />
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent focus:outline-none transition-colors"
@@ -302,15 +303,15 @@ export function AuthModal({ children }) {
                                         <ValidationMessage />
                                     </label>
                                     <div className="relative group">
-                                        <input 
-                                            type={showConfirmPassword ? "text" : "password"} 
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             className={`w-full h-9 bg-transparent border ${error && !passwordsMatch ? 'border-red-500' : 'border-brutalist-fg'} pl-3 pr-10 font-mono text-xs text-brutalist-fg focus:outline-none focus:border-brutalist-accent transition-colors rounded-none placeholder:text-brutalist-fg/40 dark:placeholder:text-brutalist-fg/50`}
                                             placeholder="••••••••"
                                             tabIndex={isLogin ? -1 : 0}
                                         />
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-0 top-0 h-full px-3 text-brutalist-fg hover:text-brutalist-accent focus:outline-none transition-colors"
@@ -321,7 +322,7 @@ export function AuthModal({ children }) {
                                     </div>
                                 </div>
 
-                                <Button 
+                                <Button
                                     type="submit"
                                     className={`w-full mt-2 font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-[#f0ede6] dark:text-[#1a1a1a] hover:bg-brutalist-accent hover:text-white uppercase tracking-widest h-11 flex items-center justify-center gap-2 group/btn transition-colors ${success ? 'bg-brutalist-terminal hover:bg-brutalist-terminal border-brutalist-terminal !text-brutalist-fg' : ''}`}
                                     tabIndex={isLogin ? -1 : 0}
@@ -336,8 +337,8 @@ export function AuthModal({ children }) {
                             </form>
 
                             <div className="mt-4 pt-3 border-t border-brutalist-fg/20 flex justify-center">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={toggleMode}
                                     className="font-mono text-[10px] text-brutalist-fg uppercase tracking-widest hover:text-brutalist-accent transition-colors font-bold"
                                     tabIndex={isLogin ? -1 : 0}
