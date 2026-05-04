@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FileText, Scan, Brain, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { UploadReportModal } from '@/components/UploadReportModal';
+import { toast } from 'sonner';
 
 const steps = [
     { id: '1', x: 15, y: 50, label: 'UPLOAD', icon: <FileText className="w-4 h-4" />, side: 'left' },
@@ -13,6 +15,14 @@ const steps = [
 export function Hero() {
     const canvasRef = useRef(null);
     const [activeStep, setActiveStep] = useState(null);
+    const isLoggedIn = !!localStorage.getItem('access_token');
+
+    const handleAnalyzeClick = (e) => {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            toast.error('Please log in first to upload a report');
+        }
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -108,8 +118,8 @@ export function Hero() {
                         <div
                             key={step.id}
                             className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${step.side === 'center'
-                                    ? 'w-14 h-14 md:w-16 md:h-16'
-                                    : 'w-20 md:w-24'
+                                ? 'w-14 h-14 md:w-16 md:h-16'
+                                : 'w-20 md:w-24'
                                 }`}
                             style={{
                                 left: `${step.x}%`,
@@ -125,8 +135,8 @@ export function Hero() {
                             ) : (
                                 <div
                                     className={`flex flex-col items-center gap-2 px-3 py-2 border border-brutalist-fg bg-brutalist-bg cursor-pointer transition-all ${activeStep === step.id
-                                            ? 'bg-brutalist-fg text-brutalist-bg'
-                                            : ''
+                                        ? 'bg-brutalist-fg text-brutalist-bg'
+                                        : ''
                                         }`}
                                 >
                                     {step.icon}
@@ -155,20 +165,34 @@ export function Hero() {
 
                 {/* CTA Button */}
                 <div className="flex justify-center mb-16">
-                    <Button
-                        className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
-                    >
-                        <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
-                            <ArrowRight className="w-4 h-4 text-white" />
-                        </span>
-                        Analyze Your Report
-                    </Button>
+                    {isLoggedIn ? (
+                        <UploadReportModal>
+                            <Button
+                                className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                            >
+                                <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
+                                    <ArrowRight className="w-4 h-4 text-white" />
+                                </span>
+                                Analyze Your Report
+                            </Button>
+                        </UploadReportModal>
+                    ) : (
+                        <Button
+                            onClick={handleAnalyzeClick}
+                            className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                        >
+                            <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
+                                <ArrowRight className="w-4 h-4 text-white" />
+                            </span>
+                            Analyze Your Report
+                        </Button>
+                    )}
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12">
                     {[
-                        { value: '50+', label: 'Diseases Detected' },
+                        { value: '14', label: 'Diseases Detected' },
                         { value: '99.2%', label: 'Accuracy Rate' },
                         { value: '2M+', label: 'Reports Analyzed' },
                         { value: '<30s', label: 'Analysis Time' },

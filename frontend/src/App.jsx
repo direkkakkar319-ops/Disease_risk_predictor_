@@ -1,6 +1,3 @@
-import { useEffect } from 'react';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Hero } from '@/sections/Hero';
@@ -12,6 +9,9 @@ import { Pricing } from '@/sections/Pricing';
 import { Partners } from '@/sections/Partners';
 import { History } from '@/sections/History';
 import { Compare } from '@/sections/Compare';
+import { useEffect } from 'react';
+import { Toaster } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 function App() {
     useEffect(() => {
