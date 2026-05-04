@@ -16,7 +16,7 @@ import { Compare } from '@/sections/Compare';
 function App() {
     useEffect(() => {
         if (sessionStorage.getItem('loginSuccess') === 'true') {
-            toast.success('Hey you are successfully logged in');
+            toast.success('Hey, you are successfully logged in!');
             sessionStorage.removeItem('loginSuccess');
         }
     }, []);
