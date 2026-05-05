@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    FileText, Calendar, Clock, ChevronRight,
+    FileText, Calendar, Clock,
     Download, Eye, Search, Filter,
-    TrendingUp, TrendingDown, Minus, Loader2,
+    TrendingUp, TrendingDown, Minus, Loader2, Trash2,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { ReportPDFRenderer } from '@/components/ReportPDFRenderer';
@@ -69,6 +69,7 @@ export function History() {
     const [filterType, setFilterType] = useState('all');
     const [pdfReportData, setPdfReportData] = useState(null);
     const [pdfGeneratingId, setPdfGeneratingId] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const pdfRendererRef = useRef(null);
 
     // ── Fetch report list ─────────────────────────────────────────────────
@@ -79,10 +80,12 @@ export function History() {
         setError(null);
         try {
             const res = await apiFetch('/api/reports');
-            if (res.status === 401) { setLoading(false); return; } // not logged in
+            if (res.status === 401) { setLoading(false); return; }
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            setReports(data.map(transformReport));
+            // Filter out IDs the user has permanently removed (stored in localStorage)
+            const deleted = new Set(JSON.parse(localStorage.getItem('deletedReportIds') || '[]'));
+            setReports(data.map(transformReport).filter(r => !deleted.has(r.id)));
         } catch (e) {
             setError('Could not load reports. Please try again.');
         } finally {
@@ -171,7 +174,28 @@ export function History() {
         }
     }, []);
 
+    // ── Delete a report ───────────────────────────────────────────────────
+    const handleDeleteReport = useCallback((e, report) => {
+        e.stopPropagation();
+        setDeleteTarget(report);
+    }, []);
+
+    const confirmDelete = useCallback(() => {
+        if (!deleteTarget) return;
+        // Persist deletion so it survives page refresh
+        const existing = JSON.parse(localStorage.getItem('deletedReportIds') || '[]');
+        if (!existing.includes(deleteTarget.id)) {
+            localStorage.setItem('deletedReportIds', JSON.stringify([...existing, deleteTarget.id]));
+        }
+        setReports(prev => prev.filter(r => r.id !== deleteTarget.id));
+        setSelectedReport(prev => (prev?.id === deleteTarget.id ? null : prev));
+        setDeleteTarget(null);
+    }, [deleteTarget]);
+
+    const cancelDelete = useCallback(() => setDeleteTarget(null), []);
+
 const filteredReports = reports.filter((r) => {
+
     const q = searchQuery.toLowerCase();
     const matchesSearch =
         r.fileName.toLowerCase().includes(q) ||
@@ -414,7 +438,13 @@ return (
                                         <Download className="w-4 h-4" />
                                     )}
                                 </button>
-                                <ChevronRight className="w-4 h-4 text-brutalist-muted ml-2" />
+                                <button
+                                    className="p-2 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors ml-2"
+                                    title="Remove from history"
+                                    onClick={(e) => handleDeleteReport(e, report)}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -525,6 +555,106 @@ return (
             )}
             
             <ReportPDFRenderer ref={pdfRendererRef} reportData={pdfReportData} />
+
+            {/* ── Delete Confirm Modal ───────────────────────────────── */}
+            {deleteTarget && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+                    onClick={cancelDelete}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            backgroundColor: 'var(--brutalist-bg)',
+                            border: '2px solid var(--brutalist-fg)',
+                            animation: 'modalPop 0.18s cubic-bezier(0.16,1,0.3,1) both',
+                            width: '100%',
+                            maxWidth: '380px',
+                            padding: '2rem',
+                            boxShadow: '8px 8px 0px var(--brutalist-fg)',
+                        }}
+                    >
+                        {/* Title */}
+                        <h2 style={{
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: '2.5rem',
+                            fontWeight: 700,
+                            color: 'var(--brutalist-fg)',
+                            textTransform: 'uppercase',
+                            lineHeight: 1,
+                            marginBottom: '1rem',
+                        }}>
+                            DELETE<br />REPORT?
+                        </h2>
+
+                        {/* Subtitle */}
+                        <p style={{
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            color: 'var(--brutalist-fg)',
+                            marginBottom: '0.25rem',
+                        }}>
+                            ARE YOU SURE YOU WANT TO REMOVE THIS FROM HISTORY?
+                        </p>
+                        <p style={{
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: '0.7rem',
+                            color: 'var(--brutalist-muted)',
+                            marginBottom: '1.75rem',
+                        }}>
+                            {deleteTarget.displayId} &mdash; {deleteTarget.type}
+                        </p>
+
+                        {/* Buttons */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                            <button
+                                onClick={cancelDelete}
+                                style={{
+                                    padding: '0.75rem',
+                                    border: '2px solid var(--brutalist-fg)',
+                                    backgroundColor: 'var(--brutalist-muted)',
+                                    color: 'var(--brutalist-bg)',
+                                    fontFamily: "'IBM Plex Mono', monospace",
+                                    fontSize: '0.7rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.1em',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={e => { e.target.style.backgroundColor = 'var(--brutalist-fg)'; e.target.style.color = 'var(--brutalist-bg)'; }}
+                                onMouseLeave={e => { e.target.style.backgroundColor = 'var(--brutalist-muted)'; e.target.style.color = 'var(--brutalist-bg)'; }}
+                            >
+                                CANCEL
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                style={{
+                                    padding: '0.75rem',
+                                    border: '2px solid #dc2626',
+                                    backgroundColor: '#dc2626',
+                                    color: '#ffffff',
+                                    fontFamily: "'IBM Plex Mono', monospace",
+                                    fontSize: '0.7rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.1em',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={e => { e.target.style.backgroundColor = '#b91c1c'; }}
+                                onMouseLeave={e => { e.target.style.backgroundColor = '#dc2626'; }}
+                            >
+                                CONFIRM
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     </section>
 );
