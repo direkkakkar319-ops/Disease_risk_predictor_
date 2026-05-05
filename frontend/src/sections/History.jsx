@@ -559,95 +559,97 @@ return (
             {/* ── Delete Confirm Modal ───────────────────────────────── */}
             {deleteTarget && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-6"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                     onClick={cancelDelete}
                 >
                     <div
                         onClick={e => e.stopPropagation()}
                         style={{
                             backgroundColor: 'var(--brutalist-bg)',
-                            border: '2px solid var(--brutalist-fg)',
-                            animation: 'modalPop 0.18s cubic-bezier(0.16,1,0.3,1) both',
+                            border: '1.5px solid var(--brutalist-fg)',
+                            animation: 'modalPop 0.2s cubic-bezier(0.16,1,0.3,1) both',
                             width: '100%',
-                            maxWidth: '380px',
-                            padding: '2rem',
-                            boxShadow: '8px 8px 0px var(--brutalist-fg)',
+                            maxWidth: '500px',
+                            padding: '2.5rem 2.5rem 2.5rem',
                         }}
                     >
-                        {/* Title */}
+                        {/* Big title — matches "LOG OUT?" style */}
                         <h2 style={{
                             fontFamily: "'Space Mono', monospace",
-                            fontSize: '2.5rem',
+                            fontSize: '3.25rem',
                             fontWeight: 700,
                             color: 'var(--brutalist-fg)',
                             textTransform: 'uppercase',
-                            lineHeight: 1,
-                            marginBottom: '1rem',
+                            letterSpacing: '0.04em',
+                            lineHeight: 1.05,
+                            marginBottom: '1.25rem',
                         }}>
-                            DELETE<br />REPORT?
+                            DELETE REPORT?
                         </h2>
 
                         {/* Subtitle */}
                         <p style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: '0.7rem',
+                            fontSize: '0.72rem',
                             fontWeight: 700,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.1em',
+                            letterSpacing: '0.12em',
                             color: 'var(--brutalist-fg)',
-                            marginBottom: '0.25rem',
+                            marginBottom: '0.35rem',
                         }}>
                             ARE YOU SURE YOU WANT TO REMOVE THIS FROM HISTORY?
                         </p>
                         <p style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: '0.7rem',
+                            fontSize: '0.72rem',
                             color: 'var(--brutalist-muted)',
-                            marginBottom: '1.75rem',
+                            marginBottom: '2rem',
                         }}>
                             {deleteTarget.displayId} &mdash; {deleteTarget.type}
                         </p>
 
                         {/* Buttons */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                            {/* CANCEL — outlined, transparent fill */}
                             <button
                                 onClick={cancelDelete}
                                 style={{
-                                    padding: '0.75rem',
-                                    border: '2px solid var(--brutalist-fg)',
-                                    backgroundColor: 'var(--brutalist-muted)',
-                                    color: 'var(--brutalist-bg)',
+                                    padding: '1rem',
+                                    border: '1.5px solid var(--brutalist-fg)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--brutalist-fg)',
                                     fontFamily: "'IBM Plex Mono', monospace",
-                                    fontSize: '0.7rem',
+                                    fontSize: '0.72rem',
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.1em',
+                                    letterSpacing: '0.12em',
                                     cursor: 'pointer',
-                                    transition: 'all 0.15s',
+                                    transition: 'background-color 0.15s, color 0.15s',
                                 }}
-                                onMouseEnter={e => { e.target.style.backgroundColor = 'var(--brutalist-fg)'; e.target.style.color = 'var(--brutalist-bg)'; }}
-                                onMouseLeave={e => { e.target.style.backgroundColor = 'var(--brutalist-muted)'; e.target.style.color = 'var(--brutalist-bg)'; }}
+                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--brutalist-fg)'; e.currentTarget.style.color = 'var(--brutalist-bg)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--brutalist-fg)'; }}
                             >
                                 CANCEL
                             </button>
+                            {/* CONFIRM — solid red */}
                             <button
                                 onClick={confirmDelete}
                                 style={{
-                                    padding: '0.75rem',
-                                    border: '2px solid #dc2626',
+                                    padding: '1rem',
+                                    border: '1.5px solid #dc2626',
                                     backgroundColor: '#dc2626',
                                     color: '#ffffff',
                                     fontFamily: "'IBM Plex Mono', monospace",
-                                    fontSize: '0.7rem',
+                                    fontSize: '0.72rem',
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.1em',
+                                    letterSpacing: '0.12em',
                                     cursor: 'pointer',
-                                    transition: 'all 0.15s',
+                                    transition: 'background-color 0.15s',
                                 }}
-                                onMouseEnter={e => { e.target.style.backgroundColor = '#b91c1c'; }}
-                                onMouseLeave={e => { e.target.style.backgroundColor = '#dc2626'; }}
+                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#b91c1c'; }}
+                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#dc2626'; }}
                             >
                                 CONFIRM
                             </button>
