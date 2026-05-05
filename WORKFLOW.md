@@ -61,10 +61,10 @@
 | ML/OCR Service | PaddleOCR 3 + XGBoost 2 | Hugging Face Space | https://direkkakkar-medscan-ai-ml-models.hf.space |
 | Database | PostgreSQL 15 | Neon (eu-west-2) | — |
 | Cache / Broker | Redis 7 | Upstash (ap-south-1) | — |
-| File Storage | S3-compatible | Supabase | Bucket: `medscan-uploads` |
+| Temprory File Storage | S3-compatible | Supabase | Bucket: `medscan-uploads` |
 
 ---
-
+-
 ## 2. Frontend Upload Flow
 
 ### 2.1 Authentication Gate
