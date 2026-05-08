@@ -164,7 +164,7 @@ export function AuthModal({ children }) {
             <DialogContent
                 showCloseButton={false}
                 overlayClassName="bg-black/5 dark:bg-black/40 backdrop-blur-sm transition-all duration-300 data-[state=closed]:duration-500"
-                className={`sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
+                className={`w-[calc(100vw-2rem)] sm:max-w-[400px] bg-[#f0ede6] dark:bg-[#1a1a1a] border-brutalist-fg rounded-none p-4 sm:p-6 overflow-hidden ${shake ? 'animate-shake' : ''} shadow-2xl duration-250`}
             >
                 <div className="relative z-10 flex flex-col gap-0 w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ transform: `translateX(${isLogin ? '0' : '-50%'})` }}>
                     {/* The Two Forms Container */}
@@ -173,7 +173,7 @@ export function AuthModal({ children }) {
                         {/* ----------------- LOG IN FORM ----------------- */}
                         <div className="w-1/2 pr-6 shrink-0 flex flex-col items-stretch">
                             <DialogHeader className="mb-4 !flex-row items-start justify-between">
-                                <DialogTitle className="font-space text-[40px] font-bold tracking-tight text-brutalist-fg uppercase animate-slide-up leading-none mt-2" style={{ animationDelay: '0ms' }}>
+                                <DialogTitle className="font-space text-3xl sm:text-[40px] font-bold tracking-tight text-brutalist-fg uppercase animate-slide-up leading-none mt-2" style={{ animationDelay: '0ms' }}>
                                     LOG. IN.
                                 </DialogTitle>
                                 <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10 dark:hover:bg-brutalist-fg/20 dark:hover:bg-brutalist-fg/20">
@@ -249,7 +249,7 @@ export function AuthModal({ children }) {
                         {/* ----------------- SIGN UP FORM ----------------- */}
                         <div className="w-1/2 pl-6 shrink-0 flex flex-col items-stretch border-l border-brutalist-fg/20">
                             <DialogHeader className="mb-4 !flex-row items-start justify-between">
-                                <DialogTitle className="font-space text-[40px] font-bold tracking-tight text-brutalist-fg uppercase leading-none mt-2">
+                                <DialogTitle className="font-space text-3xl sm:text-[40px] font-bold tracking-tight text-brutalist-fg uppercase leading-none mt-2">
                                     NEW. USER.
                                 </DialogTitle>
                                 <DialogClose className="font-mono text-2xl font-bold text-brutalist-fg opacity-50 hover:opacity-100 transition-colors focus:outline-none leading-none flex items-center justify-center p-2 rounded-none hover:bg-brutalist-fg/10" tabIndex={isLogin ? -1 : 0}>

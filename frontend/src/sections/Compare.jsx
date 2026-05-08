@@ -211,13 +211,13 @@ export function Compare() {
 
     // ── Render ─────────────────────────────────────────────────────────────
     return (
-        <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="compare">
+        <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="compare">
             <div className="max-w-6xl mx-auto">
 
                 {/* Section Header */}
                 <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono text-brutalist-muted">// SECTION: REPORT_COMPARISON</span>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+                        <span className="text-xs font-mono text-brutalist-muted text-balance-safe">// SECTION: REPORT_COMPARISON</span>
                         <span className="text-xs font-mono text-brutalist-muted">008</span>
                     </div>
                 </div>
@@ -370,7 +370,7 @@ export function Compare() {
                         <button
                             disabled={!canCompare}
                             onClick={handleCompare}
-                            className="flex items-center gap-3 px-8 py-3 bg-brutalist-fg text-brutalist-bg font-mono font-bold text-xs uppercase tracking-widest hover:bg-brutalist-accent hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex w-full sm:w-auto items-center justify-center gap-3 px-8 py-3 bg-brutalist-fg text-brutalist-bg font-mono font-bold text-xs uppercase tracking-widest hover:bg-brutalist-accent hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {comparing ? (
                                 <>
@@ -403,15 +403,15 @@ export function Compare() {
                 {comparisonResult && summary && (
                     <>
                         {/* Summary cards */}
-                        <div className="grid grid-cols-3 gap-0 border border-brutalist-fg mb-8">
-                            <div className="p-4 border-r border-brutalist-fg">
+                        <div className="grid grid-cols-1 min-[380px]:grid-cols-3 gap-0 border border-brutalist-fg mb-8">
+                            <div className="p-4 border-b min-[380px]:border-b-0 min-[380px]:border-r border-brutalist-fg">
                                 <div className="flex items-center gap-2 mb-2">
                                     <CheckCircle className="w-4 h-4 text-green-500" />
                                     <span className="text-xs font-mono text-brutalist-muted uppercase">Improved</span>
                                 </div>
                                 <span className="font-space text-3xl font-bold text-green-500">{improvedCount}</span>
                             </div>
-                            <div className="p-4 border-r border-brutalist-fg">
+                            <div className="p-4 border-b min-[380px]:border-b-0 min-[380px]:border-r border-brutalist-fg">
                                 <div className="flex items-center gap-2 mb-2">
                                     <AlertCircle className="w-4 h-4 text-red-500" />
                                     <span className="text-xs font-mono text-brutalist-muted uppercase">Needs Attention</span>
@@ -428,7 +428,7 @@ export function Compare() {
                         </div>
 
                         {/* Overall trend badge */}
-                        <div className="mb-6 flex items-center gap-3">
+                        <div className="mb-6 flex flex-wrap items-center gap-3">
                             <span className="text-xs font-mono text-brutalist-muted uppercase">Overall Trend:</span>
                             <span className={`text-sm font-mono font-bold px-3 py-1 border ${
                                 summary.overall_trend === 'IMPROVING'
@@ -443,7 +443,7 @@ export function Compare() {
 
                         {/* Risk Score Changes */}
                         {riskComparison.length > 0 && (
-                            <div className="border border-brutalist-fg mb-8">
+                            <div className="border border-brutalist-fg mb-8 overflow-x-auto">
                                 <div className="border-b border-brutalist-fg px-4 py-3">
                                     <h3 className="font-space text-lg font-bold text-brutalist-fg">
                                         Risk Score Changes
@@ -454,7 +454,7 @@ export function Compare() {
                                     return (
                                         <div
                                             key={item.disease}
-                                            className={`flex items-center justify-between px-4 py-3 ${index < riskComparison.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
+                                            className={`flex min-w-[34rem] items-center justify-between px-4 py-3 ${index < riskComparison.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
                                         >
                                             <span className="font-mono text-sm text-brutalist-fg capitalize">
                                                 {item.disease.replace(/_/g, ' ')}
@@ -491,9 +491,9 @@ export function Compare() {
 
                         {/* Comparison table */}
                         {metrics.length > 0 ? (
-                            <div className="border border-brutalist-fg mb-8">
+                            <div className="border border-brutalist-fg mb-8 overflow-x-auto">
                                 {/* Header */}
-                                <div className="grid grid-cols-12 gap-0 border-b border-brutalist-fg bg-brutalist-bg px-4 py-3">
+                                <div className="grid min-w-[42rem] grid-cols-12 gap-0 border-b border-brutalist-fg bg-brutalist-bg px-4 py-3">
                                     <div className="col-span-3 md:col-span-2">
                                         <span className="text-xs font-mono text-brutalist-muted uppercase">Biomarker</span>
                                     </div>
@@ -522,7 +522,7 @@ export function Compare() {
                                     return (
                                         <div
                                             key={item.name}
-                                            className={`grid grid-cols-12 gap-0 px-4 py-3 items-center ${
+                                            className={`grid min-w-[42rem] grid-cols-12 gap-0 px-4 py-3 items-center ${
                                                 index < metrics.length - 1 ? 'border-b border-brutalist-fg' : ''
                                             } ${isSignificant ? (improved ? 'bg-green-500/5' : 'bg-red-500/5') : ''}`}
                                         >
@@ -580,7 +580,7 @@ export function Compare() {
 
                         {/* Visual bars for top 6 metrics */}
                         {metrics.length > 0 && (
-                            <div className="border border-brutalist-fg p-6">
+                            <div className="border border-brutalist-fg p-4 sm:p-6">
                                 <h3 className="font-space text-lg font-bold text-brutalist-fg mb-6">
                                     Visual Comparison
                                 </h3>
@@ -591,11 +591,11 @@ export function Compare() {
                                         const w2 = (item.r2_val / maxVal) * 100;
 
                                         return (
-                                            <div key={item.name} className="grid grid-cols-12 gap-4 items-center">
-                                                <div className="col-span-3 md:col-span-2">
+                                            <div key={item.name} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
+                                                <div className="md:col-span-2">
                                                     <span className="text-xs font-mono capitalize">{item.name.replace(/_/g, ' ')}</span>
                                                 </div>
-                                                <div className="col-span-9 md:col-span-10">
+                                                <div className="md:col-span-10">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="text-xs font-mono text-brutalist-muted w-20 shrink-0">{formatDate(selected1?.created_at)}</span>
                                                         <div className="flex-1 h-4 bg-brutalist-fg/10 overflow-hidden">
@@ -628,7 +628,7 @@ export function Compare() {
                 {/* Past Comparisons */}
                 {!loadingHistory && (
                     <div className="mt-12">
-                        <div className="flex items-center gap-4 border-b border-brutalist-fg pb-4 mb-0">
+                        <div className="flex flex-wrap items-center gap-4 border-b border-brutalist-fg pb-4 mb-0">
                             <h3 className="font-space text-xl font-bold text-brutalist-fg">Past Comparisons</h3>
                             {history.length > 0 && (
                                 <span className="text-xs font-mono text-brutalist-muted">{history.length} total</span>
@@ -646,9 +646,9 @@ export function Compare() {
                                 {history.map((item, index) => (
                                     <div
                                         key={item.comparison_id}
-                                        className={`flex items-center justify-between px-4 py-3 hover:bg-brutalist-fg/5 transition-colors ${index < history.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
+                                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 hover:bg-brutalist-fg/5 transition-colors ${index < history.length - 1 ? 'border-b border-brutalist-fg' : ''}`}
                                     >
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                                             <span className="font-mono text-sm text-brutalist-fg">
                                                 {formatType(item.report_type)}
                                             </span>

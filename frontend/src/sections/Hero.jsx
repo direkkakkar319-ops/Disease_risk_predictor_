@@ -96,18 +96,18 @@ export function Hero() {
     }, []);
 
     return (
-        <section className="min-h-screen pt-20 md:pt-24 pb-16 px-4 md:px-6 lg:px-8 relative overflow-hidden">
+        <section className="min-h-[100svh] pt-20 md:pt-24 pb-16 safe-x md:px-6 lg:px-8 relative overflow-hidden">
             <div className="max-w-6xl mx-auto">
                 {/* Main Title */}
                 <div className="text-center mb-8 md:mb-12">
-                    <h1 className="font-space text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-brutalist-fg mb-2">
+                    <h1 className="font-space text-3xl min-[380px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-brutalist-fg mb-2">
                         <span className="inline-block">SCAN.</span>{' '}
                         <span className="inline-block">PREDICT.</span>
                     </h1>
                 </div>
 
                 {/* Process Diagram */}
-                <div className="relative w-full max-w-2xl mx-auto h-48 md:h-56 mb-8 md:mb-12">
+                <div className="relative w-full max-w-2xl mx-auto h-44 min-[380px]:h-48 md:h-56 mb-8 md:mb-12">
                     <canvas
                         ref={canvasRef}
                         className="absolute inset-0 w-full h-full"
@@ -119,7 +119,7 @@ export function Hero() {
                             key={step.id}
                             className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${step.side === 'center'
                                 ? 'w-14 h-14 md:w-16 md:h-16'
-                                : 'w-20 md:w-24'
+                                : 'w-[4.7rem] min-[380px]:w-20 md:w-24'
                                 }`}
                             style={{
                                 left: `${step.x}%`,
@@ -134,13 +134,13 @@ export function Hero() {
                                 </div>
                             ) : (
                                 <div
-                                    className={`flex flex-col items-center gap-2 px-3 py-2 border border-brutalist-fg bg-brutalist-bg cursor-pointer transition-all ${activeStep === step.id
+                                    className={`flex flex-col items-center gap-1.5 px-2 min-[380px]:px-3 py-2 border border-brutalist-fg bg-brutalist-bg cursor-pointer transition-all ${activeStep === step.id
                                         ? 'bg-brutalist-fg text-brutalist-bg'
                                         : ''
                                         }`}
                                 >
                                     {step.icon}
-                                    <span className="text-xs font-mono tracking-wider uppercase">
+                                    <span className="text-[10px] min-[380px]:text-xs font-mono tracking-wider uppercase">
                                         {step.label}
                                     </span>
                                 </div>
@@ -151,7 +151,7 @@ export function Hero() {
 
                 {/* Subtitle */}
                 <div className="text-center mb-6">
-                    <h2 className="font-space text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-brutalist-fg">
+                    <h2 className="font-space text-3xl min-[380px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-brutalist-fg">
                         PREVENT.
                     </h2>
                 </div>
@@ -168,7 +168,7 @@ export function Hero() {
                     {isLoggedIn ? (
                         <UploadReportModal>
                             <Button
-                                className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                                className="group w-full max-w-xs bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs sm:text-sm font-mono tracking-wider uppercase min-h-12 px-4 sm:px-6 rounded-none border border-brutalist-fg flex items-center justify-center gap-3"
                             >
                                 <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
                                     <ArrowRight className="w-4 h-4 text-white" />
@@ -179,7 +179,7 @@ export function Hero() {
                     ) : (
                         <Button
                             onClick={handleAnalyzeClick}
-                            className="group bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-sm font-mono tracking-wider uppercase h-12 px-6 rounded-none border border-brutalist-fg flex items-center gap-3"
+                            className="group w-full max-w-xs bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted text-xs sm:text-sm font-mono tracking-wider uppercase min-h-12 px-4 sm:px-6 rounded-none border border-brutalist-fg flex items-center justify-center gap-3"
                         >
                             <span className="w-8 h-8 bg-brutalist-accent flex items-center justify-center -ml-2">
                                 <ArrowRight className="w-4 h-4 text-white" />
