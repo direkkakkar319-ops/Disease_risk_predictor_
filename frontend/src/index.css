@@ -69,6 +69,7 @@
   
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
   
   body {
@@ -78,6 +79,26 @@
     background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
     background-size: 24px 24px;
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100svh;
+    overflow-x: hidden;
+  }
+
+  img,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 }
 
@@ -102,6 +123,16 @@
   .dot-pattern {
     background-image: radial-gradient(circle, var(--brutalist-dot) 1px, transparent 1px);
     background-size: 24px 24px;
+  }
+
+  .safe-x {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .text-balance-safe {
+    overflow-wrap: anywhere;
+    word-break: normal;
   }
   
   .terminal-text {

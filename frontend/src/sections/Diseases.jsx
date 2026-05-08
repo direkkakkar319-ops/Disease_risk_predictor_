@@ -76,12 +76,12 @@ export function Diseases() {
     const activeColor = diseaseCategories.find((c) => c.id === activeCategory)?.color || '#1a1a1a';
 
     return (
-        <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="diseases">
+        <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="diseases">
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono text-brutalist-muted">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+                        <span className="text-xs font-mono text-brutalist-muted text-balance-safe">
               // SECTION: DISEASE_DATABASE
                         </span>
                         <span className="text-xs font-mono text-brutalist-muted">
@@ -129,7 +129,7 @@ export function Diseases() {
 
                     {/* Disease Grid */}
                     <div className="lg:col-span-2 p-6 md:p-8">
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                             <span className="text-xs font-mono text-brutalist-muted uppercase">
                                 {diseaseCategories.find((c) => c.id === activeCategory)?.name} DISEASES
                             </span>
@@ -172,7 +172,7 @@ export function Diseases() {
 
                         {/* Stats */}
                         <div className="mt-8 pt-6 border-t border-brutalist-fg">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 min-[380px]:grid-cols-3 gap-4">
                                 <div>
                                     <span className="text-xs font-mono text-brutalist-muted uppercase block mb-1">
                                         Detection Rate

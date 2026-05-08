@@ -82,12 +82,12 @@ export function HowItWorks() {
     }, [activeStep]);
 
     return (
-        <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="how-it-works">
+        <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="how-it-works">
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono text-brutalist-muted">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+                        <span className="text-xs font-mono text-brutalist-muted text-balance-safe">
               // SECTION: PROCESS_PIPELINE
                         </span>
                         <span className="text-xs font-mono text-brutalist-muted">
@@ -116,7 +116,7 @@ export function HowItWorks() {
                                     }`}
                                 onMouseEnter={() => setActiveStep(step.id)}
                             >
-                                <div className="flex items-start gap-4">
+                                <div className="flex items-start gap-3 sm:gap-4">
                                     <div
                                         className={`w-10 h-10 border border-current flex items-center justify-center flex-shrink-0 ${activeStep === step.id
                                                 ? 'bg-brutalist-accent border-brutalist-accent'
@@ -157,7 +157,7 @@ export function HowItWorks() {
                     </div>
 
                     {/* Terminal Preview */}
-                    <div className="border border-brutalist-fg">
+                    <div className="border border-brutalist-fg min-w-0">
                         <div className="flex items-center justify-between px-4 py-2 border-b border-brutalist-fg bg-brutalist-bg">
                             <span className="text-xs font-mono text-brutalist-muted uppercase">
                                 processing.log
@@ -170,7 +170,7 @@ export function HowItWorks() {
                         </div>
                         <div
                             ref={terminalRef}
-                            className="h-80 bg-[#1a1a1a] p-4 overflow-y-auto font-mono text-sm"
+                            className="h-72 sm:h-80 bg-[#1a1a1a] p-4 overflow-y-auto font-mono text-xs sm:text-sm text-balance-safe"
                         >
                             <div className="text-brutalist-terminal mb-4">
                                 {`> MEDSCAN.AI v2.4.1 initialized`}

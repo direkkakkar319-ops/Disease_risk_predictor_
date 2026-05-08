@@ -237,13 +237,13 @@ const getTrendIcon = (trend) => {
 
 // ── Render ────────────────────────────────────────────────────────────
 return (
-    <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="history">
+    <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="history">
         <div className="max-w-6xl mx-auto">
 
             {/* Section Header */}
-            <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
-                <div className="flex items-center gap-4">
-                    <span className="text-xs font-mono text-brutalist-muted">// SECTION: REPORT_HISTORY</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brutalist-fg pb-4 mb-8">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+                    <span className="text-xs font-mono text-brutalist-muted text-balance-safe">// SECTION: REPORT_HISTORY</span>
                     <span className="text-xs font-mono text-brutalist-muted">007</span>
                 </div>
                 <button
@@ -273,12 +273,12 @@ return (
                         className="w-full pl-10 pr-4 py-3 border border-brutalist-fg bg-brutalist-bg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brutalist-accent"
                     />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full sm:w-auto items-center gap-2">
                     <Filter className="w-4 h-4 text-brutalist-muted" />
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="px-4 py-3 border border-brutalist-fg bg-brutalist-bg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brutalist-accent"
+                        className="w-full sm:w-auto px-4 py-3 border border-brutalist-fg bg-brutalist-bg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brutalist-accent"
                     >
                         {reportTypes.map((type) => (
                             <option key={type} value={type}>
@@ -291,13 +291,13 @@ return (
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-brutalist-fg mb-8">
-                <div className="p-4 border-r border-brutalist-fg">
+                <div className="p-4 border-r border-b md:border-b-0 border-brutalist-fg">
                     <span className="text-xs font-mono text-brutalist-muted uppercase block mb-1">Total Reports</span>
                     <span className="font-space text-2xl font-bold text-brutalist-fg">
                         {loading ? '—' : reports.length}
                     </span>
                 </div>
-                <div className="p-4 border-r border-brutalist-fg">
+                <div className="p-4 md:border-r border-b md:border-b-0 border-brutalist-fg">
                     <span className="text-xs font-mono text-brutalist-muted uppercase block mb-1">This Month</span>
                     <span className="font-space text-2xl font-bold text-brutalist-fg">
                         {loading ? '—' : thisMonth}
@@ -342,9 +342,9 @@ return (
 
             {/* Reports Table */}
             {!loading && filteredReports.length > 0 && (
-                <div className="border border-brutalist-fg">
+                <div className="border border-brutalist-fg overflow-x-auto">
                     {/* Header */}
-                    <div className="grid grid-cols-12 gap-0 border-b border-brutalist-fg bg-brutalist-bg px-4 py-3">
+                    <div className="grid min-w-[42rem] grid-cols-12 gap-0 border-b border-brutalist-fg bg-brutalist-bg px-4 py-3">
                         <div className="col-span-4 md:col-span-3">
                             <span className="text-xs font-mono text-brutalist-muted uppercase">Report</span>
                         </div>
@@ -366,7 +366,7 @@ return (
                     {filteredReports.map((report, index) => (
                         <div
                             key={report.id}
-                            className={`grid grid-cols-12 gap-0 px-4 py-4 items-center hover:bg-brutalist-fg/5 transition-colors cursor-pointer ${index < filteredReports.length - 1 ? 'border-b border-brutalist-fg' : ''
+                            className={`grid min-w-[42rem] grid-cols-12 gap-0 px-4 py-4 items-center hover:bg-brutalist-fg/5 transition-colors cursor-pointer ${index < filteredReports.length - 1 ? 'border-b border-brutalist-fg' : ''
                                 } ${selectedReport?.id === report.id ? 'bg-brutalist-fg/10' : ''}`}
                             onClick={() => handleSelectReport(report)}
                         >
@@ -453,13 +453,13 @@ return (
 
             {/* Selected Report Detail */}
             {selectedReport && (
-                <div className="mt-8 border border-brutalist-fg p-6">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="mt-8 border border-brutalist-fg p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                         <div>
                             <span className="text-xs font-mono text-brutalist-muted uppercase block mb-1">
                                 Selected Report
                             </span>
-                            <h3 className="font-space text-xl font-bold text-brutalist-fg">
+                            <h3 className="font-space text-lg sm:text-xl font-bold text-brutalist-fg text-balance-safe">
                                 {selectedReport.type} — {selectedReport.displayId}
                             </h3>
                         </div>
@@ -538,11 +538,11 @@ return (
                         </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-brutalist-fg flex items-center justify-between">
-                        <span className="text-xs font-mono text-brutalist-muted">
+                    <div className="mt-6 pt-4 border-t border-brutalist-fg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <span className="text-xs font-mono text-brutalist-muted text-balance-safe">
                             File: {selectedReport.fileName}
                         </span>
-                        <div className="flex items-center gap-3">
+                        <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:flex sm:items-center">
                             <button className="px-4 py-2 border border-brutalist-fg text-sm font-mono hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors">
                                 View Full Analysis
                             </button>
@@ -571,13 +571,13 @@ return (
                             animation: 'modalPop 0.2s cubic-bezier(0.16,1,0.3,1) both',
                             width: '100%',
                             maxWidth: '500px',
-                            padding: '2.5rem 2.5rem 2.5rem',
+                            padding: 'clamp(1.25rem, 6vw, 2.5rem)',
                         }}
                     >
                         {/* Big title — matches "LOG OUT?" style */}
                         <h2 style={{
                             fontFamily: "'Space Mono', monospace",
-                            fontSize: '3.25rem',
+                            fontSize: 'clamp(2rem, 12vw, 3.25rem)',
                             fontWeight: 700,
                             color: 'var(--brutalist-fg)',
                             textTransform: 'uppercase',
@@ -610,7 +610,7 @@ return (
                         </p>
 
                         {/* Buttons */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.75rem' }}>
                             {/* CANCEL — outlined, transparent fill */}
                             <button
                                 onClick={cancelDelete}

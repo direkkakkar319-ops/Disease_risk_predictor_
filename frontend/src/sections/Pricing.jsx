@@ -22,7 +22,6 @@ const pricingTiers = [
             { text: 'Family sharing', included: false },
             { text: 'API access', included: false },
         ],
-        cta: 'START FREE',
     },
     {
         id: 'premium',
@@ -63,7 +62,6 @@ const pricingTiers = [
             { text: 'Unlimited staff accounts', included: true },
             { text: 'Full API access', included: true },
         ],
-        cta: 'CONTACT SALES',
         underConstruction: true,
     },
 ];
@@ -176,7 +174,7 @@ export function Pricing() {
     }
 
     return (
-        <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="pricing">
+        <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="pricing">
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
@@ -189,7 +187,7 @@ export function Pricing() {
                 </div>
 
                 {/* Live Counter */}
-                <div className="flex items-center justify-end gap-4 mb-8">
+                <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 sm:gap-4 mb-8">
                     <span className="text-xs font-mono text-brutalist-muted uppercase">
                         reports analyzed today:
                     </span>
@@ -220,13 +218,13 @@ export function Pricing() {
                 )}
 
                 {/* Pricing Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-brutalist-fg">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-brutalist-fg">
                     {pricingTiers.map((tier, index) => (
                         <div
                             key={tier.id}
                             className={`relative ${
                                 index < pricingTiers.length - 1
-                                    ? 'border-b md:border-b-0 md:border-r border-brutalist-fg'
+                                    ? 'border-b lg:border-b-0 lg:border-r border-brutalist-fg'
                                     : ''
                             } ${tier.recommended ? 'bg-brutalist-fg text-brutalist-bg' : 'bg-brutalist-bg'}`}
                         >
@@ -336,31 +334,29 @@ export function Pricing() {
                                 </ul>
 
                                 {/* CTA Button */}
-                                <Button
-                                    onClick={() => handleCtaClick(tier.id)}
-                                    disabled={tier.id === 'premium' && loading}
-                                    className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${
-                                        tier.recommended
-                                            ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
-                                            : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
-                                    }`}
-                                >
-                                    {tier.id === 'premium' && loading ? (
-                                        'PROCESSING...'
-                                    ) : (
-                                        <>
-                                            {tier.cta}
-                                            <ArrowRight className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </Button>
+                                {tier.id === 'premium' && (
+                                    <Button
+                                        onClick={() => handleCtaClick(tier.id)}
+                                        disabled={loading}
+                                        className="w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90"
+                                    >
+                                        {loading ? (
+                                            'PROCESSING...'
+                                        ) : (
+                                            <>
+                                                {tier.cta}
+                                                <ArrowRight className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Footer Notes */}
-                <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="mt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <p className="text-xs font-mono text-brutalist-muted">
                         * All plans include HIPAA-compliant security. Cancel anytime.
                     </p>

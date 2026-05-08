@@ -250,17 +250,17 @@ export function Results() {
 
     // ── Render ────────────────────────────────────────────────────────────
     return (
-        <section className="py-16 md:py-24 px-4 md:px-6 lg:px-8" id="results">
+        <section className="py-16 md:py-24 safe-x md:px-6 lg:px-8" id="results">
             <div className="max-w-6xl mx-auto">
 
                 {/* Section Header */}
-                <div className="flex items-center justify-between border-b border-brutalist-fg pb-4 mb-8">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono text-brutalist-muted">// SECTION: YOUR_RESULTS</span>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brutalist-fg pb-4 mb-8">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+                        <span className="text-xs font-mono text-brutalist-muted text-balance-safe">// SECTION: YOUR_RESULTS</span>
                         <span className="text-xs font-mono text-brutalist-muted">003</span>
                     </div>
                     {reportData && (
-                        <span className="text-xs font-mono text-green-500 uppercase">
+                        <span className="text-xs font-mono text-green-500 uppercase text-balance-safe">
                             Live · {reportData.reportType} · {reportData.filename}
                         </span>
                     )}
@@ -314,7 +314,7 @@ export function Results() {
                 {/* Risk Level Badge — real data only */}
                 {reportData && (
                     <div
-                        className="mb-8 flex items-center gap-5 px-5 py-4 border-l-4 border border-brutalist-fg/20"
+                        className="mb-8 flex items-center gap-4 sm:gap-5 px-4 sm:px-5 py-4 border-l-4 border border-brutalist-fg/20"
                         style={{ borderLeftColor: getStatusColor(reportData.riskLevel), backgroundColor: getStatusBg(reportData.riskLevel) }}
                     >
                         <div
@@ -331,7 +331,7 @@ export function Results() {
                                 Overall Risk Assessment
                             </span>
                             <span
-                                className="font-space text-xl font-bold uppercase tracking-wide"
+                                className="font-space text-lg sm:text-xl font-bold uppercase tracking-wide"
                                 style={{ color: getStatusColor(reportData.riskLevel) }}
                             >
                                 {reportData.riskLevel} Risk
@@ -402,7 +402,7 @@ export function Results() {
                             <canvas ref={canvasRef} className="w-full h-full" />
                         </div>
                         <div className="mt-4 pt-4 border-t border-brutalist-fg/20">
-                            <div className="flex items-center gap-4 text-xs font-mono">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-mono">
                                 <div className="flex items-center gap-2">
                                     <span className="w-3 h-3 bg-green-500" />
                                     <span>Low Risk</span>

@@ -22,7 +22,7 @@ function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-brutalist-bg dot-pattern">
+        <div className="min-h-screen overflow-x-hidden bg-brutalist-bg dot-pattern">
             <Toaster position="top-center" richColors />
             <Navbar />
             <main>
