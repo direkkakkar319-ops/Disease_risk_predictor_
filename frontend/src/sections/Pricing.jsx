@@ -22,7 +22,6 @@ const pricingTiers = [
             { text: 'Family sharing', included: false },
             { text: 'API access', included: false },
         ],
-        cta: 'START FREE',
     },
     {
         id: 'premium',
@@ -63,7 +62,6 @@ const pricingTiers = [
             { text: 'Unlimited staff accounts', included: true },
             { text: 'Full API access', included: true },
         ],
-        cta: 'CONTACT SALES',
         underConstruction: true,
     },
 ];
@@ -83,17 +81,9 @@ function loadRazorpayScript() {
 }
 
 export function Pricing() {
-    const [reportsAnalyzed, setReportsAnalyzed] = useState(2847);
     const [loading, setLoading]   = useState(false);
     const [payStatus, setPayStatus] = useState(null); // 'success' | 'failed' | null
     const rzpRef = useRef(null);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setReportsAnalyzed((prev) => prev + Math.floor(Math.random() * 3));
-        }, 2000);
-        return () => clearInterval(interval);
-    }, []);
 
     // Pre-load the Razorpay script in the background when the section mounts
     useEffect(() => { loadRazorpayScript(); }, []);
@@ -190,15 +180,7 @@ export function Pricing() {
                     </div>
                 </div>
 
-                {/* Live Counter */}
-                <div className="flex items-center justify-end gap-4 mb-8">
-                    <span className="text-xs font-mono text-brutalist-muted uppercase">
-                        reports analyzed today:
-                    </span>
-                    <span className="font-space text-lg font-bold text-brutalist-fg">
-                        {reportsAnalyzed.toLocaleString()}
-                    </span>
-                </div>
+
 
                 {/* Title */}
                 <h2 className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg mb-4">
@@ -338,34 +320,33 @@ export function Pricing() {
                                 </ul>
 
                                 {/* CTA Button */}
-                                <Button
-                                    onClick={() => handleCtaClick(tier.id)}
-                                    disabled={tier.id === 'premium' && loading}
-                                    className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${
-                                        tier.recommended
-                                            ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
-                                            : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
-                                    }`}
-                                >
-                                    {tier.id === 'premium' && loading ? (
-                                        'PROCESSING...'
-                                    ) : (
-                                        <>
-                                            {tier.cta}
-                                            <ArrowRight className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </Button>
+                                {tier.id === 'premium' && (
+                                    <Button
+                                        onClick={() => handleCtaClick(tier.id)}
+                                        disabled={tier.id === 'premium' && loading}
+                                        className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${
+                                            tier.recommended
+                                                ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
+                                                : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
+                                        }`}
+                                    >
+                                        {tier.id === 'premium' && loading ? (
+                                            'PROCESSING...'
+                                        ) : (
+                                            <>
+                                                {tier.cta}
+                                                <ArrowRight className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Footer Notes */}
-                <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-xs font-mono text-brutalist-muted">
-                        * All plans include HIPAA-compliant security. Cancel anytime.
-                    </p>
+                <div className="mt-6 flex flex-col md:flex-row items-center justify-end gap-4">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-brutalist-muted">
                             Need help choosing?
