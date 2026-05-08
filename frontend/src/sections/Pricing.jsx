@@ -14,7 +14,7 @@ const pricingTiers = [
         icon: <Stethoscope className="w-5 h-5" />,
         features: [
             { text: '3 reports / month', included: true },
-            { text: 'Basic disease detection (20+)', included: true },
+            { text: 'Basic disease detection', included: true },
             { text: 'PDF summary download', included: true },
             { text: '7-day data retention', included: true },
             { text: 'Advanced visualizations', included: false },
