@@ -24,8 +24,8 @@ from app.database import get_db
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
-# Amount in paise (INR). 19 USD ~ 1580 INR. Adjust to your actual price.
-PREMIUM_AMOUNT_PAISE = 158000   # 1580.00 INR
+# Amount in paise (INR). 100 paise = 1 rupee.
+PREMIUM_AMOUNT_PAISE = 99900    # 999.00 INR
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ const pricingTiers = [
         id: 'premium',
         name: 'PREMIUM',
         number: '02',
-        price: '$19',
+        price: '₹999',
         unit: '/ month',
         description: 'Unlimited reports with full disease detection and advanced analytics.',
         icon: <Users className="w-5 h-5" />,
@@ -64,6 +64,7 @@ const pricingTiers = [
             { text: 'Full API access', included: true },
         ],
         cta: 'CONTACT SALES',
+        underConstruction: true,
     },
 ];
 
@@ -126,7 +127,7 @@ export function Pricing() {
                 amount:      order.amount,
                 currency:    order.currency,
                 name:        'MEDSCAN.AI',
-                description: 'Premium Plan - Unlimited Reports',
+                description: 'Premium Plan - Rs. 999/month',
                 order_id:    order.order_id,
                 theme:       { color: '#f97316' },  // brutalist-accent orange
 
@@ -234,6 +235,15 @@ export function Pricing() {
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                                     <span className="bg-brutalist-accent text-white text-xs font-mono px-3 py-1 uppercase tracking-wider">
                                         Most Popular
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Under Construction Badge */}
+                            {tier.underConstruction && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                                    <span className="bg-yellow-500 text-black text-xs font-mono px-3 py-1 uppercase tracking-wider flex items-center gap-1">
+                                        🚧 Under Construction
                                     </span>
                                 </div>
                             )}
