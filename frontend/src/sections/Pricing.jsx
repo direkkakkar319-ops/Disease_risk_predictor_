@@ -83,17 +83,9 @@ function loadRazorpayScript() {
 }
 
 export function Pricing() {
-    const [reportsAnalyzed, setReportsAnalyzed] = useState(2847);
     const [loading, setLoading]   = useState(false);
     const [payStatus, setPayStatus] = useState(null); // 'success' | 'failed' | null
     const rzpRef = useRef(null);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setReportsAnalyzed((prev) => prev + Math.floor(Math.random() * 3));
-        }, 2000);
-        return () => clearInterval(interval);
-    }, []);
 
     // Pre-load the Razorpay script in the background when the section mounts
     useEffect(() => { loadRazorpayScript(); }, []);
@@ -188,15 +180,7 @@ export function Pricing() {
                     </div>
                 </div>
 
-                {/* Live Counter */}
-                <div className="flex items-center justify-end gap-4 mb-8">
-                    <span className="text-xs font-mono text-brutalist-muted uppercase">
-                        reports analyzed today:
-                    </span>
-                    <span className="font-space text-lg font-bold text-brutalist-fg">
-                        {reportsAnalyzed.toLocaleString()}
-                    </span>
-                </div>
+
 
                 {/* Title */}
                 <h2 className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg mb-4">
