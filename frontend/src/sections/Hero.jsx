@@ -189,24 +189,6 @@ export function Hero() {
                     )}
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12">
-                    {[
-                        { value: '14', label: 'Diseases Detected' },
-                        { value: '99.2%', label: 'Accuracy Rate' },
-                        { value: '2M+', label: 'Reports Analyzed' },
-                        { value: '<30s', label: 'Analysis Time' },
-                    ].map((stat, i) => (
-                        <div key={i} className="text-center">
-                            <div className="font-space text-2xl md:text-3xl font-bold text-brutalist-fg">
-                                {stat.value}
-                            </div>
-                            <div className="text-xs font-mono text-brutalist-muted uppercase tracking-wider">
-                                {stat.label}
-                            </div>
-                        </div>
-                    ))}
-                </div>
 
                 {/* Scroll Indicator */}
                 <div className="flex justify-center">

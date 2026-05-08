@@ -225,15 +225,12 @@ export function Pricing() {
                 </div>
 
                 {/* Footer Notes */}
-                <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-xs font-mono text-brutalist-muted">
-                        * All plans include HIPAA-compliant security. Cancel anytime.
-                    </p>
+                <div className="mt-6 flex flex-col md:flex-row items-center justify-end gap-4">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-brutalist-muted">
                             Need help choosing?
                         </span>
-                        <a href="#" className="text-xs font-mono text-brutalist-accent hover:underline">
+                        <a href="mailto:sales@medscan.ai" className="text-xs font-mono text-brutalist-accent hover:underline">
                             Talk to our team
                         </a>
                     </div>

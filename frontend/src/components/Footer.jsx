@@ -3,7 +3,6 @@ import { Activity } from 'lucide-react';
 const footerLinks = [
     { label: 'Privacy', href: '#' },
     { label: 'Terms', href: '#' },
-    { label: 'HIPAA', href: '#' },
     { label: 'Contact', href: '#' },
 ];
 
@@ -31,9 +30,6 @@ export function Footer() {
                             AI-powered health report analysis. Predict disease risks,
                             visualize biomarkers, and take control of your health.
                         </p>
-                        <span className="text-xs font-mono text-brutalist-muted">
-                            HIPAA Compliant • SOC 2 Certified
-                        </span>
                     </div>
 
                     {/* Legal Links */}
