@@ -275,14 +275,14 @@ class OCRRunner:
         text = ' '.join([item['text'] for item in text_data])
 
         patterns = {
-            'wbc':          r'(?:WBC|White\s+Blood\s+Cell)[\s:)]+([0-9.]+)',
-            'rbc':          r'(?:RBC|Red\s+Blood\s+Cell)[\s:)]+([0-9.]+)',
-            'hemoglobin':   r'(?:Hemoglobin|HGB|Hb)[\s:)]+([0-9.]+)',
-            'hematocrit':   r'(?:Hematocrit|HCT)[\s:)]+([0-9.]+)',
-            'platelets':    r'(?:Platelets|PLT)[\s:)]+([0-9.]+)',
-            'glucose':      r'(?:Glucose|Fasting\s+Glucose)[\s:)]+([0-9.]+)',
-            'creatinine':   r'(?:Creatinine)[\s:)]+([0-9.]+)',
-            'bun':          r'(?:BUN)[\s:)]+([0-9.]+)',
+            'wbc':          r'(?:WBC|White\s+Blood\s+Cell)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'rbc':          r'(?:RBC|Red\s+Blood\s+Cell)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'hemoglobin':   r'(?:Hemoglobin|HGB|Hb)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'hematocrit':   r'(?:Hematocrit|HCT)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'platelets':    r'(?:Platelets|PLT)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'glucose':      r'(?:Glucose|Fasting\s+Glucose)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'creatinine':   r'(?:Creatinine)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'bun':          r'(?:BUN|Blood\s+Urea\s+Nitrogen)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
         }
 
         metrics: Dict[str, Any] = {}
@@ -308,11 +308,11 @@ class OCRRunner:
         text = ' '.join([item['text'] for item in text_data])
 
         patterns = {
-            'total_cholesterol': r'(?:Total\s+Cholesterol|T\.?\s*Chol)[\s:)]+([0-9.]+)',
-            'hdl':               r'(?:HDL)[\s:)]+([0-9.]+)',
-            'ldl':               r'(?:LDL)[\s:)]+([0-9.]+)',
-            'triglycerides':     r'(?:Triglycerides|TG)[\s:)]+([0-9.]+)',
-            'vldl':              r'(?:VLDL)[\s:)]+([0-9.]+)',
+            'total_cholesterol': r'(?:Total\s+Cholesterol|T\.?\s*Chol)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'hdl':               r'(?:HDL)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'ldl':               r'(?:LDL)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'triglycerides':     r'(?:Triglycerides|TG)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'vldl':              r'(?:VLDL)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
         }
 
         metrics: Dict[str, Any] = {}
@@ -338,7 +338,7 @@ class OCRRunner:
         text = ' '.join(item["text"] for item in text_data)
 
         patterns = {
-            'vitamin_d': r'(?:25[\s\-]?(?:OH|Hydroxy)?\s*Vitamin\s*D|Vitamin\s*D|Vit\s*D)[\s:)]+([0-9.]+)'
+            'vitamin_d': r'(?:25[\s\-]?(?:OH|Hydroxy)?\s*Vitamin\s*D|Vitamin\s*D|Vit\s*D)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)'
         }
 
         metrics: Dict[str, Any] = {}
@@ -364,16 +364,16 @@ class OCRRunner:
         text = ' '.join(item["text"] for item in text_data)
 
         patterns = {
-            'tsh':          r'(?:TSH|T\.?\s*S\.?\s*H)[\s:)]+([0-9.]+)',
-            't3':           r'(?:T3|Free\s*T3|Triiodothyronine)[\s:)]+([0-9.]+)',
-            't4':           r'(?:T4|Free\s*T4|Thyroxine)[\s:)]+([0-9.]+)',
-            'testosterone': r'(?:Testosterone|Total\s*Testosterone)[\s:)]+([0-9.]+)',
-            'estradiol':    r'(?:Estradiol|Estrogen|E2)[\s:)]+([0-9.]+)',
-            'progesterone': r'(?:Progesterone)[\s:)]+([0-9.]+)',
-            'prolactin':    r'(?:Prolactin)[\s:)]+([0-9.]+)',
-            'lh':           r'(?:LH|Luteinizing\s*Hormone)[\s:)]+([0-9.]+)',
-            'fsh':          r'(?:FSH|Follicle\s*Stimulating\s*Hormone)[\s:)]+([0-9.]+)',
-            'cortisol':     r'(?:Cortisol)[\s:)]+([0-9.]+)',
+            'tsh':          r'(?:TSH|T\.?\s*S\.?\s*H)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            't3':           r'(?:T3|Free\s*T3|Triiodothyronine)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            't4':           r'(?:T4|Free\s*T4|Thyroxine)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'testosterone': r'(?:Testosterone|Total\s*Testosterone)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'estradiol':    r'(?:Estradiol|Estrogen|E2)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'progesterone': r'(?:Progesterone)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'prolactin':    r'(?:Prolactin)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'lh':           r'(?:LH|Luteinizing\s*Hormone)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'fsh':          r'(?:FSH|Follicle\s*Stimulating\s*Hormone)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'cortisol':     r'(?:Cortisol)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
         }
 
         metrics: Dict[str, Any] = {}
@@ -399,11 +399,11 @@ class OCRRunner:
         text = ' '.join(item["text"] for item in text_data)
 
         patterns = {
-            'creatinine': r'(?:Creatinine)[\s:)]+([0-9.]+)',
-            'bun':        r'(?:BUN|Blood\s+Urea\s+Nitrogen)[\s:)]+([0-9.]+)',
-            'urea':       r'(?:Urea)[\s:)]+([0-9.]+)',
-            'uric_acid':  r'(?:Uric\s+Acid)[\s:)]+([0-9.]+)',
-            'egfr':       r'(?:eGFR|GFR)[\s:)]+([0-9.]+)',
+            'creatinine': r'(?:Creatinine)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'bun':        r'(?:BUN|Blood\s+Urea\s+Nitrogen)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'urea':       r'(?:Urea)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'uric_acid':  r'(?:Uric\s+Acid)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'egfr':       r'(?:eGFR|GFR)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
         }
 
         metrics: Dict[str, Any] = {}
@@ -429,14 +429,14 @@ class OCRRunner:
         text = ' '.join(item["text"] for item in text_data)
 
         patterns = {
-            'bilirubin_total':    r'(?:Total\s+Bilirubin|Bilirubin\s+Total)[\s:)]+([0-9.]+)',
-            'bilirubin_direct':   r'(?:Direct\s+Bilirubin)[\s:)]+([0-9.]+)',
-            'bilirubin_indirect': r'(?:Indirect\s+Bilirubin)[\s:)]+([0-9.]+)',
-            'alt':                r'(?:ALT|SGPT)[\s:)]+([0-9.]+)',
-            'ast':                r'(?:AST|SGOT)[\s:)]+([0-9.]+)',
-            'alp':                r'(?:ALP|Alkaline\s+Phosphatase)[\s:)]+([0-9.]+)',
-            'albumin':            r'(?:Albumin)[\s:)]+([0-9.]+)',
-            'total_protein':      r'(?:Total\s+Protein)[\s:)]+([0-9.]+)',
+            'bilirubin_total':    r'(?:Total\s+Bilirubin|Bilirubin\s+Total)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'bilirubin_direct':   r'(?:Direct\s+Bilirubin)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'bilirubin_indirect': r'(?:Indirect\s+Bilirubin)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'alt':                r'(?:ALT|SGPT)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'ast':                r'(?:AST|SGOT)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'alp':                r'(?:ALP|Alkaline\s+Phosphatase)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'albumin':            r'(?:Albumin)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
+            'total_protein':      r'(?:Total\s+Protein)[^0-9\n]{0,50}([0-9]+\.?[0-9]*)(?!\s*-)',
         }
 
         metrics: Dict[str, Any] = {}
