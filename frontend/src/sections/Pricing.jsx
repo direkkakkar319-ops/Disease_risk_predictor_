@@ -22,7 +22,6 @@ const pricingTiers = [
             { text: 'Family sharing', included: false },
             { text: 'API access', included: false },
         ],
-        cta: 'START FREE',
     },
     {
         id: 'premium',
@@ -63,7 +62,6 @@ const pricingTiers = [
             { text: 'Unlimited staff accounts', included: true },
             { text: 'Full API access', included: true },
         ],
-        cta: 'CONTACT SALES',
         underConstruction: true,
     },
 ];
@@ -320,24 +318,26 @@ export function Pricing() {
                                 </ul>
 
                                 {/* CTA Button */}
-                                <Button
-                                    onClick={() => handleCtaClick(tier.id)}
-                                    disabled={tier.id === 'premium' && loading}
-                                    className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${
-                                        tier.recommended
-                                            ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
-                                            : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
-                                    }`}
-                                >
-                                    {tier.id === 'premium' && loading ? (
-                                        'PROCESSING...'
-                                    ) : (
-                                        <>
-                                            {tier.cta}
-                                            <ArrowRight className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </Button>
+                                {tier.id === 'premium' && (
+                                    <Button
+                                        onClick={() => handleCtaClick(tier.id)}
+                                        disabled={tier.id === 'premium' && loading}
+                                        className={`w-full rounded-none text-xs font-mono tracking-wider uppercase h-12 flex items-center justify-center gap-2 ${
+                                            tier.recommended
+                                                ? 'bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-bg/90'
+                                                : 'bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-muted'
+                                        }`}
+                                    >
+                                        {tier.id === 'premium' && loading ? (
+                                            'PROCESSING...'
+                                        ) : (
+                                            <>
+                                                {tier.cta}
+                                                <ArrowRight className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}
