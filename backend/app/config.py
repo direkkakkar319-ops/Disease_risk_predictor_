@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     DATABASE_URL: str = "postgresql://user:pass@db:5432/disease_risk_db"
     ASYNC_DATABASE_URL: str | None = None
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
     
     # Use environment variables first
     model_config = SettingsConfigDict(extra="ignore")

@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.api import upload, status, reports, compare
+from app.api import upload, status, reports, compare, payments
 from app.config import settings, BASE_DIR
 from app.database import engine
 from app import models
@@ -45,7 +45,8 @@ def on_startup():
 app.include_router(upload.router,  prefix="/api", tags=["upload"])
 app.include_router(status.router,  prefix="/api", tags=["status"])
 app.include_router(reports.router, prefix="/api", tags=["reports"])
-app.include_router(compare.router, prefix="/api", tags=["compare"])
+app.include_router(compare.router,   prefix="/api", tags=["compare"])
+app.include_router(payments.router)
 app.include_router(auth_router)
 
 @app.get("/")
