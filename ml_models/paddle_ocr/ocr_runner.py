@@ -42,54 +42,39 @@ class OCRRunner:
         return cls._instance
 
     def __init__(self):
-        """
-        Guard 1 - prevents re-run of PaddleOCR init
-        """
         if self._initialized:
             return
 
-        """
-        Guard 2 - checks if PaddleOCR is installed
-        """
-        if not _PADDLE_AVAILABLE:
-            raise RuntimeError(
-                "PaddleOCR is not installed.\n"
-                "Run: pip install paddlepaddle paddleocr"
-            )
-
-        """These are set in .env and injected by docker-compose"""
         self.use_gpu = os.getenv('PADDLE_USE_GPU', 'false').lower() == 'true'
         self.lang = os.getenv('PADDLE_OCR_LANG', 'en')
-
-        logger.info(f"Initializing PaddleOCR (GPU: {self.use_gpu}, Lang: {self.lang})")
-
-        """
-        Bug 4 fix: PaddleOCR 3.4.0 completely changed its constructor API.
-        Parameters like use_gpu, use_angle_cls, show_log, enable_mkldnn,
-        ocr_version, limit_side_len, det_db_thresh etc. no longer exist.
-        The new API only accepts model-selection and pipeline-toggle params.
-        GPU selection is now handled via the PaddlePaddle backend automatically.
-        """
-        try:
-            self.ocr_engine = PaddleOCR(
-                lang=self.lang,
-                use_doc_orientation_classify=False,  # skip page rotation, saves memory
-                use_doc_unwarping=False,             # skip dewarping, saves memory
-                use_textline_orientation=False,      # disabled to reduce RAM usage
-            )
-            logger.info("PaddleOCR (text engine) initialised successfully")
-        except Exception as e:
-            logger.warning(f"PaddleOCR init failed ({e}), retrying with minimal params")
-            self.ocr_engine = PaddleOCR(lang=self.lang)
-            logger.info("PaddleOCR (text engine) initialised successfully (minimal params)")
-
-        # PPStructureV3 disabled — too memory-intensive for constrained deployments.
-        # Table data falls back to regex parsers in the report-specific parse methods.
+        # Loaded on first image/scanned-PDF OCR call — never loaded for digital PDFs
+        self._ocr_engine = None
         self.structure_engine = None
 
-        """Make Guard 1 skip future inits"""
         self._initialized = True
-        logger.info("OCRRunner fully initialised")
+        logger.info("OCRRunner initialised (PaddleOCR will load only if image OCR is needed)")
+
+    def _get_ocr_engine(self):
+        """Load PaddleOCR models on first call. Skipped entirely for digital PDFs."""
+        if not _PADDLE_AVAILABLE:
+            raise RuntimeError(
+                "PaddleOCR is not installed. Run: pip install paddlepaddle paddleocr"
+            )
+        if self._ocr_engine is None:
+            logger.info("Loading PaddleOCR models into memory...")
+            try:
+                self._ocr_engine = PaddleOCR(
+                    lang=self.lang,
+                    use_doc_orientation_classify=False,
+                    use_doc_unwarping=False,
+                    use_textline_orientation=False,
+                )
+                logger.info("PaddleOCR models loaded successfully")
+            except Exception as e:
+                logger.warning(f"PaddleOCR init failed ({e}), retrying with minimal params")
+                self._ocr_engine = PaddleOCR(lang=self.lang)
+                logger.info("PaddleOCR models loaded (minimal params)")
+        return self._ocr_engine
 
     """
     Image Preprocessing
@@ -140,23 +125,78 @@ class OCRRunner:
 
         return temp_paths
 
+    def _extract_pdf_text_direct(self, pdf_path: str) -> List[Dict]:
+        """
+        Extract text directly from a digital PDF using PyMuPDF — no OCR needed.
+        Returns items in the same format as extract_text():
+            { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        Returns an empty list if the PDF appears to be scanned (no embedded text).
+        """
+        try:
+            import fitz
+        except ImportError:
+            return []
+
+        items: List[Dict] = []
+        doc = fitz.open(pdf_path)
+        try:
+            for page in doc:
+                blocks = page.get_text("dict")["blocks"]
+                for block in blocks:
+                    if block.get("type") != 0:  # 0 = text block
+                        continue
+                    for line in block.get("lines", []):
+                        line_text = " ".join(
+                            span["text"] for span in line.get("spans", [])
+                        ).strip()
+                        if not line_text:
+                            continue
+                        bbox_rect = line["bbox"]  # (x0, y0, x1, y1)
+                        bbox = [
+                            [bbox_rect[0], bbox_rect[1]],
+                            [bbox_rect[2], bbox_rect[1]],
+                            [bbox_rect[2], bbox_rect[3]],
+                            [bbox_rect[0], bbox_rect[3]],
+                        ]
+                        items.append({
+                            "text": line_text,
+                            "confidence": 1.0,  # digital text is perfect
+                            "bbox": bbox,
+                        })
+        finally:
+            doc.close()
+
+        return items
+
     """
     Public extraction methods
     """
     def extract_text(self, image_path: str, preprocess: bool = True) -> List[Dict]:
         """
         Run OCR on an image or PDF and return all detected text in reading order.
-        Uses PaddleOCR 3.4 .predict() API (replaces deprecated .ocr()).
+        For digital PDFs: uses PyMuPDF direct extraction (no OCR models loaded).
+        For images or scanned PDFs: loads PaddleOCR lazily and runs OCR.
         Each item in the returned list is:
             { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
-        PDFs are converted page-by-page to temp images before OCR.
         """
         is_pdf = image_path.lower().endswith('.pdf')
         temp_files: List[str] = []
 
         try:
             if is_pdf:
-                # Convert each PDF page to a temp image, then OCR each page
+                # Try zero-OCR direct extraction first (works for digital PDFs)
+                direct_items = self._extract_pdf_text_direct(image_path)
+                if len(direct_items) >= 5:
+                    logger.info(f"[extract_text] direct PDF extraction: {len(direct_items)} lines, no OCR needed")
+                    return sorted(
+                        direct_items,
+                        key=lambda x: (
+                            self._get_center(x['bbox'])[1],
+                            self._get_center(x['bbox'])[0],
+                        ),
+                    )
+                # Scanned/image PDF — fall back to OCR
+                logger.info("[extract_text] PDF has little/no embedded text, falling back to OCR")
                 temp_files = self._pdf_to_temp_images(image_path)
                 if not temp_files:
                     logger.warning(f"PDF produced no pages: {image_path}")
@@ -171,10 +211,10 @@ class OCRRunner:
             else:
                 input_paths = [image_path]
 
+            ocr = self._get_ocr_engine()
             extracted: List[Dict] = []
             for input_path in input_paths:
-                # PaddleOCR 3.4: use predict() — ocr() is deprecated
-                results = self.ocr_engine.predict(input_path)
+                results = ocr.predict(input_path)
                 extracted.extend(self._parse_paddle_results(results))
 
         except Exception as e:
