@@ -13,7 +13,7 @@ import logging
 import os
 import traceback
 from datetime import datetime
-from celery.exceptions import MaxRetriesExceededError
+from celery.exceptions import MaxRetriesExceededError, SoftTimeLimitExceeded
 from task_queue.celery_app import celery_app
 
 """
@@ -153,6 +153,14 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
             "metrics_extracted": len(structured_metrics),
             "risk_level": prediction.get("risk_level"),
         }
+
+    except SoftTimeLimitExceeded:
+        # Celery soft kill — update status so frontend stops spinning
+        logger.error(f"[process_medical_report] soft time limit exceeded for report {report_id}")
+        _save_task_error(report_id, Exception("Task timed out — OCR/model loading took too long"), "SoftTimeLimitExceeded")
+        if local_tmp and os.path.exists(local_tmp):
+            os.remove(local_tmp)
+        raise
 
     except Exception as exc:
         tb = traceback.format_exc()
