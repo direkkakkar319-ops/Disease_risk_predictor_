@@ -50,7 +50,7 @@ export function Results() {
         let attempts = 0;
         pollingRef.current = setInterval(async () => {
             attempts++;
-            if (attempts > 60) {
+            if (attempts > 120) {
                 stopPolling();
                 setLoading(false);
                 localStorage.removeItem('healthinsight_pending_report_id');
