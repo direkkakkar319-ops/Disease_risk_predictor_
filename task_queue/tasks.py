@@ -137,6 +137,16 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         self.update_state(state="PROGRESS", meta={"step": "saving_results"})
         _save_prediction(report_id, prediction)
 
+        # ── Cleanup: delete temp file and S3 object only on success ─────────
+        if local_tmp and os.path.exists(local_tmp):
+            os.remove(local_tmp)
+        if _USE_S3:
+            try:
+                _get_s3().delete_object(Bucket=os.getenv("S3_BUCKET_NAME"), Key=file_path)
+                logger.info(f"[process_medical_report] deleted S3 object {file_path}")
+            except Exception as e:
+                logger.warning(f"[process_medical_report] failed to delete S3 object {file_path}: {e}")
+
         return {
             "status": "completed",
             "report_id": report_id,
@@ -148,17 +158,10 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         tb = traceback.format_exc()
         logger.error(f"[process_medical_report] failed for report {report_id}: {exc}\n{tb}")
         _save_task_error(report_id, exc, tb)
-        raise self.retry(exc=exc)
-
-    finally:
+        # Clean up local tmp on failure but keep the S3 object so retries can re-download it
         if local_tmp and os.path.exists(local_tmp):
             os.remove(local_tmp)
-        if _USE_S3:
-            try:
-                _get_s3().delete_object(Bucket=os.getenv("S3_BUCKET_NAME"), Key=file_path)
-                logger.info(f"[process_medical_report] deleted S3 object {file_path}")
-            except Exception as e:
-                logger.warning(f"[process_medical_report] failed to delete S3 object {file_path}: {e}")
+        raise self.retry(exc=exc)
 
 
 # ─────────────────────────────────────────────
