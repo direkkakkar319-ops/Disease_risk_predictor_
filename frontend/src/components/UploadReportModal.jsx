@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, FileText, Image as ImageIcon, Activity, ArrowRight, Droplets, Heart, Sun, Zap, Bean, FlaskConical } from 'lucide-react';
+import { Upload, X, FileText, Image as ImageIcon, ArrowRight, Droplets, Heart, Sun, Zap, Bean, FlaskConical } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import {
     Dialog,
@@ -12,6 +12,11 @@ import {
 import { Button } from '@/components/ui/button';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+const FILE_TYPES = [
+    { value: 'pdf', label: 'PDF', icon: FileText, description: 'Scanned lab report', accept: '.pdf' },
+    { value: 'image', label: 'IMAGE', icon: ImageIcon, description: 'JPG / PNG photo', accept: '.jpg,.jpeg,.png' },
+];
 
 const REPORT_TYPES = [
     { value: 'blood', label: 'BLOOD', icon: Droplets, description: 'CBC / Blood Panel' },
@@ -26,8 +31,18 @@ export function UploadReportModal({ children }) {
     const [open, setOpen] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [files, setFiles] = useState([]);
+    const [fileType, setFileType] = useState(null);
     const [reportType, setReportType] = useState(null);
     const [error, setError] = useState(null);
+
+    const selectedFileTypeMeta = FILE_TYPES.find(ft => ft.value === fileType);
+    const acceptAttr = selectedFileTypeMeta?.accept ?? '.pdf,.jpg,.jpeg,.png';
+
+    const handleFileTypeSelect = (value) => {
+        setFileType(value);
+        setFiles([]);
+        setError(null);
+    };
 
     const handleDrag = (e) => {
         e.preventDefault();
@@ -41,18 +56,30 @@ export function UploadReportModal({ children }) {
 
     const processFiles = (incomingFiles) => {
         setError(null);
-        let hasError = false;
+
+        if (!fileType) {
+            setError('Please select a file type (PDF or Image) before adding files.');
+            return;
+        }
 
         const validFiles = Array.from(incomingFiles).filter(file => {
             if (file.size > MAX_FILE_SIZE) {
                 setError(`File ${file.name} exceeds the 50MB limit.`);
-                hasError = true;
+                return false;
+            }
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (fileType === 'pdf' && ext !== 'pdf') {
+                setError(`Only PDF files are allowed. "${file.name}" is not a PDF.`);
+                return false;
+            }
+            if (fileType === 'image' && !['jpg', 'jpeg', 'png'].includes(ext)) {
+                setError(`Only JPG/PNG files are allowed. "${file.name}" is not an image.`);
                 return false;
             }
             return true;
         });
 
-        if (!hasError && validFiles.length > 0) {
+        if (validFiles.length > 0) {
             setFiles(prev => [...prev, ...validFiles]);
         }
     };
@@ -82,6 +109,10 @@ export function UploadReportModal({ children }) {
 
     const handleUpload = async () => {
         if (files.length === 0) return;
+        if (!fileType) {
+            setError('Please select a file type (PDF or Image) before uploading.');
+            return;
+        }
         if (!reportType) {
             setError('Please select a report type before uploading.');
             return;
@@ -143,6 +174,7 @@ export function UploadReportModal({ children }) {
     const handleOpenChange = (newOpen) => {
         if (!newOpen) {
             setFiles([]);
+            setFileType(null);
             setReportType(null);
             setError(null);
         }
@@ -164,18 +196,35 @@ export function UploadReportModal({ children }) {
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex gap-3 sm:gap-4 mb-8">
-                    <div className="flex flex-col items-center justify-center gap-2 py-4 border border-brutalist-fg bg-brutalist-bg flex-1 hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors group cursor-default">
-                        <FileText className="w-5 h-5 text-brutalist-fg group-hover:text-brutalist-bg transition-colors" />
-                        <span className="text-xs font-mono tracking-wider uppercase text-brutalist-fg group-hover:text-brutalist-bg transition-colors">PDF</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center gap-2 py-4 border border-brutalist-fg bg-brutalist-bg flex-1 hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors group cursor-default">
-                        <ImageIcon className="w-5 h-5 text-brutalist-fg group-hover:text-brutalist-bg transition-colors" />
-                        <span className="text-xs font-mono tracking-wider uppercase text-brutalist-fg group-hover:text-brutalist-bg transition-colors">IMAGE</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center gap-2 py-4 border border-brutalist-fg bg-brutalist-bg flex-1 hover:bg-brutalist-fg hover:text-brutalist-bg transition-colors group cursor-default">
-                        <Activity className="w-5 h-5 text-brutalist-fg group-hover:text-brutalist-bg transition-colors" />
-                        <span className="text-xs font-mono tracking-wider uppercase text-brutalist-fg group-hover:text-brutalist-bg transition-colors">DICOM</span>
+                {/* File Type Selector */}
+                <div className="mb-8">
+                    <p className="font-space font-bold text-sm sm:text-base tracking-tight text-brutalist-fg uppercase mb-4">
+                        SELECT FILE TYPE
+                    </p>
+                    <div className="flex gap-3 sm:gap-4">
+                        {FILE_TYPES.map((ft) => {
+                            const Icon = ft.icon;
+                            const isSelected = fileType === ft.value;
+                            return (
+                                <button
+                                    key={ft.value}
+                                    type="button"
+                                    onClick={() => handleFileTypeSelect(ft.value)}
+                                    className={`flex flex-col items-center justify-center gap-2 py-4 px-6 border-2 flex-1 transition-all duration-200 cursor-pointer group/ft ${isSelected
+                                        ? 'border-brutalist-accent bg-brutalist-accent text-brutalist-bg shadow-[4px_4px_0px_0px] shadow-brutalist-accent/40'
+                                        : 'border-brutalist-fg bg-brutalist-bg text-brutalist-fg hover:bg-brutalist-fg hover:text-brutalist-bg'
+                                    }`}
+                                >
+                                    <Icon className={`w-5 h-5 transition-colors ${isSelected ? 'text-brutalist-bg' : 'text-brutalist-fg group-hover/ft:text-brutalist-bg'}`} />
+                                    <span className={`text-xs font-mono tracking-wider uppercase font-bold transition-colors ${isSelected ? 'text-brutalist-bg' : 'text-brutalist-fg group-hover/ft:text-brutalist-bg'}`}>
+                                        {ft.label}
+                                    </span>
+                                    <span className={`text-[10px] font-mono tracking-wide transition-colors ${isSelected ? 'text-brutalist-bg/70' : 'text-brutalist-muted group-hover/ft:text-brutalist-bg/70'}`}>
+                                        {ft.description}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -231,7 +280,7 @@ export function UploadReportModal({ children }) {
                     <input
                         type="file"
                         multiple
-                        accept=".pdf,.jpg,.jpeg,.png,.dcm,.dicom"
+                        accept={acceptAttr}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                         onChange={handleChange}
                     />
@@ -244,7 +293,7 @@ export function UploadReportModal({ children }) {
                         DRAG & DROP YOUR FILES HERE
                     </p>
                     <p className="font-mono text-xs text-brutalist-muted text-center mb-6 uppercase tracking-wider relative z-10">
-                        Supported: PDF, JPG, PNG, DICOM
+                        {fileType === 'pdf' ? 'PDF files only' : fileType === 'image' ? 'JPG / PNG files only' : 'Select a file type above first'}
                     </p>
 
                     <Button
@@ -304,7 +353,7 @@ export function UploadReportModal({ children }) {
                         CANCEL
                     </Button>
                     <Button
-                        disabled={files.length === 0 || !reportType}
+                        disabled={files.length === 0 || !reportType || !fileType}
                         className="font-mono font-bold text-xs rounded-none border border-brutalist-fg bg-brutalist-fg text-brutalist-bg hover:bg-brutalist-accent hover:border-brutalist-accent uppercase tracking-widest h-12 px-6 sm:px-8 w-full sm:w-auto flex items-center justify-center gap-3 group/btn disabled:opacity-50 disabled:hover:bg-brutalist-fg disabled:hover:border-brutalist-fg disabled:cursor-not-allowed"
                         onClick={handleUpload}
                     >

@@ -30,11 +30,7 @@ try:
 except ImportError:
     ReportComparison = None
 
-import requests
-
 from services.ml_service import ReportComparator
-
-ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "").rstrip("/")
 
 logger = logging.getLogger(__name__)
 
@@ -103,39 +99,47 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         else:
             image_path = file_path
 
-        self.update_state(state="PROGRESS", meta={"step": "calling_ml_service"})
-        logger.info(f"[process_medical_report] Calling ML service at {ML_SERVICE_URL}")
+        # ── Step 1: OCR ───────────────────────────────────────────────────
+        self.update_state(state="PROGRESS", meta={"step": "running_ocr"})
+        logger.info(f"[process_medical_report] Running OCR on {image_path}")
 
-        with open(image_path, "rb") as f:
-            response = requests.post(
-                f"{ML_SERVICE_URL}/analyze",
-                files={"file": (os.path.basename(image_path), f)},
-                data={"report_type": report_type},
-                timeout=300,
-            )
-        response.raise_for_status()
-        result = response.json()
+        from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
+        ocr_runner = get_ocr_runner()
+        ocr_result = ocr_runner.process_report(image_path, report_type)
 
-        ocr_result = result
-        prediction = result["prediction"]
+        structured_metrics = ocr_result["structured_metrics"]
+        raw_text = ocr_result["raw_text"]
+        avg_confidence = ocr_result.get("average_confidence", 0.0)
 
-        logger.info(f"[process_medical_report] ML service done: "
-                    f"{len(ocr_result['structured_metrics'])} metrics, "
+        logger.info(f"[process_medical_report] OCR done: "
+                    f"{len(structured_metrics)} metrics extracted, "
+                    f"confidence={avg_confidence:.3f}")
+
+        _save_ocr_results(
+            report_id=report_id,
+            raw_text=raw_text,
+            metrics=structured_metrics,
+            confidence=avg_confidence,
+        )
+
+        # ── Step 2: Disease risk prediction ──────────────────────────────
+        self.update_state(state="PROGRESS", meta={"step": "running_prediction"})
+        logger.info(f"[process_medical_report] Running risk prediction for report {report_id}")
+
+        from ml_models.predict import RiskPredictor
+        predictor = RiskPredictor()
+        prediction = predictor.predict(metrics=structured_metrics, report_type=report_type)
+
+        logger.info(f"[process_medical_report] Prediction done: "
                     f"risk_level={prediction.get('risk_level')}")
 
         self.update_state(state="PROGRESS", meta={"step": "saving_results"})
-        _save_ocr_results(
-            report_id=report_id,
-            raw_text=ocr_result["raw_text"],
-            metrics=ocr_result["structured_metrics"],
-            confidence=ocr_result.get("ocr_confidence", 0.0),
-        )
         _save_prediction(report_id, prediction)
 
         return {
             "status": "completed",
             "report_id": report_id,
-            "metrics_extracted": len(ocr_result["structured_metrics"]),
+            "metrics_extracted": len(structured_metrics),
             "risk_level": prediction.get("risk_level"),
         }
 
