@@ -174,7 +174,9 @@ export function Pricing() {
                         <span className="text-xs font-mono text-brutalist-muted">
                             // SECTION: PRICING_TIERS
                         </span>
-                        <span className="text-xs font-mono text-brutalist-muted">005</span>
+                        <span className="text-xs font-mono text-brutalist-muted">
+                            007
+                        </span>
                     </div>
                 </div>
 

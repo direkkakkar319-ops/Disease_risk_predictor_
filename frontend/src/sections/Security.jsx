@@ -38,7 +38,7 @@ export function Security() {
                             // SECTION: SECURITY_PROTOCOLS
                         </span>
                         <span className="text-xs font-mono text-brutalist-muted">
-                            004
+                            006
                         </span>
                     </div>
                 </div>
