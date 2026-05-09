@@ -11,14 +11,13 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libpq-dev \
     gcc \
+    tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .
 
 RUN pip install --no-cache-dir --timeout 300 --retries 10 -r requirements.txt
 
-# Pre-download PaddleOCR models at build time so the first request isn't slow
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(lang='en', use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False)"
 
 COPY backend/ ./
 COPY task_queue/ ./task_queue/
