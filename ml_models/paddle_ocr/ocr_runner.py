@@ -6,14 +6,6 @@ import logging
 import re
 import os
 
-# Bug 5 fix: the original try block set _PADDLE_AVAILABLE = True unconditionally
-# without actually importing anything. The import must be inside the try block.
-try:
-    from paddleocr import PaddleOCR
-    _PADDLE_AVAILABLE = True
-except ImportError:
-    _PADDLE_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,9 +14,9 @@ OCRRunner - Singleton class
 """
 class OCRRunner:
     """
-    Wraps PP-OCRv5 (text detection + recognition) and PP-StructureV3
-    (layout analysis + table extraction) in a Singleton — heavy models are
-    loaded once per process.
+    Wraps PP-OCRv5 (text detection + recognition) in a Singleton — heavy models
+    are loaded once per process, and only when image OCR is actually needed.
+    Digital PDFs are handled via PyMuPDF direct extraction with zero OCR cost.
     """
 
     # Class-level variable — shared across ALL instances.
@@ -45,8 +37,6 @@ class OCRRunner:
         if self._initialized:
             return
 
-        self.use_gpu = os.getenv('PADDLE_USE_GPU', 'false').lower() == 'true'
-        self.lang = os.getenv('PADDLE_OCR_LANG', 'en')
         # Loaded on first image/scanned-PDF OCR call — never loaded for digital PDFs
         self._ocr_engine = None
         self.structure_engine = None
@@ -56,15 +46,17 @@ class OCRRunner:
 
     def _get_ocr_engine(self):
         """Load PaddleOCR models on first call. Skipped entirely for digital PDFs."""
-        if not _PADDLE_AVAILABLE:
-            raise RuntimeError(
-                "PaddleOCR is not installed. Run: pip install paddlepaddle paddleocr"
-            )
         if self._ocr_engine is None:
+            try:
+                from paddleocr import PaddleOCR
+            except ImportError:
+                raise RuntimeError(
+                    "PaddleOCR is not installed. Run: pip install paddlepaddle paddleocr"
+                )
             logger.info("Loading PaddleOCR models into memory...")
             try:
                 self._ocr_engine = PaddleOCR(
-                    lang=self.lang,
+                    lang="en",
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
                     use_textline_orientation=False,
@@ -72,7 +64,8 @@ class OCRRunner:
                 logger.info("PaddleOCR models loaded successfully")
             except Exception as e:
                 logger.warning(f"PaddleOCR init failed ({e}), retrying with minimal params")
-                self._ocr_engine = PaddleOCR(lang=self.lang)
+                from paddleocr import PaddleOCR
+                self._ocr_engine = PaddleOCR(lang="en")
                 logger.info("PaddleOCR models loaded (minimal params)")
         return self._ocr_engine
 
@@ -176,8 +169,10 @@ class OCRRunner:
         Run OCR on an image or PDF and return all detected text in reading order.
         For digital PDFs: uses PyMuPDF direct extraction (no OCR models loaded).
         For images or scanned PDFs: loads PaddleOCR lazily and runs OCR.
+        Uses PaddleOCR 3.4 .predict() API (replaces deprecated .ocr()).
         Each item in the returned list is:
             { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        PDFs are converted page-by-page to temp images before OCR.
         """
         is_pdf = image_path.lower().endswith('.pdf')
         temp_files: List[str] = []
@@ -195,7 +190,7 @@ class OCRRunner:
                             self._get_center(x['bbox'])[0],
                         ),
                     )
-                # Scanned/image PDF — fall back to OCR
+                # Scanned/image PDF — fall back to PaddleOCR
                 logger.info("[extract_text] PDF has little/no embedded text, falling back to OCR")
                 temp_files = self._pdf_to_temp_images(image_path)
                 if not temp_files:
@@ -214,6 +209,7 @@ class OCRRunner:
             ocr = self._get_ocr_engine()
             extracted: List[Dict] = []
             for input_path in input_paths:
+                # PaddleOCR 3.4: use predict() — ocr() is deprecated
                 results = ocr.predict(input_path)
                 extracted.extend(self._parse_paddle_results(results))
 
