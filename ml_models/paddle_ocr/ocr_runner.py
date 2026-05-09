@@ -122,40 +122,93 @@ class OCRRunner:
 
         return enhanced
 
+    def _pdf_to_temp_images(self, pdf_path: str) -> List[str]:
+        """
+        Convert each page of a PDF to a temporary JPEG file.
+        Returns a list of temp file paths (caller must delete them).
+        Uses PyMuPDF (fitz) at 2x resolution for good OCR quality.
+        """
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            raise RuntimeError(
+                "PyMuPDF is required for PDF processing.\n"
+                "Run: pip install PyMuPDF"
+            )
+
+        temp_paths = []
+        doc = fitz.open(pdf_path)
+        try:
+            mat = fitz.Matrix(2.0, 2.0)  # 2x scale → ~144 dpi, better OCR accuracy
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                pix = page.get_pixmap(matrix=mat, alpha=False)
+                temp_file = f"{pdf_path}_page{page_num}.jpg"
+                pix.save(temp_file)
+                temp_paths.append(temp_file)
+        finally:
+            doc.close()
+
+        return temp_paths
 
     """
     Public extraction methods
     """
     def extract_text(self, image_path: str, preprocess: bool = True) -> List[Dict]:
         """
-        Run OCR on an image and return all detected text in reading order.
+        Run OCR on an image or PDF and return all detected text in reading order.
         Uses PaddleOCR 3.4 .predict() API (replaces deprecated .ocr()).
         Each item in the returned list is:
             { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        PDFs are converted page-by-page to temp images before OCR.
         """
-        temp_path = None
+        is_pdf = image_path.lower().endswith('.pdf')
+        temp_files: List[str] = []
+
         try:
-            if preprocess:
+            if is_pdf:
+                # Convert each PDF page to a temp image, then OCR each page
+                temp_files = self._pdf_to_temp_images(image_path)
+                if not temp_files:
+                    logger.warning(f"PDF produced no pages: {image_path}")
+                    return []
+                input_paths = temp_files
+            elif preprocess:
                 temp_path = f"{image_path}_temp.jpg"
                 processed = self.preprocess_image(image_path)
                 cv2.imwrite(temp_path, processed)
-                input_path = temp_path
+                temp_files = [temp_path]
+                input_paths = temp_files
             else:
-                input_path = image_path
+                input_paths = [image_path]
 
-            # PaddleOCR 3.4: use predict() — ocr() is deprecated
-            results = self.ocr_engine.predict(input_path)
+            extracted: List[Dict] = []
+            for input_path in input_paths:
+                # PaddleOCR 3.4: use predict() — ocr() is deprecated
+                results = self.ocr_engine.predict(input_path)
+                extracted.extend(self._parse_paddle_results(results))
 
         except Exception as e:
             logger.error(f"Text extraction failed: {e}", exc_info=True)
             raise
 
         finally:
-            if temp_path and os.path.exists(temp_path):
-                os.remove(temp_path)
+            for tmp in temp_files:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
 
+        # Sort by reading order (top-to-bottom, left-to-right)
+        extracted.sort(
+            key=lambda x: (
+                self._get_center(x['bbox'])[1],
+                self._get_center(x['bbox'])[0]
+            ))
+
+        return extracted
+
+    def _parse_paddle_results(self, results) -> List[Dict]:
+        """Parse raw PaddleOCR predict() output into a list of text/confidence/bbox dicts."""
         extracted: List[Dict] = []
-
         # PaddleOCR 3.4 returns a list of result dicts, one per image.
         # Each dict has: rec_texts (list[str]), rec_scores (list[float]),
         # rec_polys (list of polygon arrays).
@@ -176,44 +229,50 @@ class OCRRunner:
                     'confidence': float(score),
                     'bbox': bbox
                 })
-
-        # Sort by reading order (top-to-bottom, left-to-right)
-        extracted.sort(
-            key=lambda x: (
-                self._get_center(x['bbox'])[1],
-                self._get_center(x['bbox'])[0]
-            ))
-
         return extracted
 
     def extract_tables(self, image_path: str) -> List[Dict]:
         """
         Extract tables using PP-StructureV3.
         Returns an empty list if the engine is unavailable.
+        PDFs are converted page-by-page to temp images before table extraction.
         """
         if self.structure_engine is None:
             return []
 
-        try:
-            result = self.structure_engine.predict(input=image_path)
-            tables = []
+        is_pdf = image_path.lower().endswith('.pdf')
+        temp_files: List[str] = []
 
-            for res in result:
-                # PPStructureV3 result items are dict-like objects
-                item_type = res.get('type', '') if isinstance(res, dict) else getattr(res, 'type', '')
-                if item_type == 'table':
-                    item_res = res.get('res', {}) if isinstance(res, dict) else getattr(res, 'res', {})
-                    tables.append({
-                        'html': item_res.get('html', '') if isinstance(item_res, dict) else '',
-                        'data': item_res.get('data', []) if isinstance(item_res, dict) else [],
-                        'bbox': res.get('bbox', []) if isinstance(res, dict) else []
-                    })
+        try:
+            if is_pdf:
+                temp_files = self._pdf_to_temp_images(image_path)
+                input_paths = temp_files
+            else:
+                input_paths = [image_path]
+
+            tables: List[Dict] = []
+            for input_path in input_paths:
+                result = self.structure_engine.predict(input=input_path)
+                for res in result:
+                    item_type = res.get('type', '') if isinstance(res, dict) else getattr(res, 'type', '')
+                    if item_type == 'table':
+                        item_res = res.get('res', {}) if isinstance(res, dict) else getattr(res, 'res', {})
+                        tables.append({
+                            'html': item_res.get('html', '') if isinstance(item_res, dict) else '',
+                            'data': item_res.get('data', []) if isinstance(item_res, dict) else [],
+                            'bbox': res.get('bbox', []) if isinstance(res, dict) else []
+                        })
 
             return tables
 
         except Exception as e:
             logger.error(f"Table extraction failed: {e}", exc_info=True)
             return []
+
+        finally:
+            for tmp in temp_files:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
 
     """
     Complete processing pipeline for medical reports.
