@@ -1,0 +1,46 @@
+steps:
+  # Build the backend Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${COMMIT_SHA}'
+      - '-f'
+      - 'backend/Dockerfile'
+      - '.'
+
+  # Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - push
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${COMMIT_SHA}'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - medscan-backend
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${COMMIT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=4Gi'
+      - '--cpu=2'
+      - '--timeout=300'
+      - '--concurrency=4'
+      - '--min-instances=0'
+      - '--max-instances=2'
+      - '--allow-unauthenticated'
+      - '--set-secrets=NEON_DB_URL=NEON_DB_URL:latest,NEON_ASYNC_DB_URL=NEON_ASYNC_DB_URL:latest,CELERY_BROKER_URL=CELERY_BROKER_URL:latest,CELERY_RESULT_BACKEND=CELERY_RESULT_BACKEND:latest,RAZORPAY_KEY_ID=RAZORPAY_KEY_ID:latest,RAZORPAY_KEY_SECRET=RAZORPAY_KEY_SECRET:latest,SECRET_KEY=SECRET_KEY:latest'
+
+substitutions:
+  _REGION: us-central1
+  _REPO: medscan
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${COMMIT_SHA}'
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY

@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libpq-dev \
     gcc \
+    tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements.txt first (before the rest of the code)
