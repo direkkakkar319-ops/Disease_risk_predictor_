@@ -11,6 +11,7 @@ Important imports
 """
 import logging
 import os
+import traceback
 from datetime import datetime
 from celery.exceptions import MaxRetriesExceededError
 from task_queue.celery_app import celery_app
@@ -30,11 +31,7 @@ try:
 except ImportError:
     ReportComparison = None
 
-import requests
-
 from services.ml_service import ReportComparator
-
-ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "").rstrip("/")
 
 logger = logging.getLogger(__name__)
 
@@ -103,48 +100,44 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         else:
             image_path = file_path
 
-        self.update_state(state="PROGRESS", meta={"step": "calling_ml_service"})
-        logger.info(f"[process_medical_report] Calling ML service at {ML_SERVICE_URL}")
+        # ── Step 1: OCR ───────────────────────────────────────────────────
+        self.update_state(state="PROGRESS", meta={"step": "running_ocr"})
+        logger.info(f"[process_medical_report] Running OCR on {image_path}")
 
-        with open(image_path, "rb") as f:
-            response = requests.post(
-                f"{ML_SERVICE_URL}/analyze",
-                files={"file": (os.path.basename(image_path), f)},
-                data={"report_type": report_type},
-                timeout=300,
-            )
-        response.raise_for_status()
-        result = response.json()
+        from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
+        ocr_runner = get_ocr_runner()
+        ocr_result = ocr_runner.process_report(image_path, report_type)
 
-        ocr_result = result
-        prediction = result["prediction"]
+        structured_metrics = ocr_result["structured_metrics"]
+        raw_text = ocr_result["raw_text"]
+        avg_confidence = ocr_result.get("average_confidence", 0.0)
 
-        logger.info(f"[process_medical_report] ML service done: "
-                    f"{len(ocr_result['structured_metrics'])} metrics, "
+        logger.info(f"[process_medical_report] OCR done: "
+                    f"{len(structured_metrics)} metrics extracted, "
+                    f"confidence={avg_confidence:.3f}")
+
+        _save_ocr_results(
+            report_id=report_id,
+            raw_text=raw_text,
+            metrics=structured_metrics,
+            confidence=avg_confidence,
+        )
+
+        # ── Step 2: Disease risk prediction ──────────────────────────────
+        self.update_state(state="PROGRESS", meta={"step": "running_prediction"})
+        logger.info(f"[process_medical_report] Running risk prediction for report {report_id}")
+
+        from ml_models.predict import RiskPredictor
+        predictor = RiskPredictor()
+        prediction = predictor.predict(metrics=structured_metrics, report_type=report_type)
+
+        logger.info(f"[process_medical_report] Prediction done: "
                     f"risk_level={prediction.get('risk_level')}")
 
         self.update_state(state="PROGRESS", meta={"step": "saving_results"})
-        _save_ocr_results(
-            report_id=report_id,
-            raw_text=ocr_result["raw_text"],
-            metrics=ocr_result["structured_metrics"],
-            confidence=ocr_result.get("ocr_confidence", 0.0),
-        )
         _save_prediction(report_id, prediction)
 
-        return {
-            "status": "completed",
-            "report_id": report_id,
-            "metrics_extracted": len(ocr_result["structured_metrics"]),
-            "risk_level": prediction.get("risk_level"),
-        }
-
-    except Exception as exc:
-        logger.error(f"[process_medical_report] failed for report {report_id}: {exc}", exc_info=True)
-        _update_report_status(report_id, "failed")
-        raise self.retry(exc=exc)
-
-    finally:
+        # ── Cleanup: delete temp file and S3 object only on success ─────────
         if local_tmp and os.path.exists(local_tmp):
             os.remove(local_tmp)
         if _USE_S3:
@@ -153,6 +146,22 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
                 logger.info(f"[process_medical_report] deleted S3 object {file_path}")
             except Exception as e:
                 logger.warning(f"[process_medical_report] failed to delete S3 object {file_path}: {e}")
+
+        return {
+            "status": "completed",
+            "report_id": report_id,
+            "metrics_extracted": len(structured_metrics),
+            "risk_level": prediction.get("risk_level"),
+        }
+
+    except Exception as exc:
+        tb = traceback.format_exc()
+        logger.error(f"[process_medical_report] failed for report {report_id}: {exc}\n{tb}")
+        _save_task_error(report_id, exc, tb)
+        # Clean up local tmp on failure but keep the S3 object so retries can re-download it
+        if local_tmp and os.path.exists(local_tmp):
+            os.remove(local_tmp)
+        raise self.retry(exc=exc)
 
 
 # ─────────────────────────────────────────────
@@ -247,6 +256,25 @@ def compare_reports(self, comparison_id: str, report_1_id: int, report_2_id: int
 # ─────────────────────────────────────────────
 #  Private synchronous DB helpers
 # ─────────────────────────────────────────────
+
+def _save_task_error(report_id: int, exc: Exception, tb: str):
+    """Mark the report as failed and store the error so the status API can return it."""
+    db = SessionLocal()
+    try:
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
+        if report:
+            report.status = "failed"
+            report.extracted_metrics = {
+                "error": str(exc),
+                "traceback": tb[-3000:],
+            }
+            db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_save_task_error] could not save error for report {report_id}: {e}")
+    finally:
+        db.close()
+
 
 def _update_report_status(report_id: int, status: str):
     """Update the status column of a report row."""
