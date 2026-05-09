@@ -48,7 +48,7 @@ async def get_report_status(
         "report_type":       report.report_type,
         "filename":          report.filename,
         "ocr_confidence":    report.ocr_confidence,
-        "extracted_metrics": report.extracted_metrics if report.status == "completed" else None,
+        "extracted_metrics": report.extracted_metrics if report.status in ("completed", "failed") else None,
         "created_at":        report.created_at.isoformat() if report.created_at else None,
         "processed_at":      report.processed_at.isoformat() if report.processed_at else None,
         "result":            task.result if task else None,

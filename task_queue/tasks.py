@@ -11,6 +11,7 @@ Important imports
 """
 import logging
 import os
+import traceback
 from datetime import datetime
 from celery.exceptions import MaxRetriesExceededError
 from task_queue.celery_app import celery_app
@@ -144,8 +145,9 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         }
 
     except Exception as exc:
-        logger.error(f"[process_medical_report] failed for report {report_id}: {exc}", exc_info=True)
-        _update_report_status(report_id, "failed")
+        tb = traceback.format_exc()
+        logger.error(f"[process_medical_report] failed for report {report_id}: {exc}\n{tb}")
+        _save_task_error(report_id, exc, tb)
         raise self.retry(exc=exc)
 
     finally:
@@ -251,6 +253,25 @@ def compare_reports(self, comparison_id: str, report_1_id: int, report_2_id: int
 # ─────────────────────────────────────────────
 #  Private synchronous DB helpers
 # ─────────────────────────────────────────────
+
+def _save_task_error(report_id: int, exc: Exception, tb: str):
+    """Mark the report as failed and store the error so the status API can return it."""
+    db = SessionLocal()
+    try:
+        report = db.query(MedicalReport).filter(MedicalReport.id == report_id).first()
+        if report:
+            report.status = "failed"
+            report.extracted_metrics = {
+                "error": str(exc),
+                "traceback": tb[-3000:],
+            }
+            db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[_save_task_error] could not save error for report {report_id}: {e}")
+    finally:
+        db.close()
+
 
 def _update_report_status(report_id: int, status: str):
     """Update the status column of a report row."""
