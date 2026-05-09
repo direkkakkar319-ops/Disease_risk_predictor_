@@ -9,7 +9,7 @@ import os
 # Bug 5 fix: the original try block set _PADDLE_AVAILABLE = True unconditionally
 # without actually importing anything. The import must be inside the try block.
 try:
-    from paddleocr import PaddleOCR, PPStructureV3
+    from paddleocr import PaddleOCR
     _PADDLE_AVAILABLE = True
 except ImportError:
     _PADDLE_AVAILABLE = False
@@ -73,9 +73,9 @@ class OCRRunner:
         try:
             self.ocr_engine = PaddleOCR(
                 lang=self.lang,
-                use_doc_orientation_classify=False,  # skip page rotation on plain scans
-                use_doc_unwarping=False,             # skip dewarping for flat images
-                use_textline_orientation=True,       # keep per-line angle correction
+                use_doc_orientation_classify=False,  # skip page rotation, saves memory
+                use_doc_unwarping=False,             # skip dewarping, saves memory
+                use_textline_orientation=False,      # disabled to reduce RAM usage
             )
             logger.info("PaddleOCR (text engine) initialised successfully")
         except Exception as e:
@@ -83,20 +83,9 @@ class OCRRunner:
             self.ocr_engine = PaddleOCR(lang=self.lang)
             logger.info("PaddleOCR (text engine) initialised successfully (minimal params)")
 
-        """
-        Initialize StructureV3 for table analysis.
-        PPStructureV3 understands the layout of the page and extracts tables.
-        """
-        try:
-            self.structure_engine = PPStructureV3(
-                use_doc_orientation_classify=False,   # saves memory in CPU mode
-                use_doc_unwarping=False,               # skip for clean scans
-                lang=self.lang
-            )
-            logger.info("PPStructureV3 (table engine) initialised successfully")
-        except Exception as e:
-            logger.warning(f"PPStructureV3 failed to initialise ({e}). Table extraction disabled.")
-            self.structure_engine = None
+        # PPStructureV3 disabled — too memory-intensive for constrained deployments.
+        # Table data falls back to regex parsers in the report-specific parse methods.
+        self.structure_engine = None
 
         """Make Guard 1 skip future inits"""
         self._initialized = True
