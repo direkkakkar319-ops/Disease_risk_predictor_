@@ -50,7 +50,7 @@ export function Results() {
         let attempts = 0;
         pollingRef.current = setInterval(async () => {
             attempts++;
-            if (attempts > 60) {
+            if (attempts > 120) {
                 stopPolling();
                 setLoading(false);
                 localStorage.removeItem('healthinsight_pending_report_id');
@@ -434,7 +434,6 @@ export function Results() {
                                 >
                                     <div className="flex items-start justify-between gap-2 mb-2">
                                         <span className="text-xs font-mono text-brutalist-fg">{marker.name}</span>
-                                        <StatusBadge status={marker.status} />
                                     </div>
                                     <div className="flex items-baseline gap-1.5 mt-1">
                                         <span

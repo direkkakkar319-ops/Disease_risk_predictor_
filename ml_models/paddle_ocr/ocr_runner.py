@@ -6,14 +6,6 @@ import logging
 import re
 import os
 
-# Bug 5 fix: the original try block set _PADDLE_AVAILABLE = True unconditionally
-# without actually importing anything. The import must be inside the try block.
-try:
-    from paddleocr import PaddleOCR
-    _PADDLE_AVAILABLE = True
-except ImportError:
-    _PADDLE_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,9 +14,9 @@ OCRRunner - Singleton class
 """
 class OCRRunner:
     """
-    Wraps PP-OCRv5 (text detection + recognition) and PP-StructureV3
-    (layout analysis + table extraction) in a Singleton — heavy models are
-    loaded once per process.
+    Wraps PP-OCRv5 (text detection + recognition) in a Singleton — heavy models
+    are loaded once per process, and only when image OCR is actually needed.
+    Digital PDFs are handled via PyMuPDF direct extraction with zero OCR cost.
     """
 
     # Class-level variable — shared across ALL instances.
@@ -45,8 +37,6 @@ class OCRRunner:
         if self._initialized:
             return
 
-        self.use_gpu = os.getenv('PADDLE_USE_GPU', 'false').lower() == 'true'
-        self.lang = os.getenv('PADDLE_OCR_LANG', 'en')
         # Loaded on first image/scanned-PDF OCR call — never loaded for digital PDFs
         self._ocr_engine = None
         self.structure_engine = None
@@ -56,15 +46,17 @@ class OCRRunner:
 
     def _get_ocr_engine(self):
         """Load PaddleOCR models on first call. Skipped entirely for digital PDFs."""
-        if not _PADDLE_AVAILABLE:
-            raise RuntimeError(
-                "PaddleOCR is not installed. Run: pip install paddlepaddle paddleocr"
-            )
         if self._ocr_engine is None:
+            try:
+                from paddleocr import PaddleOCR
+            except ImportError:
+                raise RuntimeError(
+                    "PaddleOCR is not installed. Run: pip install paddlepaddle paddleocr"
+                )
             logger.info("Loading PaddleOCR models into memory...")
             try:
                 self._ocr_engine = PaddleOCR(
-                    lang=self.lang,
+                    lang="en",
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
                     use_textline_orientation=False,
@@ -72,7 +64,8 @@ class OCRRunner:
                 logger.info("PaddleOCR models loaded successfully")
             except Exception as e:
                 logger.warning(f"PaddleOCR init failed ({e}), retrying with minimal params")
-                self._ocr_engine = PaddleOCR(lang=self.lang)
+                from paddleocr import PaddleOCR
+                self._ocr_engine = PaddleOCR(lang="en")
                 logger.info("PaddleOCR models loaded (minimal params)")
         return self._ocr_engine
 
@@ -176,8 +169,10 @@ class OCRRunner:
         Run OCR on an image or PDF and return all detected text in reading order.
         For digital PDFs: uses PyMuPDF direct extraction (no OCR models loaded).
         For images or scanned PDFs: loads PaddleOCR lazily and runs OCR.
+        Uses PaddleOCR 3.4 .predict() API (replaces deprecated .ocr()).
         Each item in the returned list is:
             { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        PDFs are converted page-by-page to temp images before OCR.
         """
         is_pdf = image_path.lower().endswith('.pdf')
         temp_files: List[str] = []
@@ -195,7 +190,7 @@ class OCRRunner:
                             self._get_center(x['bbox'])[0],
                         ),
                     )
-                # Scanned/image PDF — fall back to OCR
+                # Scanned/image PDF — convert pages to images then run Tesseract
                 logger.info("[extract_text] PDF has little/no embedded text, falling back to OCR")
                 temp_files = self._pdf_to_temp_images(image_path)
                 if not temp_files:
@@ -211,11 +206,9 @@ class OCRRunner:
             else:
                 input_paths = [image_path]
 
-            ocr = self._get_ocr_engine()
             extracted: List[Dict] = []
             for input_path in input_paths:
-                results = ocr.predict(input_path)
-                extracted.extend(self._parse_paddle_results(results))
+                extracted.extend(self._run_tesseract(input_path))
 
         except Exception as e:
             logger.error(f"Text extraction failed: {e}", exc_info=True)
@@ -259,6 +252,65 @@ class OCRRunner:
                     'bbox': bbox
                 })
         return extracted
+
+    def _run_tesseract(self, image_path: str) -> List[Dict]:
+        """
+        Run Tesseract OCR on an image file and return line-level text items.
+        Uses ~50 MB of RAM — works on Render free tier unlike PaddleOCR (~1.5 GB).
+        Returns items in the same format as the rest of the pipeline:
+            { 'text': str, 'confidence': float, 'bbox': [[x,y],...] }
+        """
+        try:
+            import pytesseract
+        except ImportError:
+            raise RuntimeError("pytesseract is not installed. Run: pip install pytesseract")
+
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Cannot load image: {image_path}")
+
+        # Preprocess for better accuracy
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        denoised = cv2.fastNlMeansDenoising(gray, None, 10, 7, 21)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(denoised)
+
+        data = pytesseract.image_to_data(
+            enhanced,
+            output_type=pytesseract.Output.DICT,
+            config="--psm 6",
+        )
+
+        # Group individual words into lines
+        line_map: Dict[tuple, dict] = {}
+        for i, word in enumerate(data["text"]):
+            word = word.strip()
+            conf = float(data["conf"][i])
+            if not word or conf < 0:
+                continue
+            key = (data["block_num"][i], data["par_num"][i], data["line_num"][i])
+            x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
+            if key not in line_map:
+                line_map[key] = {"words": [], "confs": [], "x0": x, "y0": y, "x1": x + w, "y1": y + h}
+            else:
+                line_map[key]["x1"] = max(line_map[key]["x1"], x + w)
+                line_map[key]["y1"] = max(line_map[key]["y1"], y + h)
+            line_map[key]["words"].append(word)
+            line_map[key]["confs"].append(conf)
+
+        items: List[Dict] = []
+        for line in line_map.values():
+            text = " ".join(line["words"])
+            avg_conf = sum(line["confs"]) / len(line["confs"]) / 100.0
+            x0, y0, x1, y1 = line["x0"], line["y0"], line["x1"], line["y1"]
+            items.append({
+                "text": text,
+                "confidence": avg_conf,
+                "bbox": [[x0, y0], [x1, y0], [x1, y1], [x0, y1]],
+            })
+
+        logger.info(f"[tesseract] extracted {len(items)} lines from {os.path.basename(image_path)}")
+        return items
 
     def extract_tables(self, image_path: str) -> List[Dict]:
         """
