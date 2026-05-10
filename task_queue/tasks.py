@@ -100,21 +100,32 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         else:
             image_path = file_path
 
-        # ── Step 1: OCR ───────────────────────────────────────────────────
+        # ── Step 1+2: OCR + Prediction via HF Space ──────────────────────
         self.update_state(state="PROGRESS", meta={"step": "running_ocr"})
-        logger.info(f"[process_medical_report] Running OCR on {image_path}")
+        logger.info(f"[process_medical_report] Sending {image_path} to HF Space for OCR+prediction")
 
-        from ml_models.paddle_ocr.ocr_runner import get_ocr_runner
-        ocr_runner = get_ocr_runner()
-        ocr_result = ocr_runner.process_report(image_path, report_type)
+        import requests
+        hf_url = os.getenv("HF_SPACE_URL", "https://derekkakkar-medscan-ai-ml-models.hf.space")
 
-        structured_metrics = ocr_result["structured_metrics"]
-        raw_text = ocr_result["raw_text"]
-        avg_confidence = ocr_result.get("average_confidence", 0.0)
+        with open(image_path, "rb") as f:
+            resp = requests.post(
+                f"{hf_url}/analyze",
+                files={"file": (os.path.basename(image_path), f)},
+                data={"report_type": report_type},
+                timeout=300,
+            )
+        resp.raise_for_status()
+        result = resp.json()
 
-        logger.info(f"[process_medical_report] OCR done: "
-                    f"{len(structured_metrics)} metrics extracted, "
-                    f"confidence={avg_confidence:.3f}")
+        structured_metrics = result.get("structured_metrics", {})
+        raw_text = result.get("raw_text", "")
+        avg_confidence = result.get("ocr_confidence", 0.0)
+        prediction = result.get("prediction", {})
+
+        logger.info(f"[process_medical_report] HF Space done: "
+                    f"{len(structured_metrics)} metrics, "
+                    f"confidence={avg_confidence:.3f}, "
+                    f"risk_level={prediction.get('risk_level')}")
 
         _save_ocr_results(
             report_id=report_id,
@@ -122,17 +133,6 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
             metrics=structured_metrics,
             confidence=avg_confidence,
         )
-
-        # ── Step 2: Disease risk prediction ──────────────────────────────
-        self.update_state(state="PROGRESS", meta={"step": "running_prediction"})
-        logger.info(f"[process_medical_report] Running risk prediction for report {report_id}")
-
-        from ml_models.predict import RiskPredictor
-        predictor = RiskPredictor()
-        prediction = predictor.predict(metrics=structured_metrics, report_type=report_type)
-
-        logger.info(f"[process_medical_report] Prediction done: "
-                    f"risk_level={prediction.get('risk_level')}")
 
         self.update_state(state="PROGRESS", meta={"step": "saving_results"})
         _save_prediction(report_id, prediction)
