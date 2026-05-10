@@ -105,7 +105,7 @@ def process_medical_report(self, report_id: int, file_path: str, report_type: st
         logger.info(f"[process_medical_report] Sending {image_path} to HF Space for OCR+prediction")
 
         import requests
-        hf_url = os.getenv("HF_SPACE_URL", "https://derekkakkar-medscan-ai-ml-models.hf.space")
+        hf_url = os.getenv("HF_SPACE_URL", "https://direkkakkar-medscan-ai-ml-models.hf.space")
 
         with open(image_path, "rb") as f:
             resp = requests.post(
