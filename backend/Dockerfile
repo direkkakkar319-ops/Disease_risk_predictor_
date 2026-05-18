@@ -33,11 +33,6 @@ COPY backend/requirements.txt .
 # --no-cache-dir → skip saving pip's download cache, keeps image size smaller
 RUN pip install --no-cache-dir --timeout 300 --retries 10 -r requirements.txt
 
-# Pre-download PaddleOCR ML models at build time
-# Without this, models download on first API request (slow cold start)
-# With this, models are baked into the image and ready immediately
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(lang='en', use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False)"
-
 # Copy backend source, then repo-root modules that the backend imports
 COPY backend/ ./
 COPY task_queue/ ./task_queue/
